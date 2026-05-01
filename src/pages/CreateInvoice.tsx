@@ -267,7 +267,7 @@ export default function CreateInvoice() {
                     <input 
                       value={invoiceNo} 
                       onChange={e => setInvoiceNo(e.target.value)}
-                      className="w-full border border-[var(--border)] focus:border-[var(--primary)] rounded-lg p-2.5 bg-[#F8F9FA] dark:bg-[#1A1A1A] outline-none font-mono" 
+                      className="w-full border border-[var(--border)] focus:border-[var(--primary)] rounded-lg p-2.5 bg-[var(--bg)] dark:bg-[var(--bg)] outline-none font-mono" 
                     />
                   </div>
                   <div className="space-y-1.5">
@@ -305,7 +305,7 @@ export default function CreateInvoice() {
                   : [];
 
                 return (
-                <div key={idx} className="relative grid grid-cols-1 md:grid-cols-[1fr_80px_150px_150px_40px] gap-3 items-start bg-[#F8F9FA] dark:bg-[#1A1A1A] md:bg-transparent p-4 md:p-0 rounded-lg md:rounded-none group slide-down">
+                <div key={idx} className="relative grid grid-cols-1 md:grid-cols-[1fr_80px_150px_150px_40px] gap-3 items-start bg-[var(--bg)] dark:bg-[var(--bg)] md:bg-transparent p-4 md:p-0 rounded-lg md:rounded-none group slide-down">
                   <div className="space-y-1 relative">
                     <label className="text-xs text-[var(--text-sec)] md:hidden">Nama Item</label>
                     <input 

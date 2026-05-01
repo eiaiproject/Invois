@@ -98,14 +98,14 @@ export default function Catalog() {
         </div>
       ) : (
         <div className="bg-[var(--surface)] rounded-xl border border-[var(--border)] overflow-hidden shadow-sm">
-          <div className="grid grid-cols-[1fr_150px_60px] gap-4 bg-[#F8F9FA] dark:bg-[#1A1A1A] p-4 text-xs font-semibold text-[var(--text-sec)] uppercase tracking-wider border-b border-[var(--border)]">
+          <div className="grid grid-cols-[1fr_150px_60px] gap-4 bg-[var(--bg)] dark:bg-[var(--bg)] p-4 text-xs font-semibold text-[var(--text-sec)] uppercase tracking-wider border-b border-[var(--border)]">
             <div>Nama Item</div>
             <div className="text-right">Harga Satuan</div>
             <div></div>
           </div>
           <div className="divide-y divide-[var(--border)]">
             {items.map((item) => (
-              <div key={item.id} className="grid grid-cols-[1fr_150px_60px] gap-4 p-4 items-center hover:bg-[#F8F9FA]/50 dark:hover:bg-[#1A1A1A]/50 transition-colors">
+              <div key={item.id} className="grid grid-cols-[1fr_150px_60px] gap-4 p-4 items-center hover:bg-[var(--bg)]/50 dark:hover:bg-[var(--bg)]/50 transition-colors">
                 <div className="font-medium truncate">{item.name}</div>
                 <div className="text-right font-mono font-medium">{formatCurrency(item.price)}</div>
                 <div className="flex justify-end">

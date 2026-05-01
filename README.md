@@ -1,30 +1,66 @@
-# Invois
+# 📄 Invois
 
-## Overview
-Invois is a professional, client-side web application for creating, managing, and exporting invoices. Built with **React 19**, **Vite**, **Tailwind CSS**, and **Dexie.js**, it provides a seamless experience for freelancers and small business owners to generate professional invoices without needing a backend server. All data is stored locally in the browser's IndexedDB, ensuring privacy and offline availability.
+Invois is a high-performance, professional client-side web application designed for creating, managing, and exporting invoices with precision and ease. Built for freelancers, consultants, and small business owners, Invois eliminates the need for complex backend infrastructure by leveraging modern browser capabilities for data persistence and PDF generation.
 
-## Key Features
-- **Streamlined Invoice Creation:** Fast and intuitive workflow for creating invoices with automatic calculations for subtotal, discounts, tax (PPN), and grand totals.
-- **Local Storage & Privacy:** Uses Dexie.js for reactive client-side storage. Your data never leaves your device.
-- **Professional PDF Export:** Generates clean, professionally formatted PDFs using `@react-pdf/renderer`.
-- **Multi-Format Export:** Supports both PDF download and a "Copy to Clipboard" markdown format for easy sharing via chat or email.
-- **Brand Customization:** Settings page for uploading logos, setting brand colors, and customizing "Thank You" messages.
-- **Appearance Control:** Support for Light and Dark modes, following system preferences with a manual toggle for user convenience.
-- **Catalog Management:** Store reusable items/services to speed up the invoice creation process.
-- **Responsive Design:** Fully optimized for desktop and mobile devices.
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![React](https://img.shields.io/badge/React-19-blue)](https://react.dev/)
+[![TailwindCSS](https://img.shields.io/badge/Tailwind-CSS-38B2AC)](https://tailwindcss.com/)
+[![Dexie.js](https://img.shields.io/badge/Dexie.js-IndexedDB-orange)](https://dexie.org/)
 
-## Recent Updates
-- **Optimized UX:** Removed redundant fields like "Due Date" to focus on essential billing information.
-- **Enhanced PDF Layout:** Improved brand alignment (centered logo and info) and proportional vertical spacing for a more polished look.
-- **Quick History Access:** Added a "Copy Text" feature directly in the invoice history tab for rapid retrieval of invoice details.
+---
 
-## Architecture
-- **`src/pages`**: Application views (`CreateInvoice`, `History`, `Catalog`, `Settings`).
-- **`src/components`**: Core UI elements, including the `InvoicePDF` engine and `Layout` wrapper.
-- **`src/lib`**: Business logic and data layer (`db.ts` for Dexie schema, `utils.ts` for formatting and markdown generation).
-- **`src/App.tsx`**: Routing and application state management.
+## ✨ Key Features
 
-## Installation & Setup
+### 🚀 Streamlined Invoice Creation
+An intuitive workflow that handles the heavy lifting. Automatic calculations for:
+- **Subtotals** based on quantity and unit price.
+- **Discounts** (Percentage or Nominal).
+- **Tax (PPN)** calculations with toggleable options.
+- **Grand Totals** calculated in real-time.
+
+### 🔐 Privacy-First Architecture
+Your financial data is sensitive. Invois uses **Dexie.js** to store all information locally within the browser's **IndexedDB**. 
+- No cloud storage.
+- No account creation required.
+- Full offline availability.
+- Total data ownership.
+
+### 📄 Professional PDF Export
+Generate industry-standard PDFs using `@react-pdf/renderer`.
+- **Custom Branding:** Integration of company logo and brand colors.
+- **Clean Layout:** Professionally aligned headers, itemized tables, and clear totals.
+- **Multi-Format:** Download as PDF or copy as a clean Markdown summary for quick sharing.
+
+### 📦 Catalog Management
+Speed up your billing process by maintaining a reusable catalog of services and products, reducing repetitive data entry.
+
+### 🎨 Brand & Appearance Control
+- **Customization:** Set brand names, contact details, and accent colors.
+- **Theme Support:** Native support for **Light and Dark modes**, respecting system preferences with a manual override.
+- **Responsive Design:** A mobile-first approach ensuring a seamless experience across smartphones, tablets, and desktops.
+
+---
+
+## 🛠 Technical Stack
+
+| Layer | Technology | Purpose |
+| :--- | :--- | :--- |
+| **Frontend** | React 19 + TypeScript | UI Logic & Component Architecture |
+| **Styling** | Tailwind CSS | Utility-first Responsive Design |
+| **Build Tool** | Vite | Next-generation Frontend Tooling |
+| **Database** | Dexie.js (IndexedDB) | Reactive Client-side Storage |
+| **PDF Engine** | @react-pdf/renderer | Client-side PDF Generation |
+| **Icons** | Lucide-react | Consistent Visual Iconography |
+
+---
+
+## 🚀 Getting Started
+
+### Prerequisites
+- **Node.js** (Latest LTS recommended)
+- **npm** or **yarn**
+
+### Installation
 ```bash
 # Clone the repository
 git clone https://github.com/eiaiproject/Invois.git
@@ -36,26 +72,35 @@ npm install
 # Start development server
 npm run dev
 ```
-The application runs on `http://localhost:3000` by default.
+The application will be available at `http://localhost:5173` (default Vite port).
 
-## Production Deployment
+### Production Build
 ```bash
-# Build the project
+# Generate optimized production build
 npm run build
 
-# Serve the dist folder
-npx serve -s dist
+# Preview the build locally
+npm run preview
 ```
 
-## Technical Stack
-- **Frontend:** React 19, TypeScript, Tailwind CSS.
-- **Build Tool:** Vite.
-- **Database:** Dexie.js (IndexedDB).
-- **PDF Engine:** @react-pdf/renderer.
-- **Icons:** Lucide-react.
+---
 
-## Documentation
-For a detailed list of changes and version history, please refer to [docs/CHANGELOG.md](docs/CHANGELOG.md).
+## 📂 Project Structure
 
-## License
-This project is licensed under the MIT License.
+```text
+src/
+├── components/       # Shared UI components (Layout, PDF Engine)
+├── lib/              # Core business logic (DB Schema, Formatting Utils)
+├── pages/            # Main views (Invoice Creator, History, Catalog, Settings)
+├── App.tsx           # Application routing & state
+└── main.tsx          # Entry point
+```
+
+---
+
+## 📝 Documentation
+Detailed technical insights and version history can be found in the `/docs` directory:
+- [CHANGELOG.md](docs/CHANGELOG.md) - History of updates and bug fixes.
+
+## 📄 License
+Distributed under the MIT License. See `LICENSE` for more information.

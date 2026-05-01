@@ -122,14 +122,6 @@ export function InvoicePDF({ invoice, profile }: InvoicePDFProps) {
         {/* Parties */}
         <View style={styles.partiesRow}>
           <View style={styles.partyCol}>
-            <Text style={styles.partyLabel}>DARI</Text>
-            <Text style={styles.partyName}>{profile.brandName || '-'}</Text>
-            <View>
-                {profile.address && <Text style={styles.partyDetails}>{profile.address}</Text>}
-                {profile.contact && <Text style={styles.partyDetails}>{profile.contact}</Text>}
-              </View>
-          </View>
-          <View style={styles.partyCol}>
             <Text style={styles.partyLabel}>KEPADA</Text>
             <Text style={styles.partyName}>{invoice.clientName || 'Nama Klien'}</Text>
             <View>
