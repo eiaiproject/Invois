@@ -2,7 +2,7 @@ import { useState, useMemo, useEffect, useRef } from 'react';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { db, type Invoice, type InvoiceItem, type CatalogItem, defaultProfile } from '@/lib/db';
 import { generateInvoiceNumber, formatCurrency, cn, invoiceToMarkdown } from '@/lib/utils';
-import { Plus, Trash2, FileDown, CheckCircle2, Search } from 'lucide-react';
+import { Plus, Trash2, FileDown, CheckCircle2, Search, Check } from 'lucide-react';
 import { format } from 'date-fns';
 import { PDFDownloadLink } from '@react-pdf/renderer';
 import { InvoicePDF } from '@/components/InvoicePDF';
@@ -65,6 +65,7 @@ export default function CreateInvoice() {
 
   const [isSaved, setIsSaved] = useState(false);
   const [savedInvoiceData, setSavedInvoiceData] = useState<Invoice | null>(null);
+  const [copied, setCopied] = useState(false);
 
   // Calculations
   const subtotal = useMemo(() => items.reduce((acc, item) => acc + (item.qty * item.price), 0), [items]);
@@ -188,11 +189,21 @@ export default function CreateInvoice() {
             <button
               onClick={() => {
                 const text = invoiceToMarkdown(savedInvoiceData, profile);
-                navigator.clipboard.writeText(text).catch(() => alert('Gagal menyalin ke clipboard'));
+                navigator.clipboard.writeText(text).then(() => {
+                  setCopied(true);
+                  setTimeout(() => setCopied(false), 2000);
+                }).catch(() => alert('Gagal menyalin ke clipboard'));
               }}
-              className="bg-white border text-gray-700 px-6 py-3 rounded-xl font-bold hover:bg-gray-50 ml-2"
+              className="bg-white border text-gray-700 px-6 py-3 rounded-xl font-bold hover:bg-gray-50 ml-2 flex items-center justify-center gap-2 transition-all"
             >
-              Salin Teks
+              {copied ? (
+                <>
+                  <Check className="w-4 h-4 text-green-600" />
+                  <span className="text-green-600">Tersalin!</span>
+                </>
+              ) : (
+                'Salin Teks'
+              )}
             </button>
             <button 
               onClick={resetForm}

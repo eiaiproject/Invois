@@ -1,9 +1,10 @@
 import { useLiveQuery } from 'dexie-react-hooks';
+import { useState, useMemo } from 'react';
 import { db, defaultProfile } from '@/lib/db';
 import { formatCurrency } from '@/lib/utils';
 import { format } from 'date-fns';
 import { id as localeID } from 'date-fns/locale';
-import { FileDown, FileText, Trash2 } from 'lucide-react';
+import { FileDown, FileText, Trash2, Check, TrendingUp, Receipt, DollarSign } from 'lucide-react';
 import { invoiceToMarkdown } from '@/lib/utils';
 import { PDFDownloadLink } from '@react-pdf/renderer';
 import { InvoicePDF } from '@/components/InvoicePDF';
@@ -12,6 +13,15 @@ export default function History() {
   const invoices = useLiveQuery(() => db.invoices.orderBy('createdAt').reverse().toArray());
   const profileRecord = useLiveQuery(() => db.profile.get(1));
   const profile = profileRecord || defaultProfile;
+  const [copiedId, setCopiedId] = useState<number | null>(null);
+
+  const stats = useMemo(() => {
+    if (!invoices) return { totalSales: 0, count: 0, average: 0 };
+    const totalSales = invoices.reduce((sum, inv) => sum + inv.grandTotal, 0);
+    const count = invoices.length;
+    const average = count > 0 ? totalSales / count : 0;
+    return { totalSales, count, average };
+  }, [invoices]);
 
   const handleDelete = async (id: number) => {
     if (confirm("Yakin ingin menghapus invoice ini?")) {
@@ -25,6 +35,38 @@ export default function History() {
         <h1 className="text-2xl font-bold mb-2">Riwayat Invoice</h1>
         <p className="text-[var(--text-sec)]">Daftar invoice yang pernah Anda buat. Data tersimpan di perangkat ini.</p>
       </div>
+
+      {invoices && invoices.length > 0 && (
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <div className="bg-[var(--surface)] p-5 rounded-xl border border-[var(--border)] shadow-sm">
+            <div className="flex items-center gap-3 mb-3">
+              <div className="p-2 bg-green-100 text-green-600 rounded-lg">
+                <DollarSign className="w-5 h-5" />
+              </div>
+              <span className="text-sm font-medium text-[var(--text-sec)]">Total Penjualan</span>
+            </div>
+            <p className="text-2xl font-bold font-mono">{formatCurrency(stats.totalSales)}</p>
+          </div>
+          <div className="bg-[var(--surface)] p-5 rounded-xl border border-[var(--border)] shadow-sm">
+            <div className="flex items-center gap-3 mb-3">
+              <div className="p-2 bg-blue-100 text-blue-600 rounded-lg">
+                <Receipt className="w-5 h-5" />
+              </div>
+              <span className="text-sm font-medium text-[var(--text-sec)]">Jumlah Invoice</span>
+            </div>
+            <p className="text-2xl font-bold">{stats.count} <span className="text-sm font-normal text-[var(--text-sec)]">Invoice</span></p>
+          </div>
+          <div className="bg-[var(--surface)] p-5 rounded-xl border border-[var(--border)] shadow-sm">
+            <div className="flex items-center gap-3 mb-3">
+              <div className="p-2 bg-purple-100 text-purple-600 rounded-lg">
+                <TrendingUp className="w-5 h-5" />
+              </div>
+              <span className="text-sm font-medium text-[var(--text-sec)]">Rata-rata</span>
+            </div>
+            <p className="text-2xl font-bold font-mono">{formatCurrency(stats.average)}</p>
+          </div>
+        </div>
+      )}
 
       {!invoices ? (
         <div className="flex justify-center py-10">
@@ -71,12 +113,19 @@ export default function History() {
                   <button
                     onClick={() => {
                       const text = invoiceToMarkdown(inv, profile);
-                      navigator.clipboard.writeText(text).catch(() => alert('Gagal menyalin ke clipboard'));
+                      navigator.clipboard.writeText(text).then(() => {
+                        setCopiedId(inv.id!);
+                        setTimeout(() => setCopiedId(null), 2000);
+                      }).catch(() => alert('Gagal menyalin ke clipboard'));
                     }}
                     className="p-2.5 bg-gray-100 text-gray-800 hover:bg-gray-200 rounded-lg transition-colors flex items-center justify-center"
                     title="Salin Teks"
                   >
-                    <FileText className="w-5 h-5" />
+                    {copiedId === inv.id ? (
+                      <Check className="w-5 h-5 text-green-600" />
+                    ) : (
+                      <FileText className="w-5 h-5" />
+                    )}
                   </button>
                   <button 
                     onClick={() => inv.id && handleDelete(inv.id)}

@@ -29,10 +29,16 @@ Your financial data is sensitive. Invois uses **Dexie.js** to store all informat
 Generate industry-standard PDFs using `@react-pdf/renderer`.
 - **Custom Branding:** Integration of company logo and brand colors.
 - **Clean Layout:** Professionally aligned headers, itemized tables, and clear totals.
-- **Multi-Format:** Download as PDF or copy as a clean Markdown summary for quick sharing.
+- **Multi-Format:** Download as PDF or copy as a clean Markdown summary for quick sharing, now with visual copy confirmation.
 
 ### 📦 Catalog Management
 Speed up your billing process by maintaining a reusable catalog of services and products, reducing repetitive data entry.
+
+### 📊 Sales Recapitulation
+Track your business growth with the built-in sales summary in the History tab.
+- **Total Revenue:** Instant calculation of all issued invoices.
+- **Total Volume:** Total count of transactions.
+- **Average Transaction Value:** Insight into your average deal size.
 
 ### 🎨 Brand & Appearance Control
 - **Customization:** Set brand names, contact details, and accent colors.

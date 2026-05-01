@@ -31,9 +31,10 @@ The Catalog is designed to save you time. Instead of typing the same service or 
 
 ## 4. Invoice History
 The **History** tab allows you to:
+- **View Sales Summary:** Get an instant overview of your total revenue, total number of invoices, and average transaction value.
 - Review all previously issued invoices.
 - Re-download the PDF for any past invoice.
-- Copy the invoice summary as text for quick sharing.
+- Copy the invoice summary as text for quick sharing (with a visual confirmation when copied).
 - Delete old invoices to keep your storage clean.
 
 ## 5. Data Privacy & Storage
