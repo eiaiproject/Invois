@@ -35,9 +35,12 @@ export function InvoicePDF({ invoice, profile }: InvoicePDFProps) {
 
   const styles = StyleSheet.create({
     page: { padding: 40, fontFamily: 'Roboto', fontSize: 10, color: '#1E293B' },
-    headerRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 40 },
-    logoContainer: { maxWidth: 200 },
-    logo: { height: 50, objectFit: 'contain' },
+    headerRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 30 },
+    brandInfo: { flex: 1, marginLeft: 10, fontSize: 10, color: '#1E293B' },
+    brandName: { fontSize: 16, fontWeight: 700, marginBottom: 4 },
+    brandDetails: { fontSize: 9, color: '#64748B' },
+    logoContainer: { maxWidth: 300 },
+    logo: { height: 100, objectFit: 'contain' },
     titleBox: { alignItems: 'flex-end' },
     titleText: { fontSize: 24, fontWeight: 700, color: brandColor, letterSpacing: 2, marginBottom: 8 },
     invoiceNo: { fontSize: 12, fontWeight: 500, color: '#334155', marginBottom: 4 },
@@ -45,10 +48,10 @@ export function InvoicePDF({ invoice, profile }: InvoicePDFProps) {
     dateLabel: { color: '#64748B' },
     dateValue: { fontWeight: 500 },
     
-    partiesRow: { flexDirection: 'row', gap: 40, marginBottom: 40 },
+    partiesRow: { flexDirection: 'row', gap: 20, marginBottom: 30 },
     partyCol: { flex: 1 },
-    partyLabel: { color: '#64748B', fontSize: 9, marginBottom: 6, textTransform: 'uppercase' },
-    partyName: { fontSize: 12, fontWeight: 700, marginBottom: 4 },
+    partyLabel: { color: '#64748B', fontSize: 9, marginBottom: 2, textTransform: 'uppercase' },
+    partyName: { fontSize: 12, fontWeight: 700, marginBottom: 2 },
     partyDetails: { color: '#475569', lineHeight: 1.4 },
 
     table: { marginBottom: 30 },
@@ -96,9 +99,13 @@ export function InvoicePDF({ invoice, profile }: InvoicePDFProps) {
               <Image src={profile.logoUrl} style={styles.logo} />
             ) : (
               <View>
-                <Text style={{ fontSize: 20, fontWeight: 700 }}>{profile.brandName || 'NAMA PERUSAHAAN'}</Text>
+                <Text style={{ fontSize: 30, fontWeight: 700 }}>{profile.brandName || 'NAMA PERUSAHAAN'}</Text>
               </View>
             )}
+          </View>
+          <View style={styles.brandInfo}>
+            <Text style={styles.brandName}>{profile.brandName || '-'}</Text>
+            <Text style={styles.brandDetails}>{profile.ownerName && profile.ownerName}{profile.ownerName && '\n'}{profile.address && profile.address}{profile.address && '\n'}{profile.contact && profile.contact}</Text>
           </View>
           <View style={styles.titleBox}>
             <Text style={styles.titleText}>INVOICE</Text>

@@ -30,9 +30,7 @@ export function Layout() {
       <header className="flex-shrink-0 bg-[var(--surface)] border-b border-[var(--border)] px-4 py-3 shadow-sm z-10">
         <div className="max-w-3xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-[var(--primary)] flex items-center justify-center text-white font-bold text-xl leading-none">
-              V
-            </div>
+            
             <h1 className="font-bold text-xl tracking-tight text-[var(--text)]">Invois</h1>
           </div>
         </div>
