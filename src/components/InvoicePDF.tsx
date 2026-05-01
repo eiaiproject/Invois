@@ -127,12 +127,19 @@ export function InvoicePDF({ invoice, profile }: InvoicePDFProps) {
           <View style={styles.partyCol}>
             <Text style={styles.partyLabel}>DARI</Text>
             <Text style={styles.partyName}>{profile.brandName || '-'}</Text>
-            <Text style={styles.partyDetails}>{profile.ownerName && profile.ownerName}{profile.ownerName && '\n'}{profile.address && profile.address}{profile.address && '\n'}{profile.contact && profile.contact}</Text>
+            <View>
+                {profile.ownerName && <Text style={styles.partyDetails}>{profile.ownerName}</Text>}
+                {profile.address && <Text style={styles.partyDetails}>{profile.address}</Text>}
+                {profile.contact && <Text style={styles.partyDetails}>{profile.contact}</Text>}
+              </View>
           </View>
           <View style={styles.partyCol}>
             <Text style={styles.partyLabel}>KEPADA</Text>
             <Text style={styles.partyName}>{invoice.clientName || 'Nama Klien'}</Text>
-            <Text style={styles.partyDetails}>{invoice.clientAddress && invoice.clientAddress}{invoice.clientAddress && '\n'}{invoice.clientEmail && invoice.clientEmail}</Text>
+            <View>
+                {invoice.clientAddress && <Text style={styles.partyDetails}>{invoice.clientAddress}</Text>}
+                {invoice.clientEmail && <Text style={styles.partyDetails}>{invoice.clientEmail}</Text>}
+              </View>
           </View>
         </View>
 
@@ -211,7 +218,7 @@ export function InvoicePDF({ invoice, profile }: InvoicePDFProps) {
             </View>
           )}
           {/* Footnote mandatory */}
-          <Text style={styles.footnote}>Barang yang sudah dibeli tidak dapat dikembalikan.</Text>
+          <Text style={styles.footnote}>* Barang yang sudah dibeli tidak dapat dikembalikan.</Text>
           <View style={styles.footerTextContainer}>
             <Text style={styles.footerTextPrimary}>Terima kasih atas kepercayaan Anda.</Text>
             <Text style={styles.footerTextSecondary}>Dibuat menggunakan Invois - PWA</Text>

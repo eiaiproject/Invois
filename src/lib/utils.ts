@@ -34,12 +34,22 @@ export function invoiceToMarkdown(invoice: Invoice, profile: Profile): string {
   lines.push(`**Tanggal:** ${invoice.issueDate}`);
   lines.push(`**Jatuh Tempo:** ${invoice.dueDate}`);
   lines.push('---');
-  // From / To
+  // From / To with proportional vertical spacing
   lines.push('**Dari:**');
-  lines.push(`${profile.brandName || '-'}\\n${profile.ownerName || ''}\\n${profile.address || ''}\\n${profile.contact || ''}`);
+  lines.push(profile.brandName || '-');
+  lines.push('');
+  lines.push(profile.ownerName || '');
+  lines.push('');
+  lines.push(profile.address || '');
+  lines.push('');
+  lines.push(profile.contact || '');
   lines.push('');
   lines.push('**Kepada:**');
-  lines.push(`${invoice.clientName || '-'}\\n${invoice.clientAddress || ''}\\n${invoice.clientEmail || ''}`);
+  lines.push(invoice.clientName || '-');
+  lines.push('');
+  lines.push(invoice.clientAddress || '');
+  lines.push('');
+  lines.push(invoice.clientEmail || '');
   lines.push('');
   // Items table (simple markdown)
   lines.push('| Deskripsi | Qty | Harga Satuan | Total |');
@@ -60,7 +70,7 @@ export function invoiceToMarkdown(invoice: Invoice, profile: Profile): string {
     const tax = taxBase * invoice.taxRate / 100;
     lines.push(`**PPN (${invoice.taxRate}%):** +${formatCurrency(tax)}`);
   }
-  lines.push(`**GRAND TOTAL:** ${formatCurrency(invoice.grandTotal)}`);
+  lines.push(`**GRAND TOTAL:** **${formatCurrency(invoice.grandTotal)}**`);
   lines.push('');
   if (invoice.notes) {
     lines.push('**Catatan:**');
@@ -69,6 +79,14 @@ export function invoiceToMarkdown(invoice: Invoice, profile: Profile): string {
   }
   lines.push('_Terima kasih atas kepercayaan Anda._');
   lines.push('');
-  lines.push('**Barang yang sudah dibeli tidak dapat dikembalikan**');
+  // Payment methods
+  if (profile.banks && profile.banks.length > 0) {
+    lines.push('**Metode Pembayaran:**');
+    profile.banks.forEach(bank => {
+      lines.push(`- ${bank.bankName}: **${bank.accountNumber}** a.n **${bank.accountName}**`);
+    });
+    lines.push('');
+  }
+  lines.push('* Barang yang sudah dibeli tidak dapat dikembalikan');
   return lines.join('\n');
 }
