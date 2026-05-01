@@ -3,7 +3,7 @@ import { useLiveQuery } from 'dexie-react-hooks';
 import { db, type Invoice, type InvoiceItem, type CatalogItem, defaultProfile } from '@/lib/db';
 import { generateInvoiceNumber, formatCurrency, cn, invoiceToMarkdown } from '@/lib/utils';
 import { Plus, Trash2, FileDown, CheckCircle2, Search } from 'lucide-react';
-import { format, addDays } from 'date-fns';
+import { format } from 'date-fns';
 import { PDFDownloadLink } from '@react-pdf/renderer';
 import { InvoicePDF } from '@/components/InvoicePDF';
 import { useNavigate } from 'react-router-dom';
@@ -36,7 +36,6 @@ export default function CreateInvoice() {
 
   const today = format(new Date(), 'yyyy-MM-dd');
   const [issueDate, setIssueDate] = useState(today);
-  const [dueDate, setDueDate] = useState(format(addDays(new Date(), 14), 'yyyy-MM-dd'));
 
   const [invoiceNo, setInvoiceNo] = useState('');
   
@@ -104,8 +103,7 @@ export default function CreateInvoice() {
       clientAddress,
       clientEmail,
       issueDate,
-      dueDate,
-      items: items.filter(i => i.name.trim() !== ''),
+        items: items.filter(i => i.name.trim() !== ''),
       subtotal,
       taxIncluded,
       taxRate,
@@ -164,7 +162,7 @@ export default function CreateInvoice() {
   return (
     <div className="space-y-6 pb-36 md:pb-10 relative">
       <div>
-        <h1 className="text-2xl font-bold mb-2">Buat Invoice</h1>
+        <h1 className="text-2xl font-bold mb-2">buat invoice</h1>
         <p className="text-[var(--text-sec)]">Isi form di bawah ini untuk membuat tagihan baru. Kalkulasi berjalan otomatis.</p>
       </div>
 
@@ -263,7 +261,7 @@ export default function CreateInvoice() {
 
               <div className="space-y-4">
                 <h2 className="text-sm font-bold text-[var(--text-sec)] uppercase tracking-wider">Detail Invoice</h2>
-                <div className="grid gap-4 sm:grid-cols-2">
+                <div className="grid gap-4 md:grid-cols-2">
                   <div className="space-y-1.5">
                     <label className="text-xs font-medium text-[var(--text-sec)]">Nomor Invoice</label>
                     <input 
@@ -272,27 +270,14 @@ export default function CreateInvoice() {
                       className="w-full border border-[var(--border)] focus:border-[var(--primary)] rounded-lg p-2.5 bg-[#F8F9FA] dark:bg-[#1A1A1A] outline-none font-mono" 
                     />
                   </div>
-                  <div className="space-y-1.5 sm:col-span-2">
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="space-y-1.5">
-                        <label className="text-xs font-medium text-[var(--text-sec)]">Tgl Terbit</label>
-                        <input 
-                          type="date"
-                          value={issueDate} 
-                          onChange={e => setIssueDate(e.target.value)}
-                          className="w-full border border-[var(--border)] focus:border-[var(--primary)] rounded-lg p-2.5 bg-transparent outline-none" 
-                        />
-                      </div>
-                      <div className="space-y-1.5">
-                        <label className="text-xs font-medium text-[var(--text-sec)]">Jatuh Tempo</label>
-                        <input 
-                          type="date"
-                          value={dueDate} 
-                          onChange={e => setDueDate(e.target.value)}
-                          className="w-full border border-[var(--border)] focus:border-[var(--primary)] rounded-lg p-2.5 bg-transparent outline-none" 
-                        />
-                      </div>
-                    </div>
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-medium text-[var(--text-sec)]">Tgl Terbit</label>
+                    <input 
+                      type="date"
+                      value={issueDate} 
+                      onChange={e => setIssueDate(e.target.value)}
+                      className="w-full border border-[var(--border)] focus:border-[var(--primary)] rounded-lg p-2.5 bg-transparent outline-none" 
+                    />
                   </div>
                 </div>
               </div>
@@ -376,7 +361,7 @@ export default function CreateInvoice() {
                   </div>
 
                   <div className="space-y-1 md:self-center">
-                    <label className="text-xs text-[var(--text-sec)] md:hidden">Subtotal</label>
+                    <label className="text-xs text-[var(--text-sec)] md:hidden">Total</label>
                     <div className="py-2 text-right font-mono font-medium text-[var(--primary-dark)] md:text-[var(--text)]">
                       {formatCurrency(item.qty * item.price)}
                     </div>

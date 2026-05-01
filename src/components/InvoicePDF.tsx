@@ -35,11 +35,11 @@ export function InvoicePDF({ invoice, profile }: InvoicePDFProps) {
 
   const styles = StyleSheet.create({
     page: { padding: 40, fontFamily: 'Roboto', fontSize: 10, color: '#1E293B' },
-    headerRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 30 },
-    brandInfo: { flex: 1, marginLeft: 10, fontSize: 10, color: '#1E293B' },
+    headerRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 30 }, 
+    brandInfo: { flex: 1, marginLeft: 10, fontSize: 10, color: '#1E293B', textAlign: 'center' }, 
     brandName: { fontSize: 16, fontWeight: 700, marginBottom: 4 },
-    brandDetails: { fontSize: 9, color: '#64748B' },
-    logoContainer: { maxWidth: 300 },
+    brandDetails: { fontSize: 9, color: '#64748B', lineHeight: 1.5 }, 
+    logoContainer: { maxWidth: 300, alignItems: 'center' }, 
     logo: { height: 100, objectFit: 'contain' },
     titleBox: { alignItems: 'flex-end' },
     titleText: { fontSize: 24, fontWeight: 700, color: brandColor, letterSpacing: 2, marginBottom: 8 },

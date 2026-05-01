@@ -1,89 +1,60 @@
 # Invois
 
 ## Overview
-Invois is a web application that enables users to create, manage, and export invoices directly from the browser. The application is built with React 19, Vite, Tailwind CSS, and Dexie for client‑side IndexedDB storage. PDF generation is handled by `@react-pdf/renderer`. All data is stored locally, making the application usable offline without a backend server.
+Invois is a professional, client-side web application for creating, managing, and exporting invoices. Built with **React 19**, **Vite**, **Tailwind CSS**, and **Dexie.js**, it provides a seamless experience for freelancers and small business owners to generate professional invoices without needing a backend server. All data is stored locally in the browser's IndexedDB, ensuring privacy and offline availability.
 
-## New Capabilities
-- **Customizable Thank You Message** – Users can now define their own closing message in the Settings page, which appears at the bottom of both PDF and plain‑text invoices.
-- **Simplified Invoice Process** – Removed redundant fields (due date, buyer address, and store owner name) to streamline invoice creation and reduce clutter.
-- **Clean Plain‑Text Export** – The markdown export has been optimized to remove unnecessary blank lines and literal newline characters, ensuring a clean copy when pasted into chat or email.
-- **Copy‑to‑Clipboard Button** – After an invoice is saved, a *Salin Teks* button appears alongside the PDF download button, invoking the markdown export.
+## Key Features
+- **Streamlined Invoice Creation:** Fast and intuitive workflow for creating invoices with automatic calculations for subtotal, discounts, tax (PPN), and grand totals.
+- **Local Storage & Privacy:** Uses Dexie.js for reactive client-side storage. Your data never leaves your device.
+- **Professional PDF Export:** Generates clean, professionally formatted PDFs using `@react-pdf/renderer`.
+- **Multi-Format Export:** Supports both PDF download and a "Copy to Clipboard" markdown format for easy sharing via chat or email.
+- **Brand Customization:** Settings page for uploading logos, setting brand colors, and customizing "Thank You" messages.
+- **Catalog Management:** Store reusable items/services to speed up the invoice creation process.
+- **Responsive Design:** Fully optimized for desktop and mobile devices.
 
-## Features
-- Create invoices with automatic line‑item calculations (subtotal, discount, tax, grand total).
-- Store invoice history locally using IndexedDB with reactive Dexie hooks.
-- Export invoices as PDF documents with a professional layout.
-- Responsive design that works across desktop and mobile devices.
-- Settings page for logo upload and brand customization.
-- Optional environment configuration for AI‑assisted suggestions via Gemini API.
+## Recent Updates
+- **Optimized UX:** Removed redundant fields like "Due Date" to focus on essential billing information.
+- **Enhanced PDF Layout:** Improved brand alignment (centered logo and info) and proportional vertical spacing for a more polished look.
+- **Quick History Access:** Added a "Copy Text" feature directly in the invoice history tab for rapid retrieval of invoice details.
 
 ## Architecture
-- **src/pages** – React Router pages (`CreateInvoice`, `History`, `Catalog`, `Settings`).
-- **src/components** – Reusable UI components, including `Layout` and `InvoicePDF`.
-- **src/lib** – Utility functions (`utils.ts`) and Dexie database wrapper (`db.ts`).
-- **src/App.tsx** – Application entry point with route definitions.
-- **PDF Generation** – Implemented in `src/components/InvoicePDF.tsx` using `@react-pdf/renderer`.
+- **`src/pages`**: Application views (`CreateInvoice`, `History`, `Catalog`, `Settings`).
+- **`src/components`**: Core UI elements, including the `InvoicePDF` engine and `Layout` wrapper.
+- **`src/lib`**: Business logic and data layer (`db.ts` for Dexie schema, `utils.ts` for formatting and markdown generation).
+- **`src/App.tsx`**: Routing and application state management.
 
-## Installation
+## Installation & Setup
 ```bash
-# Clone the repository and navigate to the project directory
+# Clone the repository
 git clone https://github.com/eiaiproject/Invois.git
 cd Invois
 
 # Install dependencies
 npm install
-```
 
-## Configuration
-Create a `.env.local` file at the project root if you need to provide a Gemini API key for AI features:
-```
-GEMINI_API_KEY=your_gemini_api_key_here
-```
-Additional environment variables can be added as required.
-
-## Development
-```bash
+# Start development server
 npm run dev
 ```
-The development server runs on port 3000 by default. Open `http://localhost:3000` in a browser to use the application.
+The application runs on `http://localhost:3000` by default.
 
-## Production Build
+## Production Deployment
 ```bash
+# Build the project
 npm run build
-```
-The compiled assets are placed in the `dist/` directory and can be served with any static‑file server, for example:
-```bash
+
+# Serve the dist folder
 npx serve -s dist
 ```
 
-## PDF Generation
-The `InvoicePDF` component generates a PDF that includes:
-- Company branding (logo or brand name).
-- Client name and invoice details.
-- Itemised table with description, quantity, unit price, and total.
-- Subtotal, discount, tax, and grand total calculations.
-- Payment method section (if configured).
-- User‑defined thank you message.
+## Technical Stack
+- **Frontend:** React 19, TypeScript, Tailwind CSS.
+- **Build Tool:** Vite.
+- **Database:** Dexie.js (IndexedDB).
+- **PDF Engine:** @react-pdf/renderer.
+- **Icons:** Lucide-react.
 
-## Database Schema
-The client‑side database is defined in `src/lib/db.ts` using Dexie:
-- **invoices** – Stores invoice metadata, client information, dates, totals, and notes.
-- **catalog** – Holds reusable product/service entries for quick selection.
-Both tables are indexed for efficient queries, and Dexie React hooks keep the UI synchronized with the data.
-
-## Utility Functions
-- `formatCurrency` – Formats numbers as Indonesian Rupiah.
-- `generateInvoiceNumber` – Generates sequential invoice numbers based on a prefix.
-- `invoiceToMarkdown` – Converts an invoice and profile data into a markdown string that can be copied to the clipboard. This function is used by the *Salin Teks* button.
-- `cn` – Utility for merging Tailwind class names.
-
-## Contributing
-Contributions are welcome. Follow these steps:
-1. Fork the repository.
-2. Create a feature branch (`git checkout -b feature/your-feature`).
-3. Implement your changes and ensure the TypeScript build passes (`npm run lint`).
-4. Commit with a concise message and push to your fork.
-5. Open a pull request describing the changes.
+## Documentation
+For a detailed list of changes and version history, please refer to [docs/CHANGELOG.md](docs/CHANGELOG.md).
 
 ## License
-The project is licensed under the MIT License. See the `LICENSE` file for details.
+This project is licensed under the MIT License.

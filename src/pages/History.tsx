@@ -4,6 +4,7 @@ import { formatCurrency } from '@/lib/utils';
 import { format } from 'date-fns';
 import { id as localeID } from 'date-fns/locale';
 import { FileDown, FileText, Trash2 } from 'lucide-react';
+import { invoiceToMarkdown } from '@/lib/utils';
 import { PDFDownloadLink } from '@react-pdf/renderer';
 import { InvoicePDF } from '@/components/InvoicePDF';
 
@@ -21,7 +22,7 @@ export default function History() {
   return (
     <div className="space-y-6 pb-20">
       <div>
-        <h1 className="text-2xl font-bold mb-2">Riwayat Invois</h1>
+        <h1 className="text-2xl font-bold mb-2">riwayat invoice</h1>
         <p className="text-[var(--text-sec)]">Daftar invoice yang pernah Anda buat. Data tersimpan di perangkat ini.</p>
       </div>
 
@@ -67,6 +68,16 @@ export default function History() {
                   >
                     <FileDown className="w-5 h-5" />
                   </PDFDownloadLink>
+                  <button
+                    onClick={() => {
+                      const text = invoiceToMarkdown(inv, profile);
+                      navigator.clipboard.writeText(text).catch(() => alert('Gagal menyalin ke clipboard'));
+                    }}
+                    className="p-2.5 bg-gray-100 text-gray-800 hover:bg-gray-200 rounded-lg transition-colors flex items-center justify-center"
+                    title="Salin Teks"
+                  >
+                    <FileText className="w-5 h-5" />
+                  </button>
                   <button 
                     onClick={() => inv.id && handleDelete(inv.id)}
                     className="p-2.5 bg-red-50 text-red-500 hover:bg-red-500 hover:text-white rounded-lg transition-colors flex items-center justify-center"
