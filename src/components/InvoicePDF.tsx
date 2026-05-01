@@ -106,7 +106,7 @@ export function InvoicePDF({ invoice, profile }: InvoicePDFProps) {
           </View>
           <View style={styles.brandInfo}>
             <Text style={styles.brandName}>{profile.brandName || '-'}</Text>
-            <Text style={styles.brandDetails}>{profile.ownerName && profile.ownerName}{profile.ownerName && '\n'}{profile.address && profile.address}{profile.address && '\n'}{profile.contact && profile.contact}</Text>
+            <Text style={styles.brandDetails}>{profile.address && profile.address}{profile.address && '\n'}{profile.contact && profile.contact}</Text>
           </View>
           <View style={styles.titleBox}>
             <Text style={styles.titleText}>INVOICE</Text>
@@ -115,10 +115,7 @@ export function InvoicePDF({ invoice, profile }: InvoicePDFProps) {
               <Text style={styles.dateLabel}>Tanggal Invois</Text>
               <Text style={styles.dateValue}>{format(new Date(invoice.issueDate), 'dd MMM yyyy', { locale: localeID })}</Text>
             </View>
-            <View style={styles.dateRow}>
-              <Text style={styles.dateLabel}>Jatuh Tempo</Text>
-              <Text style={styles.dateValue}>{format(new Date(invoice.dueDate), 'dd MMM yyyy', { locale: localeID })}</Text>
-            </View>
+
           </View>
         </View>
 
@@ -128,7 +125,6 @@ export function InvoicePDF({ invoice, profile }: InvoicePDFProps) {
             <Text style={styles.partyLabel}>DARI</Text>
             <Text style={styles.partyName}>{profile.brandName || '-'}</Text>
             <View>
-                {profile.ownerName && <Text style={styles.partyDetails}>{profile.ownerName}</Text>}
                 {profile.address && <Text style={styles.partyDetails}>{profile.address}</Text>}
                 {profile.contact && <Text style={styles.partyDetails}>{profile.contact}</Text>}
               </View>
@@ -137,8 +133,7 @@ export function InvoicePDF({ invoice, profile }: InvoicePDFProps) {
             <Text style={styles.partyLabel}>KEPADA</Text>
             <Text style={styles.partyName}>{invoice.clientName || 'Nama Klien'}</Text>
             <View>
-                {invoice.clientAddress && <Text style={styles.partyDetails}>{invoice.clientAddress}</Text>}
-                {invoice.clientEmail && <Text style={styles.partyDetails}>{invoice.clientEmail}</Text>}
+
               </View>
           </View>
         </View>
@@ -218,9 +213,9 @@ export function InvoicePDF({ invoice, profile }: InvoicePDFProps) {
             </View>
           )}
           {/* Footnote mandatory */}
-          <Text style={styles.footnote}>* Barang yang sudah dibeli tidak dapat dikembalikan.</Text>
+
           <View style={styles.footerTextContainer}>
-            <Text style={styles.footerTextPrimary}>Terima kasih atas kepercayaan Anda.</Text>
+            <Text style={styles.footerTextPrimary}>{profile.thankYouMessage || 'Terima kasih atas kepercayaan Anda.'}</Text>
             <Text style={styles.footerTextSecondary}>Dibuat menggunakan Invois - PWA</Text>
           </View>
         </View>

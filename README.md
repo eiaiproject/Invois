@@ -4,9 +4,9 @@
 Invois is a web application that enables users to create, manage, and export invoices directly from the browser. The application is built with React 19, Vite, Tailwind CSS, and Dexie for client‑side IndexedDB storage. PDF generation is handled by `@react-pdf/renderer`. All data is stored locally, making the application usable offline without a backend server.
 
 ## New Capabilities
-- **Footnote Enforcement** – Every generated PDF now includes the mandatory footnote *"Barang yang sudah dibeli tidak dapat dikembalikan."* to clarify return policy.
-- **Plain‑Text Export** – Users can copy a markdown representation of an invoice to the clipboard. This text can be pasted into chat applications or email clients, providing a lightweight alternative to PDF.
-- **Improved UI** – The optional notes field no longer displays a placeholder, reducing visual noise.
+- **Customizable Thank You Message** – Users can now define their own closing message in the Settings page, which appears at the bottom of both PDF and plain‑text invoices.
+- **Simplified Invoice Process** – Removed redundant fields (due date, buyer address, and store owner name) to streamline invoice creation and reduce clutter.
+- **Clean Plain‑Text Export** – The markdown export has been optimized to remove unnecessary blank lines and literal newline characters, ensuring a clean copy when pasted into chat or email.
 - **Copy‑to‑Clipboard Button** – After an invoice is saved, a *Salin Teks* button appears alongside the PDF download button, invoking the markdown export.
 
 ## Features
@@ -59,11 +59,11 @@ npx serve -s dist
 ## PDF Generation
 The `InvoicePDF` component generates a PDF that includes:
 - Company branding (logo or brand name).
-- Client and invoice details.
+- Client name and invoice details.
 - Itemised table with description, quantity, unit price, and total.
 - Subtotal, discount, tax, and grand total calculations.
 - Payment method section (if configured).
-- Mandatory footnote about non‑returnable items.
+- User‑defined thank you message.
 
 ## Database Schema
 The client‑side database is defined in `src/lib/db.ts` using Dexie:

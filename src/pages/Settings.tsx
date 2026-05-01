@@ -125,15 +125,7 @@ export default function Settings() {
               placeholder="e.g. Toko Makmur"
             />
           </div>
-          <div className="space-y-1.5">
-            <label className="text-sm font-medium">Nama Pemilik</label>
-            <input 
-              value={profile.ownerName} 
-              onChange={e => handleChange('ownerName', e.target.value)}
-              className="w-full p-2.5 rounded-lg border border-[var(--border)] bg-[var(--bg)] focus:ring-2 focus:ring-[var(--primary)] outline-none transition-shadow" 
-              placeholder="e.g. Budi Santoso"
-            />
-          </div>
+
           <div className="space-y-1.5 md:col-span-2">
             <label className="text-sm font-medium">Alamat</label>
             <textarea 
@@ -159,6 +151,15 @@ export default function Settings() {
               onChange={e => handleChange('prefix', e.target.value.toUpperCase())}
               className="w-full p-2.5 rounded-lg border border-[var(--border)] bg-[var(--bg)] focus:ring-2 focus:ring-[var(--primary)] outline-none transition-shadow uppercase font-mono" 
               placeholder="INV"
+            />
+          </div>
+          <div className="space-y-1.5">
+            <label className="text-sm font-medium">Pesan Terima Kasih (opsional)</label>
+            <textarea 
+              value={profile.thankYouMessage || ''}
+              onChange={e => handleChange('thankYouMessage', e.target.value)}
+              className="w-full p-2.5 rounded-lg border border-[var(--border)] bg-[var(--bg)] focus:ring-2 focus:ring-[var(--primary)] outline-none transition-shadow"
+              placeholder="Terima kasih atas kepercayaan Anda."
             />
           </div>
         </div>

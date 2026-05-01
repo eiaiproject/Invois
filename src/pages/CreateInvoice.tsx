@@ -256,19 +256,8 @@ export default function CreateInvoice() {
                       );
                     })()}
                   </div>
-                  <input 
-                    value={clientEmail} 
-                    onChange={e => setClientEmail(e.target.value)}
-                    className="w-full border-b border-[var(--border)] focus:border-[var(--primary)] placeholder:text-gray-400 bg-transparent py-2 outline-none transition-colors" 
-                    placeholder="Email (Opsional)" type="email"
-                  />
-                  <textarea 
-                    value={clientAddress} 
-                    onChange={e => setClientAddress(e.target.value)}
-                    className="w-full border border-[var(--border)] focus:border-[var(--primary)] focus:ring-1 focus:ring-[var(--primary)] rounded-lg p-3 bg-transparent outline-none transition-colors mt-2" 
-                    placeholder="Alamat Klien (Opsional)" 
-                    rows={2}
-                  />
+
+
                 </div>
               </div>
 

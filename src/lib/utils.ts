@@ -32,33 +32,22 @@ export function invoiceToMarkdown(invoice: Invoice, profile: Profile): string {
   // Header
   lines.push(`# INVOICE ${invoice.invoiceNo}`);
   lines.push(`**Tanggal:** ${invoice.issueDate}`);
-  lines.push(`**Jatuh Tempo:** ${invoice.dueDate}`);
   lines.push('---');
-  // From / To with proportional vertical spacing
+  // From section
   lines.push('**Dari:**');
   lines.push(profile.brandName || '-');
-  lines.push('');
-  lines.push(profile.ownerName || '');
-  lines.push('');
-  lines.push(profile.address || '');
-  lines.push('');
-  lines.push(profile.contact || '');
-  lines.push('');
+  if (profile.address) lines.push(profile.address);
+  if (profile.contact) lines.push(profile.contact);
+  // To section
   lines.push('**Kepada:**');
   lines.push(invoice.clientName || '-');
-  lines.push('');
-  lines.push(invoice.clientAddress || '');
-  lines.push('');
-  lines.push(invoice.clientEmail || '');
-  lines.push('');
-  // Items table (simple markdown)
+  // Items table
   lines.push('| Deskripsi | Qty | Harga Satuan | Total |');
   lines.push('|---|---|---|---|');
   invoice.items.forEach(item => {
     const total = item.qty * item.price;
     lines.push(`| ${item.name} | ${item.qty} | ${formatCurrency(item.price)} | ${formatCurrency(total)} |`);
   });
-  lines.push('');
   // Totals
   lines.push(`**Subtotal:** ${formatCurrency(invoice.subtotal)}`);
   if (invoice.discount > 0) {
@@ -71,22 +60,18 @@ export function invoiceToMarkdown(invoice: Invoice, profile: Profile): string {
     lines.push(`**PPN (${invoice.taxRate}%):** +${formatCurrency(tax)}`);
   }
   lines.push(`**GRAND TOTAL:** **${formatCurrency(invoice.grandTotal)}**`);
-  lines.push('');
   if (invoice.notes) {
     lines.push('**Catatan:**');
     lines.push(invoice.notes);
-    lines.push('');
   }
-  lines.push('_Terima kasih atas kepercayaan Anda._');
-  lines.push('');
+  // Thank you message (editable)
+  lines.push(profile.thankYouMessage || '_Terima kasih atas kepercayaan Anda._');
   // Payment methods
   if (profile.banks && profile.banks.length > 0) {
     lines.push('**Metode Pembayaran:**');
     profile.banks.forEach(bank => {
       lines.push(`- ${bank.bankName}: **${bank.accountNumber}** a.n **${bank.accountName}**`);
     });
-    lines.push('');
   }
-  lines.push('* Barang yang sudah dibeli tidak dapat dikembalikan');
   return lines.join('\n');
 }

@@ -9,13 +9,13 @@ export interface BankAccount {
 export interface Profile {
   id?: number;
   brandName: string;
-  ownerName: string;
   address: string;
   contact: string;
   logoUrl?: string; // Base64 string for offline storage
   brandColor: string;
   prefix: string;
   banks: BankAccount[];
+  thankYouMessage?: string;
 }
 
 export interface CatalogItem {
@@ -34,10 +34,7 @@ export interface Invoice {
   id?: number;
   invoiceNo: string;
   clientName: string;
-  clientAddress: string;
-  clientEmail: string;
   issueDate: string; // YYYY-MM-DD
-  dueDate: string;   // YYYY-MM-DD
   items: InvoiceItem[];
   subtotal: number;
   taxIncluded: boolean;
@@ -74,10 +71,10 @@ export const db = new InvoisDatabase();
 // Default values for new users
 export const defaultProfile: Profile = {
   brandName: '',
-  ownerName: '',
   address: '',
   contact: '',
   brandColor: '#10B981',
   prefix: 'INV',
-  banks: []
+  banks: [],
+  thankYouMessage: ''
 };
