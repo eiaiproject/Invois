@@ -19,7 +19,7 @@ export function Layout() {
   }, []);
 
   const navItems = [
-    { name: 'Buat Invois', path: '/', icon: FileText },
+    { name: 'Buat Invoice', path: '/', icon: FileText },
     { name: 'Riwayat', path: '/history', icon: History },
     { name: 'Katalog', path: '/catalog', icon: PackagePlus },
     { name: 'Pengaturan', path: '/settings', icon: Settings },
