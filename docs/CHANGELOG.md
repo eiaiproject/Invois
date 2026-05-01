@@ -3,6 +3,7 @@
 ## [2026-05-01] - UI/UX Improvements & PDF Refinement
 
 ### Added
+- **Theme Toggle:** Added a manual switch between Light and Dark modes in the header for improved accessibility.
 - **History Tab Copy Feature:** Added "Salin Teks" button in the History tab to allow quick copying of invoice data in markdown format.
 - **PDF Alignment:** Centered brand logo and information for a more professional appearance.
 

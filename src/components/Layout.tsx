@@ -1,22 +1,27 @@
 import { Link, Outlet, useLocation } from 'react-router-dom';
-import { FileText, History, Settings, PackagePlus } from 'lucide-react';
+import { FileText, History, Settings, PackagePlus, Sun, Moon } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 
 export function Layout() {
   const location = useLocation();
+  const [theme, setTheme] = useState<'light' | 'dark'>(
+    (localStorage.getItem('theme') as 'light' | 'dark') || 
+    (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light')
+  );
 
-  // On mount, check dark mode preference
   useEffect(() => {
-    const isDark = localStorage.getItem('theme') === 'dark' || 
-      (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches);
-    
-    if (isDark) {
+    if (theme === 'dark') {
       document.documentElement.classList.add('dark');
     } else {
       document.documentElement.classList.remove('dark');
     }
-  }, []);
+    localStorage.setItem('theme', theme);
+  }, [theme]);
+
+  const toggleTheme = () => {
+    setTheme(prev => prev === 'light' ? 'dark' : 'light');
+  };
 
   const navItems = [
     { name: 'Buat Invoice', path: '/', icon: FileText },
@@ -29,9 +34,18 @@ export function Layout() {
     <div className="flex flex-col h-screen overflow-hidden bg-[var(--bg)] text-[var(--text)] transition-colors duration-200">
       <header className="flex-shrink-0 bg-[var(--surface)] border-b border-[var(--border)] px-4 py-3 shadow-sm z-10">
         <div className="max-w-3xl mx-auto flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            
-            <h1 className="font-bold text-xl tracking-tight text-[var(--text)]">Invois</h1>
+          <div className="flex items-center justify-between w-full">
+            <div className="flex items-center gap-2">
+              <h1 className="font-bold text-xl tracking-tight text-[var(--text)]">Invois</h1>
+            </div>
+
+            <button 
+              onClick={toggleTheme}
+              className="p-2 rounded-lg bg-[var(--bg)] border border-[var(--border)] text-[var(--text)] hover:bg-[var(--border)] transition-colors"
+              title="Ganti Tema"
+            >
+              {theme === 'light' ? <Moon className="w-5 h-5" /> : <Sun className="w-5 h-5" />}
+            </button>
           </div>
         </div>
       </header>

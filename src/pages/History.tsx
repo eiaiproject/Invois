@@ -22,7 +22,7 @@ export default function History() {
   return (
     <div className="space-y-6 pb-20">
       <div>
-        <h1 className="text-2xl font-bold mb-2">riwayat invoice</h1>
+        <h1 className="text-2xl font-bold mb-2">Riwayat Invoice</h1>
         <p className="text-[var(--text-sec)]">Daftar invoice yang pernah Anda buat. Data tersimpan di perangkat ini.</p>
       </div>
 

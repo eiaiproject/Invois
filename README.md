@@ -9,6 +9,7 @@ Invois is a professional, client-side web application for creating, managing, an
 - **Professional PDF Export:** Generates clean, professionally formatted PDFs using `@react-pdf/renderer`.
 - **Multi-Format Export:** Supports both PDF download and a "Copy to Clipboard" markdown format for easy sharing via chat or email.
 - **Brand Customization:** Settings page for uploading logos, setting brand colors, and customizing "Thank You" messages.
+- **Appearance Control:** Support for Light and Dark modes, following system preferences with a manual toggle for user convenience.
 - **Catalog Management:** Store reusable items/services to speed up the invoice creation process.
 - **Responsive Design:** Fully optimized for desktop and mobile devices.
 

@@ -162,7 +162,7 @@ export default function CreateInvoice() {
   return (
     <div className="space-y-6 pb-36 md:pb-10 relative">
       <div>
-        <h1 className="text-2xl font-bold mb-2">buat invoice</h1>
+        <h1 className="text-2xl font-bold mb-2">Buat Invoice</h1>
         <p className="text-[var(--text-sec)]">Isi form di bawah ini untuk membuat tagihan baru. Kalkulasi berjalan otomatis.</p>
       </div>
 
