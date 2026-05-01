@@ -1,0 +1,58 @@
+@import "tailwindcss";
+
+@theme {
+  --color-primary: #10B981;
+  --color-primary-dark: #34D399;
+  
+  --color-bg-light: #F8F9FA;
+  --color-surface-light: #FFFFFF;
+  --color-border-light: #E5E7EB;
+  --color-text-light: #1E293B;
+  --color-text-sec-light: #6B7280;
+
+  --color-bg-dark: #121212;
+  --color-surface-dark: #1E1E1E;
+  --color-border-dark: #333333;
+  --color-text-dark: #E2E8F0;
+  --color-text-sec-dark: #A0AEC0;
+
+  --font-sans: "Roboto", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "Roboto Mono", ui-monospace, SFMono-Regular, monospace;
+}
+
+@layer base {
+  :root {
+    --bg: var(--color-bg-light);
+    --surface: var(--color-surface-light);
+    --border: var(--color-border-light);
+    --text: var(--color-text-light);
+    --text-sec: var(--color-text-sec-light);
+    --primary: var(--color-primary);
+  }
+
+  .dark {
+    --bg: var(--color-bg-dark);
+    --surface: var(--color-surface-dark);
+    --border: var(--color-border-dark);
+    --text: var(--color-text-dark);
+    --text-sec: var(--color-text-sec-dark);
+    --primary: var(--color-primary-dark);
+  }
+
+  body {
+    background-color: var(--bg);
+    color: var(--text);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* Remove spin buttons from number inputs */
+  input[type="number"]::-webkit-inner-spin-button, 
+  input[type="number"]::-webkit-outer-spin-button { 
+    -webkit-appearance: none; 
+    margin: 0; 
+  }
+  input[type="number"] {
+    -moz-appearance: textfield;
+  }
+}
