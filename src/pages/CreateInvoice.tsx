@@ -1,7 +1,7 @@
 import { useState, useMemo, useEffect, useRef } from 'react';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { db, type Invoice, type InvoiceItem, type CatalogItem, defaultProfile } from '@/lib/db';
-import { generateInvoiceNumber, formatCurrency, cn } from '@/lib/utils';
+import { generateInvoiceNumber, formatCurrency, cn, invoiceToMarkdown } from '@/lib/utils';
 import { Plus, Trash2, FileDown, CheckCircle2, Search } from 'lucide-react';
 import { format, addDays } from 'date-fns';
 import { PDFDownloadLink } from '@react-pdf/renderer';
@@ -187,15 +187,24 @@ export default function CreateInvoice() {
                 <FileDown className="w-5 h-5" /> Download PDF
               </span>
             </PDFDownloadLink>
+            <button
+              onClick={() => {
+                const text = invoiceToMarkdown(savedInvoiceData, profile);
+                navigator.clipboard.writeText(text).catch(() => alert('Gagal menyalin ke clipboard'));
+              }}
+              className="bg-white border text-gray-700 px-6 py-3 rounded-xl font-bold hover:bg-gray-50 ml-2"
+            >
+              Salin Teks
+            </button>
             <button 
               onClick={resetForm}
-              className="bg-white border text-gray-700 px-6 py-3 rounded-xl font-bold hover:bg-gray-50"
+              className="bg-white border text-gray-700 px-6 py-3 rounded-xl font-bold hover:bg-gray-50 ml-2"
             >
               Buat Baru
             </button>
             <button 
               onClick={() => navigate('/history')}
-              className="bg-white border text-gray-700 px-6 py-3 rounded-xl font-bold hover:bg-gray-50"
+              className="bg-white border text-gray-700 px-6 py-3 rounded-xl font-bold hover:bg-gray-50 ml-2"
             >
               Lihat Riwayat
             </button>
@@ -411,7 +420,7 @@ export default function CreateInvoice() {
                 value={notes} 
                 onChange={e => setNotes(e.target.value)}
                 className="w-full border border-[var(--border)] focus:border-[var(--primary)] rounded-lg p-3 bg-transparent outline-none transition-colors min-h-[120px]" 
-                placeholder="Misal: Barang yang sudah dibeli tidak dapat dikembalikan." 
+                placeholder="" 
               />
             </div>
 

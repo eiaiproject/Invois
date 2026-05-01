@@ -85,7 +85,8 @@ export function InvoicePDF({ invoice, profile }: InvoicePDFProps) {
     notes: { fontStyle: 'italic', color: '#64748B', fontSize: 8, lineHeight: 1.4 },
     footerTextContainer: { borderTopWidth: 1, borderTopColor: '#E5E7EB', marginTop: 20, paddingTop: 12, alignItems: 'center' },
     footerTextPrimary: { fontWeight: 500, marginBottom: 2 },
-    footerTextSecondary: { fontSize: 7, color: '#94A3B8' }
+    footerTextSecondary: { fontSize: 7, color: '#94A3B8' },
+    footnote: { fontSize: 8, color: '#64748B', marginTop: 6, fontStyle: 'italic' }
   });
 
   return (
@@ -209,6 +210,8 @@ export function InvoicePDF({ invoice, profile }: InvoicePDFProps) {
               <Text style={styles.notes}>{invoice.notes}</Text>
             </View>
           )}
+          {/* Footnote mandatory */}
+          <Text style={styles.footnote}>Barang yang sudah dibeli tidak dapat dikembalikan.</Text>
           <View style={styles.footerTextContainer}>
             <Text style={styles.footerTextPrimary}>Terima kasih atas kepercayaan Anda.</Text>
             <Text style={styles.footerTextSecondary}>Dibuat menggunakan Invois - PWA</Text>
