@@ -1,5 +1,5 @@
 import { Link, Outlet, useLocation } from 'react-router-dom';
-import { FileText, History, Settings, PackagePlus, Sun, Moon } from 'lucide-react';
+import { FileText, History, Settings, PackagePlus, Sun, Moon, ReceiptText, Info } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useEffect, useState } from 'react';
 
@@ -35,8 +35,25 @@ export function Layout() {
       <header className="flex-shrink-0 bg-[var(--surface)] border-b border-[var(--border)] px-4 py-3 shadow-sm z-10">
         <div className="max-w-3xl mx-auto flex items-center justify-between">
           <div className="flex items-center justify-between w-full">
-            <div className="flex items-center gap-2">
-              <h1 className="font-bold text-xl tracking-tight text-[var(--text)]">Invois</h1>
+            <div className="flex items-center gap-2 group cursor-pointer">
+              <div className="w-8 h-8 bg-[var(--primary)] rounded-lg flex items-center justify-center text-white shadow-sm group-hover:scale-105 transition-transform">
+                <ReceiptText className="w-5 h-5" />
+              </div>
+              <div className="flex items-center gap-1.5">
+                <h1 className="font-black text-xl tracking-tighter uppercase bg-gradient-to-r from-[var(--primary)] to-emerald-400 bg-clip-text text-transparent">
+                  Invois
+                </h1>
+                <button 
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    alert('© eiaiproject');
+                  }}
+                  className="w-4 h-4 rounded-full border border-[var(--text-sec)] text-[var(--text-sec)] flex items-center justify-center hover:border-[var(--primary)] hover:text-[var(--primary)] transition-colors"
+                  title="Informasi"
+                >
+                  <Info className="w-3 h-3" />
+                </button>
+              </div>
             </div>
 
             <button 
