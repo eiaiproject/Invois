@@ -4,7 +4,7 @@ import { db, defaultProfile } from '@/lib/db';
 import { formatCurrency } from '@/lib/utils';
 import { format } from 'date-fns';
 import { id as localeID } from 'date-fns/locale';
-import { FileDown, FileText, Trash2, Check, TrendingUp, Receipt, DollarSign } from 'lucide-react';
+import { FileDown, FileText, Trash2, Check, TrendingUp, Receipt, DollarSign, Download } from 'lucide-react';
 import { invoiceToMarkdown } from '@/lib/utils';
 import { PDFDownloadLink } from '@react-pdf/renderer';
 import { InvoicePDF } from '@/components/InvoicePDF';
@@ -29,11 +29,50 @@ export default function History() {
     }
   };
 
+  const exportToCSV = () => {
+    if (!invoices || invoices.length === 0) return;
+
+    const headers = ['Invoice No', 'Client Name', 'Issue Date', 'Grand Total'];
+    const rows = invoices.map(inv => [
+      inv.invoiceNo,
+      `"${inv.clientName.replace(/"/g, '""')}"`,
+      inv.issueDate,
+      inv.grandTotal
+    ]);
+
+    const csvContent = [
+      headers.join(','),
+      ...rows.map(row => row.join(','))
+    ].join('\n');
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.setAttribute('href', url);
+    link.setAttribute('download', `riwayat_invoice_${new Date().toISOString().split('T')[0]}.csv`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   return (
     <div className="space-y-6 pb-20">
       <div>
-        <h1 className="text-2xl font-bold mb-2">Riwayat Invoice</h1>
-        <p className="text-[var(--text-sec)]">Daftar invoice yang pernah Anda buat. Data tersimpan di perangkat ini.</p>
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+          <div>
+            <h1 className="text-2xl font-bold mb-2">Riwayat Invoice</h1>
+            <p className="text-[var(--text-sec)]">Daftar invoice yang pernah Anda buat. Data tersimpan di perangkat ini.</p>
+          </div>
+          {invoices && invoices.length > 0 && (
+            <button 
+              onClick={exportToCSV}
+              className="flex items-center justify-center gap-2 bg-[var(--surface)] text-[var(--text)] border border-[var(--border)] px-4 py-2 rounded-lg font-medium hover:bg-[var(--bg)] transition-colors text-sm"
+            >
+              <Download className="w-4 h-4" /> Eksport CSV
+            </button>
+          )}
+        </div>
       </div>
 
       {invoices && invoices.length > 0 && (

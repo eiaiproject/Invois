@@ -1,4 +1,4 @@
-# 📄 Invois
+# Invois
 
 Invois is a high-performance, professional client-side web application designed for creating, managing, and exporting invoices with precision and ease. Built for freelancers, consultants, and small business owners, Invois eliminates the need for complex backend infrastructure by leveraging modern browser capabilities for data persistence and PDF generation.
 
@@ -9,45 +9,45 @@ Invois is a high-performance, professional client-side web application designed 
 
 ---
 
-## ✨ Key Features
+## Key Features
 
-### 🚀 Streamlined Invoice Creation
+### Streamlined Invoice Creation
 An intuitive workflow that handles the heavy lifting. Automatic calculations for:
 - **Subtotals** based on quantity and unit price.
 - **Discounts** (Percentage or Nominal).
 - **Tax (PPN)** calculations with toggleable options.
 - **Grand Totals** calculated in real-time.
 
-### 🔐 Privacy-First Architecture
+### Privacy-First Architecture
 Your financial data is sensitive. Invois uses **Dexie.js** to store all information locally within the browser's **IndexedDB**. 
 - No cloud storage.
 - No account creation required.
 - Full offline availability.
 - Total data ownership.
 
-### 📄 Professional PDF Export
+### Professional PDF Export
 Generate industry-standard PDFs using `@react-pdf/renderer`.
 - **Custom Branding:** Integration of company logo and brand colors.
 - **Clean Layout:** Professionally aligned headers, itemized tables, and clear totals.
 - **Multi-Format:** Download as PDF or copy as a clean Markdown summary for quick sharing, now with visual copy confirmation.
 
-### 📦 Catalog Management
+### Catalog Management
 Speed up your billing process by maintaining a reusable catalog of services and products, reducing repetitive data entry.
 
-### 📊 Sales Recapitulation
+### Sales Recapitulation
 Track your business growth with the built-in sales summary in the History tab.
 - **Total Revenue:** Instant calculation of all issued invoices.
 - **Total Volume:** Total count of transactions.
 - **Average Transaction Value:** Insight into your average deal size.
 
-### 🎨 Brand & Appearance Control
+### Brand and Appearance Control
 - **Customization:** Set brand names, contact details, and accent colors.
 - **Theme Support:** Native support for **Light and Dark modes**, respecting system preferences with a manual override.
 - **Responsive Design:** A mobile-first approach ensuring a seamless experience across smartphones, tablets, and desktops.
 
 ---
 
-## 🛠 Technical Stack
+## Technical Stack
 
 | Layer | Technology | Purpose |
 | :--- | :--- | :--- |
@@ -60,7 +60,7 @@ Track your business growth with the built-in sales summary in the History tab.
 
 ---
 
-## 🚀 Getting Started
+## Getting Started
 
 ### Prerequisites
 - **Node.js** (Latest LTS recommended)
@@ -91,7 +91,7 @@ npm run preview
 
 ---
 
-## 📂 Project Structure
+## Project Structure
 
 ```text
 src/
@@ -104,9 +104,9 @@ src/
 
 ---
 
-## 📝 Documentation
+## Documentation
 Detailed technical insights and version history can be found in the `/docs` directory:
 - [CHANGELOG.md](docs/CHANGELOG.md) - History of updates and bug fixes.
 
-## 📄 License
+## License
 Distributed under the MIT License. See `LICENSE` for more information.

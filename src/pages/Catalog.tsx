@@ -2,11 +2,12 @@ import React, { useState } from 'react';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { db } from '@/lib/db';
 import { formatCurrency } from '@/lib/utils';
-import { PackagePlus, Trash2, Plus, X } from 'lucide-react';
+import { PackagePlus, Trash2, Plus, X, Edit2 } from 'lucide-react';
 
 export default function Catalog() {
   const items = useLiveQuery(() => db.catalog.orderBy('name').toArray());
   const [isAdding, setIsAdding] = useState(false);
+  const [editingItem, setEditingItem] = useState<{id: number, name: string, price: number} | null>(null);
   
   const [newName, setNewName] = useState('');
   const [newPrice, setNewPrice] = useState<number | ''>('');
@@ -15,14 +16,29 @@ export default function Catalog() {
     e.preventDefault();
     if (!newName.trim() || newPrice === '') return;
 
-    await db.catalog.add({
-      name: newName,
-      price: Number(newPrice)
-    });
+    if (editingItem) {
+      await db.catalog.update(editingItem.id, {
+        name: newName,
+        price: Number(newPrice)
+      });
+    } else {
+      await db.catalog.add({
+        name: newName,
+        price: Number(newPrice)
+      });
+    }
 
     setNewName('');
     setNewPrice('');
     setIsAdding(false);
+    setEditingItem(null);
+  };
+
+  const handleEdit = (item: any) => {
+    setEditingItem({ id: item.id, name: item.name, price: item.price });
+    setNewName(item.name);
+    setNewPrice(item.price);
+    setIsAdding(true);
   };
 
   const handleDelete = async (id: number) => {
@@ -49,8 +65,8 @@ export default function Catalog() {
       {isAdding && (
         <form onSubmit={handleSave} className="bg-[var(--surface)] p-5 rounded-xl border border-[var(--primary)] shadow-md slide-down">
           <div className="flex justify-between items-center mb-4">
-            <h2 className="font-semibold">Tambah Baru</h2>
-            <button type="button" onClick={() => setIsAdding(false)} className="text-[var(--text-sec)] hover:text-red-500">
+            <h2 className="font-semibold">{editingItem ? 'Edit Item' : 'Tambah Baru'}</h2>
+            <button type="button" onClick={() => { setIsAdding(false); setEditingItem(null); }} className="text-[var(--text-sec)] hover:text-red-500">
               <X className="w-5 h-5" />
             </button>
           </div>
@@ -79,7 +95,7 @@ export default function Catalog() {
           </div>
           <div className="mt-6 flex justify-end">
             <button type="submit" className="bg-[var(--text)] text-[var(--bg)] px-6 py-2 rounded-lg font-medium">
-              Simpan ke Katalog
+              {editingItem ? 'Perbarui Item' : 'Simpan ke Katalog'}
             </button>
           </div>
         </form>
@@ -98,17 +114,23 @@ export default function Catalog() {
         </div>
       ) : (
         <div className="bg-[var(--surface)] rounded-xl border border-[var(--border)] overflow-hidden shadow-sm">
-          <div className="grid grid-cols-[1fr_150px_60px] gap-4 bg-[var(--bg)] dark:bg-[var(--bg)] p-4 text-xs font-semibold text-[var(--text-sec)] uppercase tracking-wider border-b border-[var(--border)]">
+          <div className="grid grid-cols-[1fr_150px_100px] gap-4 bg-[var(--bg)] dark:bg-[var(--bg)] p-4 text-xs font-semibold text-[var(--text-sec)] uppercase tracking-wider border-b border-[var(--border)]">
             <div>Nama Item</div>
             <div className="text-right">Harga Satuan</div>
-            <div></div>
+            <div className="text-right">Aksi</div>
           </div>
           <div className="divide-y divide-[var(--border)]">
             {items.map((item) => (
-              <div key={item.id} className="grid grid-cols-[1fr_150px_60px] gap-4 p-4 items-center hover:bg-[var(--bg)]/50 dark:hover:bg-[var(--bg)]/50 transition-colors">
-                <div className="font-medium truncate">{item.name}</div>
+              <div key={item.id} className="grid grid-cols-[1fr_150px_100px] gap-4 p-4 items-center hover:bg-[var(--bg)]/50 dark:hover:bg-[var(--bg)]/50 transition-colors">
+                <div className="font-medium break-words">{item.name}</div>
                 <div className="text-right font-mono font-medium">{formatCurrency(item.price)}</div>
-                <div className="flex justify-end">
+                <div className="flex justify-end gap-2">
+                  <button 
+                    onClick={() => item.id && handleEdit(item)}
+                    className="p-2 text-[var(--text-sec)] hover:text-blue-500 hover:bg-blue-50 rounded-lg transition-colors"
+                  >
+                    <Edit2 className="w-4 h-4" />
+                  </button>
                   <button 
                     onClick={() => item.id && handleDelete(item.id)}
                     className="p-2 text-[var(--text-sec)] hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"

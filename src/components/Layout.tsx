@@ -1,5 +1,6 @@
 import { Link, Outlet, useLocation } from 'react-router-dom';
 import { FileText, History, Settings, PackagePlus, Sun, Moon, ReceiptText, Info } from 'lucide-react';
+import { Analytics } from '@vercel/analytics/react';
 import { cn } from '@/lib/utils';
 import { useEffect, useState } from 'react';
 
@@ -121,6 +122,7 @@ export function Layout() {
           header > div { max-w: 100%; padding-left: 1rem; }
         }
       `}</style>
+      <Analytics />
     </div>
   );
 }
