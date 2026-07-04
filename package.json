@@ -4,6 +4,24 @@
   "version": "0.2.0",
   "type": "module",
   "description": "Invoice & receipt maker PWA for freelancers and small businesses",
+  "author": {
+    "name": "Anggie Irawan",
+    "url": "https://anggieirawan.my.id"
+  },
+  "homepage": "https://invois.pages.dev",
+  "license": "MIT",
+  "keywords": [
+    "invoice",
+    "receipt",
+    "invoice-generator",
+    "receipt-generator",
+    "pwa",
+    "offline-first",
+    "indexeddb",
+    "pdf",
+    "freelancer-tools",
+    "small-business"
+  ],
   "scripts": {
     "dev": "vite",
     "typecheck": "tsc -b && tsc -p tsconfig.playwright.json --noEmit",
