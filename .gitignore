@@ -1,0 +1,11 @@
+node_modules
+dist
+playwright-report
+test-results
+*.local
+.DS_Store
+*.log
+.impeccable
+DESIGN.md
+PRODUCT.md
+tsconfig.tsbuildinfo

@@ -1,0 +1,169 @@
+import { useEffect, useRef, useState } from 'react';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
+import { getInvoices, getReceipts } from '../lib/db';
+import { formatIDR, formatDateISO } from '../lib/format';
+
+type Doc = { kind: 'invoice' | 'receipt'; data: any };
+
+export function Documents() {
+  const [docs, setDocs] = useState<Doc[]>([]);
+  const [showSheet, setShowSheet] = useState(false);
+  const firstSheetButtonRef = useRef<HTMLButtonElement>(null);
+  const sheetRef = useRef<HTMLDivElement>(null);
+  const sheetOpenerRef = useRef<HTMLElement | null>(null);
+  const [searchParams, setSearchParams] = useSearchParams();
+  const nav = useNavigate();
+  const typeParam = searchParams.get('type');
+  const filter: 'all' | 'invoice' | 'receipt' = typeParam === 'invoice' || typeParam === 'receipt' ? typeParam : 'all';
+  const search = searchParams.get('q') || '';
+
+  const load = async () => {
+    const [invoices, receipts] = await Promise.all([getInvoices(), getReceipts()]);
+    const all: Doc[] = [
+      ...invoices.map(d => ({ kind: 'invoice' as const, data: d })),
+      ...receipts.map(d => ({ kind: 'receipt' as const, data: d })),
+    ].sort((a, b) => b.data.createdAt.localeCompare(a.data.createdAt));
+    setDocs(all);
+  };
+
+  useEffect(() => { load(); }, []);
+
+  useEffect(() => {
+    if (!showSheet) return;
+    firstSheetButtonRef.current?.focus();
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setShowSheet(false);
+      if (e.key !== 'Tab') return;
+
+      const focusable = Array.from(sheetRef.current?.querySelectorAll<HTMLElement>(
+        'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+      ) || []).filter(el => !el.hasAttribute('disabled') && el.tabIndex !== -1);
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      if (!first || !last) return;
+
+      if (e.shiftKey && document.activeElement === first) {
+        e.preventDefault();
+        last.focus();
+      } else if (!e.shiftKey && document.activeElement === last) {
+        e.preventDefault();
+        first.focus();
+      }
+    };
+    document.addEventListener('keydown', onKeyDown);
+    return () => document.removeEventListener('keydown', onKeyDown);
+  }, [showSheet]);
+
+  useEffect(() => {
+    if (showSheet) return;
+    sheetOpenerRef.current?.focus();
+  }, [showSheet]);
+
+  const openSheet = () => {
+    sheetOpenerRef.current = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    setShowSheet(true);
+  };
+
+  const closeSheet = () => setShowSheet(false);
+
+  const updateListState = (next: { q?: string; type?: 'all' | 'invoice' | 'receipt' }) => {
+    const params = new URLSearchParams(searchParams);
+    if ('q' in next) {
+      const q = next.q?.trim() || '';
+      if (q) params.set('q', q);
+      else params.delete('q');
+    }
+    if ('type' in next) {
+      if (next.type && next.type !== 'all') params.set('type', next.type);
+      else params.delete('type');
+    }
+    setSearchParams(params, { replace: true });
+  };
+
+  const filtered = docs.filter(d => {
+    if (filter !== 'all' && d.kind !== filter) return false;
+    if (search) {
+      const q = search.toLowerCase();
+      return d.data.number?.toLowerCase().includes(q) ||
+             d.data.clientSnapshot?.name?.toLowerCase().includes(q);
+    }
+    return true;
+  });
+
+  return (
+    <div>
+      <div className="page-head">
+        <div>
+          <h1>Documents</h1>
+          <p className="sub">{docs.length} total</p>
+        </div>
+        {docs.length > 0 && (
+          <button className="btn btn-primary" onClick={openSheet}>
+            <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 5v14M5 12h14"/></svg>
+            Create
+          </button>
+        )}
+      </div>
+
+      <input
+        className="input search-box"
+        aria-label="Search documents"
+        placeholder="Search documents…"
+        value={search}
+        onChange={e => updateListState({ q: e.target.value })}
+      />
+
+      <div className="filter-row">
+        {(['all', 'invoice', 'receipt'] as const).map(f => (
+          <button key={f} className={`chip${filter === f ? ' active' : ''}`} aria-pressed={filter === f} onClick={() => updateListState({ type: f })}>
+            {f === 'all' ? 'All' : f === 'invoice' ? 'Invoices' : 'Receipts'}
+          </button>
+        ))}
+      </div>
+
+      {filtered.length === 0 ? (
+        <div className="empty">
+          <h3>{search ? 'No matches' : 'No documents yet'}</h3>
+          <p>{search ? 'Try a different search.' : 'Create your first invoice to get started.'}</p>
+          {!search && <button className="btn btn-primary" onClick={() => nav('/documents/new/invoice')}>Create Invoice</button>}
+        </div>
+      ) : (
+        <div className="doc-list">
+          {filtered.map(d => (
+            <Link key={d.data.id} to={`/documents/${d.kind}/${d.data.id}`} className="doc-card document-card">
+              <div className="meta">
+                <div className="row1">
+                  <span className="num-doc">{d.data.number}</span>
+                  <span className={`badge badge-${d.data.status}`}>{d.data.status}</span>
+                  <span className="badge badge-type">{d.kind}</span>
+                </div>
+                <div className="client">
+                  {d.data.clientSnapshot?.name || 'No client'} · <span className="num">{formatDateISO(d.data.issueDate || d.data.paymentDate)}</span>
+                </div>
+              </div>
+              <span className="total num">{formatIDR(d.kind === 'invoice' ? d.data.total : d.data.amountPaid)}</span>
+            </Link>
+          ))}
+        </div>
+      )}
+
+      {showSheet && (
+        <div className="scrim" onClick={closeSheet}>
+          <div ref={sheetRef} className="sheet" role="dialog" aria-modal="true" aria-labelledby="create-document-title" onClick={e => e.stopPropagation()}>
+            <div className="sheet-handle" aria-hidden="true" />
+            <h2 id="create-document-title">Create New</h2>
+            <button ref={firstSheetButtonRef} className="btn btn-secondary btn-block mb-12" onClick={() => { setShowSheet(false); nav('/documents/new/invoice'); }}>
+              Create Invoice
+            </button>
+            <button className="btn btn-secondary btn-block" onClick={() => { setShowSheet(false); nav('/documents/new/receipt'); }}>
+              Create Receipt
+            </button>
+            <div className="actions">
+              <button className="btn btn-ghost btn-block" onClick={closeSheet}>Cancel</button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
