@@ -35,7 +35,15 @@ export function Dashboard() {
   const [biz, setBiz] = useState<BusinessProfile | undefined>();
   const [stats, setStats] = useState<Stats | null>(null);
   const [loadError, setLoadError] = useState(false);
+  const [infoOpen, setInfoOpen] = useState(false);
   const nav = useNavigate();
+
+  useEffect(() => {
+    if (!infoOpen) return;
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') setInfoOpen(false); };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [infoOpen]);
 
   useEffect(() => {
     let mounted = true;
@@ -62,8 +70,20 @@ export function Dashboard() {
 
   return (
     <div>
-      <h1 className="greet">{greet}</h1>
-      {biz?.name && <div className="biz-name">{biz.name}</div>}
+      <div className="flex between center">
+        <div>
+          <h1 className="greet">{greet}</h1>
+          {biz?.name && <div className="biz-name">{biz.name}</div>}
+        </div>
+        <button
+          className="btn btn-ghost btn-icon"
+          onClick={() => setInfoOpen(true)}
+          aria-label="App info"
+          title="App info"
+        >
+          <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="20" height="20"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
+        </button>
+      </div>
       {loadError && <p className="muted mt-8">Dashboard data could not load. Try refreshing the page.</p>}
 
       <div className="quick-actions hide-mobile">
@@ -134,6 +154,35 @@ export function Dashboard() {
           Create Receipt
         </button>
       </div>
+      {infoOpen && (
+        <div className="scrim" onClick={() => setInfoOpen(false)} role="dialog" aria-modal="true" aria-labelledby="app-info-title">
+          <div className="sheet" onClick={e => e.stopPropagation()}>
+            <div className="sheet-handle" />
+            <h2 id="app-info-title">App Info</h2>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+              <div className="item-row">
+                <span className="item-name">Version</span>
+                <span className="item-meta num">{__APP_VERSION__}</span>
+              </div>
+              <div className="item-row">
+                <span className="item-name">Build Date</span>
+                <span className="item-meta">{new Date(__BUILD_DATE__).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</span>
+              </div>
+              <div className="item-row">
+                <span className="item-name">Author</span>
+                <span className="item-meta">Anggie Irawan</span>
+              </div>
+              <div className="item-row">
+                <span className="item-name">License</span>
+                <span className="item-meta">MIT</span>
+              </div>
+            </div>
+            <div className="actions" style={{ marginTop: 18 }}>
+              <button className="btn btn-primary" onClick={() => setInfoOpen(false)}>Close</button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
