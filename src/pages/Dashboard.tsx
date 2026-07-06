@@ -1,37 +1,32 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { getDashboardStats, getBusiness, isDBEmpty } from '../lib/db';
-import { seedDB } from '../lib/seed';
-import { getGreeting, formatIDR } from '../lib/format';
+import { getDashboardStats, getBusiness } from '../lib/db';
+import { formatIDR } from '../lib/format';
 import type { BusinessProfile } from '../types';
 
 interface Stats {
   unpaidTotal: number;
   paidTotal: number;
   overdueCount: number;
-  recentDocs: any[];
+  recentDocs: Array<{
+    kind: 'invoice' | 'receipt';
+    id: string;
+    number: string;
+    status: string;
+    clientSnapshot?: { name?: string };
+    total?: number;
+    amountPaid?: number;
+  }>;
 }
-
-const EMPTY_STATS: Stats = {
-  unpaidTotal: 0,
-  paidTotal: 0,
-  overdueCount: 0,
-  recentDocs: [],
-};
 
 let dashboardLoadPromise: Promise<{ biz: BusinessProfile | undefined; stats: Stats }> | null = null;
 
 function loadDashboard() {
   if (!dashboardLoadPromise) {
-    dashboardLoadPromise = (async () => {
-      if (await isDBEmpty()) await seedDB();
-      return {
-        biz: await getBusiness(),
-        stats: await getDashboardStats(),
-      };
-    })().finally(() => {
-      dashboardLoadPromise = null;
-    });
+    dashboardLoadPromise = (async () => ({
+      biz: await getBusiness(),
+      stats: await getDashboardStats(),
+    }))().finally(() => { dashboardLoadPromise = null; });
   }
   return dashboardLoadPromise;
 }
@@ -54,7 +49,7 @@ export function Dashboard() {
         console.error(err);
         if (!mounted) return;
         setLoadError(true);
-        setStats(EMPTY_STATS);
+        setStats({ unpaidTotal: 0, paidTotal: 0, overdueCount: 0, recentDocs: [] });
       }
     })();
     return () => { mounted = false; };
@@ -62,9 +57,12 @@ export function Dashboard() {
 
   if (!stats) return <div style={{ padding: 40, textAlign: 'center' }}><div className="spinner" /></div>;
 
+  const h = new Date().getHours();
+  const greet = h < 12 ? 'Good morning' : h < 17 ? 'Good afternoon' : 'Good evening';
+
   return (
     <div>
-      <h1 className="greet">{getGreeting()}</h1>
+      <h1 className="greet">{greet}</h1>
       {biz?.name && <div className="biz-name">{biz.name}</div>}
       {loadError && <p className="muted mt-8">Dashboard data could not load. Try refreshing the page.</p>}
 
@@ -118,7 +116,7 @@ export function Dashboard() {
                       {doc.clientSnapshot?.name || 'No client'} · {isInvoice ? 'Invoice' : 'Receipt'}
                     </div>
                   </div>
-                  <span className="total num">{formatIDR(isInvoice ? doc.total : doc.amountPaid)}</span>
+                  <span className="total num">{formatIDR(isInvoice ? doc.total || 0 : doc.amountPaid || 0)}</span>
                 </Link>
               );
             })}

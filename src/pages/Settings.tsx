@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react';
-import { getBusiness, saveBusiness } from '../lib/db';
+import { useEffect, useRef, useState } from 'react';
+import { getBusiness, saveBusiness, exportAllData, importAllData, type ExportData } from '../lib/db';
 import { useToast } from '../context/toast';
 import { useUnsavedChanges } from '../lib/useUnsavedChanges';
 import type { BusinessProfile } from '../types';
@@ -24,6 +24,8 @@ export function Settings() {
   const [initialForm, setInitialForm] = useState<BusinessProfile>(DEFAULT);
   const [loading, setLoading] = useState(true);
   const [nameError, setNameError] = useState('');
+  const [importing, setImporting] = useState(false);
+  const importRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
   const dirty = !loading && JSON.stringify(form) !== JSON.stringify(initialForm);
   useUnsavedChanges(dirty);
@@ -35,6 +37,9 @@ export function Settings() {
         setInitialForm(b);
       }
       setLoading(false);
+    }).catch(() => {
+      setLoading(false);
+      toast('Could not load business profile.', 'danger');
     });
   }, []);
 
@@ -46,15 +51,63 @@ export function Settings() {
       return;
     }
     const next = { ...form, id: form.id || 'biz-1' };
-    await saveBusiness(next);
-    setInitialForm(next);
-    toast('Settings saved.', 'success');
+    try {
+      await saveBusiness(next);
+      setInitialForm(next);
+      toast('Settings saved.', 'success');
+    } catch (err) {
+      console.error(err);
+      toast('Failed to save settings. Please try again.', 'danger');
+    }
   };
 
-  const update = (key: keyof BusinessProfile, value: any) => {
-    if (key === 'name') setNameError('');
-    setForm(f => ({ ...f, [key]: value }));
+  const handleExport = async () => {
+    try {
+      const data = await exportAllData();
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      const date = new Date().toISOString().slice(0, 10);
+      a.download = `invois-backup-${date}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+      toast('Data exported successfully.', 'success');
+    } catch (err) {
+      console.error(err);
+      toast('Failed to export data.', 'danger');
+    }
   };
+
+  const handleImport = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!confirm('Importing will merge data with your existing records. Continue?')) {
+      if (importRef.current) importRef.current.value = '';
+      return;
+    }
+
+    setImporting(true);
+    try {
+      const text = await file.text();
+      const data = JSON.parse(text) as ExportData;
+      const result = await importAllData(data);
+      const total = Object.values(result.counts).reduce((s, n) => s + n, 0);
+      toast(`Imported ${total} records successfully.`, 'success');
+      // Reload to reflect changes
+      window.location.reload();
+    } catch (err) {
+      console.error(err);
+      const msg = err instanceof Error ? err.message : 'Failed to import data.';
+      toast(msg, 'danger');
+    } finally {
+      setImporting(false);
+      if (importRef.current) importRef.current.value = '';
+    }
+  };
+
+  const update = (key: keyof BusinessProfile, value: string | number | undefined) => setForm(f => ({ ...f, [key]: value }));
 
   if (loading) return <div style={{ padding: 40, textAlign: 'center' }}><div className="spinner" /></div>;
 
@@ -68,7 +121,7 @@ export function Settings() {
         <div className="section-title">Business Profile</div>
         <div className="field">
           <label className="field-label" htmlFor="business-name">Business Name *</label>
-          <input id="business-name" name="businessName" autoComplete="organization" className="input" value={form.name} onChange={e => update('name', e.target.value)} placeholder="Your business name…" aria-invalid={!!nameError} aria-describedby={nameError ? 'business-name-error' : undefined} />
+          <input id="business-name" name="businessName" autoComplete="organization" className="input" value={form.name} onChange={e => { setNameError(''); update('name', e.target.value); }} placeholder="Your business name…" aria-invalid={!!nameError} aria-describedby={nameError ? 'business-name-error' : undefined} />
           {nameError && <div id="business-name-error" className="field-error" role="alert">{nameError}</div>}
         </div>
         <div className="field-row">
@@ -128,6 +181,31 @@ export function Settings() {
       <button className="btn btn-primary btn-lg btn-block mb-24" onClick={handleSave}>
         Save Settings
       </button>
+
+      {/* ── Data Backup ── */}
+      <div className="card card-pad-lg detail-card">
+        <div className="section-title">Data Backup</div>
+        <p style={{ fontSize: 13, color: 'var(--color-text-muted)', marginBottom: 14 }}>
+          Export your invoices, receipts, clients, and items as a JSON file. Import to restore on this or another device.
+        </p>
+        <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+          <button className="btn btn-secondary" onClick={handleExport}>
+            <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ width: 16, height: 16 }}><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" /><polyline points="7 10 12 15 17 10" /><line x1="12" y1="15" x2="12" y2="3" /></svg>
+            Export Data
+          </button>
+          <button className="btn btn-secondary" onClick={() => importRef.current?.click()} disabled={importing}>
+            <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ width: 16, height: 16 }}><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" /><polyline points="17 8 12 3 7 8" /><line x1="12" y1="3" x2="12" y2="15" /></svg>
+            {importing ? 'Importing…' : 'Import Data'}
+          </button>
+          <input
+            ref={importRef}
+            type="file"
+            accept=".json"
+            style={{ display: 'none' }}
+            onChange={handleImport}
+          />
+        </div>
+      </div>
 
       <div className="card card-pad detail-card">
         <p style={{ fontSize: 12, color: 'var(--color-text-muted)', lineHeight: 1.6 }}>

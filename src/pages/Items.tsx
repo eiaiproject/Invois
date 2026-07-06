@@ -3,7 +3,7 @@ import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { getItems, saveItem, getItem } from '../lib/db';
 import { useToast } from '../context/toast';
 import { formatIDR } from '../lib/format';
-import { confirmDiscard, useUnsavedChanges } from '../lib/useUnsavedChanges';
+import { useUnsavedChanges } from '../lib/useUnsavedChanges';
 import { newId, nowISO } from '../types';
 import type { Item } from '../types';
 
@@ -168,7 +168,7 @@ export function ItemEditor() {
         </div>
         <div className="form-actions">
           <button className="btn btn-primary btn-block" onClick={handleSave}>{isEdit ? 'Save Changes' : 'Add Item'}</button>
-          <button className="btn btn-secondary" onClick={() => { if (confirmDiscard(dirty)) nav('/items'); }}>Cancel</button>
+          <button className="btn btn-secondary" onClick={() => nav('/items')}>Cancel</button>
         </div>
       </div>
     </div>

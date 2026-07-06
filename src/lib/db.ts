@@ -8,102 +8,53 @@ interface InvoisDB {
   business: { key: string; value: BusinessProfile };
   clients: { key: string; value: Client };
   items: { key: string; value: Item };
-  invoices: { key: string; value: Invoice; indexes: { number: string; status: string; createdAt: string } };
-  receipts: { key: string; value: Receipt; indexes: { number: string; createdAt: string } };
+  invoices: { key: string; value: Invoice; indexes: { createdAt: string } };
+  receipts: { key: string; value: Receipt; indexes: { createdAt: string } };
   counters: { key: string; value: number };
 }
 
 let dbPromise: Promise<IDBPDatabase<InvoisDB>> | null = null;
 
-function ensureIndex(
-  store: { indexNames: DOMStringList; createIndex: (name: string, keyPath: string) => unknown },
-  name: string,
-  keyPath: string
-) {
-  if (!store.indexNames.contains(name)) store.createIndex(name, keyPath);
-}
-
 function getDB() {
   if (!dbPromise) {
     dbPromise = openDB<InvoisDB>(DB_NAME, DB_VERSION, {
       upgrade(db, _oldVersion, _newVersion, tx) {
-        if (!db.objectStoreNames.contains('business')) {
-          db.createObjectStore('business', { keyPath: 'id' });
-        }
-        if (!db.objectStoreNames.contains('clients')) {
-          db.createObjectStore('clients', { keyPath: 'id' });
-        }
-        if (!db.objectStoreNames.contains('items')) {
-          db.createObjectStore('items', { keyPath: 'id' });
-        }
-        const inv = db.objectStoreNames.contains('invoices')
-          ? tx.objectStore('invoices')
-          : db.createObjectStore('invoices', { keyPath: 'id' });
-        ensureIndex(inv, 'number', 'number');
-        ensureIndex(inv, 'status', 'status');
-        ensureIndex(inv, 'createdAt', 'createdAt');
-
-        const rec = db.objectStoreNames.contains('receipts')
-          ? tx.objectStore('receipts')
-          : db.createObjectStore('receipts', { keyPath: 'id' });
-        ensureIndex(rec, 'number', 'number');
-        ensureIndex(rec, 'createdAt', 'createdAt');
-
-        if (!db.objectStoreNames.contains('counters')) {
-          db.createObjectStore('counters');
-        }
+        if (!db.objectStoreNames.contains('business')) db.createObjectStore('business', { keyPath: 'id' });
+        if (!db.objectStoreNames.contains('clients')) db.createObjectStore('clients', { keyPath: 'id' });
+        if (!db.objectStoreNames.contains('items')) db.createObjectStore('items', { keyPath: 'id' });
+        const inv = db.objectStoreNames.contains('invoices') ? tx.objectStore('invoices') : db.createObjectStore('invoices', { keyPath: 'id' });
+        if (!inv.indexNames.contains('createdAt')) inv.createIndex('createdAt', 'createdAt');
+        const rec = db.objectStoreNames.contains('receipts') ? tx.objectStore('receipts') : db.createObjectStore('receipts', { keyPath: 'id' });
+        if (!rec.indexNames.contains('createdAt')) rec.createIndex('createdAt', 'createdAt');
+        if (!db.objectStoreNames.contains('counters')) db.createObjectStore('counters');
       }
     });
   }
   return dbPromise;
 }
 
-/* ─── Generic helpers ─── */
-
-async function getAll(store: 'clients'): Promise<Client[]>;
-async function getAll(store: 'items'): Promise<Item[]>;
-async function getAll(store: 'clients' | 'items') {
-  const db = await getDB();
-  return db.getAll(store);
-}
-
-async function get<T>(store: 'clients' | 'items', id: string): Promise<T | undefined> {
-  const db = await getDB();
-  return db.get(store, id) as Promise<T | undefined>;
-}
-
-async function put<T>(store: 'clients' | 'items', value: T) {
-  const db = await getDB();
-  return db.put(store, value as any);
-}
-
 /* ─── Business ─── */
 
 export async function getBusiness(): Promise<BusinessProfile | undefined> {
-  const db = await getDB();
-  const all = await db.getAll('business');
-  return all[0];
+  return (await getDB()).get('business', 'biz-1');
 }
 
 export async function saveBusiness(biz: BusinessProfile) {
   const db = await getDB();
-  const tx = db.transaction('business', 'readwrite');
-  const store = tx.objectStore('business');
-  await (store.keyPath ? store.put(biz) : store.put(biz, biz.id));
-  await tx.done;
+  await db.put('business', biz);
 }
 
 /* ─── Clients ─── */
 
-export const getClients = () => getAll('clients');
-export const getClient = (id: string) => get<Client>('clients', id);
-export const saveClient = (c: Client) => put('clients', c);
+export const getClients = async (): Promise<Client[]> => (await getDB()).getAll('clients');
+export const getClient = async (id: string) => (await getDB()).get('clients', id);
+export const saveClient = async (c: Client) => (await getDB()).put('clients', c);
 
 /* ─── Items ─── */
 
-export const getItems = () => getAll('items');
-export const getItem = (id: string) => get<Item>('items', id);
-export const saveItem = (i: Item) => put('items', i);
+export const getItems = async (): Promise<Item[]> => (await getDB()).getAll('items');
+export const getItem = async (id: string) => (await getDB()).get('items', id);
+export const saveItem = async (i: Item) => (await getDB()).put('items', i);
 
 /* ─── Invoices ─── */
 
@@ -232,4 +183,95 @@ export async function isDBEmpty() {
     db.count('receipts'),
   ]);
   return business + clients + items + invoices + receipts === 0;
+}
+
+/* ─── Export / Import ─── */
+
+export interface ExportData {
+  version: number;
+  exportedAt: string;
+  business: BusinessProfile[];
+  clients: Client[];
+  items: Item[];
+  invoices: Invoice[];
+  receipts: Receipt[];
+}
+
+export async function exportAllData(): Promise<ExportData> {
+  const db = await getDB();
+  const [business, clients, items, invoices, receipts] = await Promise.all([
+    db.getAll('business'),
+    db.getAll('clients'),
+    db.getAll('items'),
+    db.getAllFromIndex('invoices', 'createdAt'),
+    db.getAllFromIndex('receipts', 'createdAt'),
+  ]);
+  return {
+    version: DB_VERSION,
+    exportedAt: new Date().toISOString(),
+    business,
+    clients,
+    items,
+    invoices,
+    receipts,
+  };
+}
+
+export async function importAllData(data: ExportData): Promise<{ imported: boolean; counts: Record<string, number> }> {
+  if (!data || typeof data !== 'object') {
+    throw new Error('Invalid import file format.');
+  }
+  if (!Array.isArray(data.invoices) || !Array.isArray(data.receipts)) {
+    throw new Error('Import file is missing required data (invoices or receipts).');
+  }
+
+  const db = await getDB();
+  const counts = { business: 0, clients: 0, items: 0, invoices: 0, receipts: 0 };
+
+  if (Array.isArray(data.business)) {
+    const tx = db.transaction('business', 'readwrite');
+    for (const b of data.business) {
+      await tx.store.put(b);
+      counts.business++;
+    }
+    await tx.done;
+  }
+
+  if (Array.isArray(data.clients)) {
+    const tx = db.transaction('clients', 'readwrite');
+    for (const c of data.clients) {
+      await tx.store.put(c);
+      counts.clients++;
+    }
+    await tx.done;
+  }
+
+  if (Array.isArray(data.items)) {
+    const tx = db.transaction('items', 'readwrite');
+    for (const i of data.items) {
+      await tx.store.put(i);
+      counts.items++;
+    }
+    await tx.done;
+  }
+
+  if (Array.isArray(data.invoices)) {
+    const tx = db.transaction('invoices', 'readwrite');
+    for (const inv of data.invoices) {
+      await tx.store.put(inv);
+      counts.invoices++;
+    }
+    await tx.done;
+  }
+
+  if (Array.isArray(data.receipts)) {
+    const tx = db.transaction('receipts', 'readwrite');
+    for (const r of data.receipts) {
+      await tx.store.put(r);
+      counts.receipts++;
+    }
+    await tx.done;
+  }
+
+  return { imported: true, counts };
 }

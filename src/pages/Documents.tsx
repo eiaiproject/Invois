@@ -18,12 +18,16 @@ export function Documents() {
   const search = searchParams.get('q') || '';
 
   const load = async () => {
-    const [invoices, receipts] = await Promise.all([getInvoices(), getReceipts()]);
-    const all: Doc[] = [
-      ...invoices.map(d => ({ kind: 'invoice' as const, data: d })),
-      ...receipts.map(d => ({ kind: 'receipt' as const, data: d })),
-    ].sort((a, b) => b.data.createdAt.localeCompare(a.data.createdAt));
-    setDocs(all);
+    try {
+      const [invoices, receipts] = await Promise.all([getInvoices(), getReceipts()]);
+      const all: Doc[] = [
+        ...invoices.map(d => ({ kind: 'invoice' as const, data: d })),
+        ...receipts.map(d => ({ kind: 'receipt' as const, data: d })),
+      ].sort((a, b) => b.data.createdAt.localeCompare(a.data.createdAt));
+      setDocs(all);
+    } catch (err) {
+      console.error(err);
+    }
   };
 
   useEffect(() => { load(); }, []);

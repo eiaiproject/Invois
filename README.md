@@ -4,8 +4,8 @@ Invois is an offline-first invoice and receipt maker for freelancers and small b
 
 ## Status
 
-- Version: `0.2.0`
-- Release stage: pre-1.0, suitable for internal/local testing
+- Version: `1.0.0`
+- Release stage: stable
 - App type: client-side PWA
 - Live app: https://invois.pages.dev
 - Data storage: browser IndexedDB, local to the current device/browser profile
@@ -21,6 +21,9 @@ Invois is an offline-first invoice and receipt maker for freelancers and small b
 - Auto-number documents by month, for example `INV-2026-07-0001`.
 - Preview invoice and receipt layouts in the editor.
 - Generate and download PDFs.
+- Export and import all data as JSON backup.
+- Mark invoices as Sent or Paid.
+- Fuzzy search for clients and catalog items.
 - Work offline after the app and assets are cached by the PWA service worker.
 - Use responsive desktop and mobile layouts.
 
@@ -33,7 +36,10 @@ Invois is an offline-first invoice and receipt maker for freelancers and small b
 - IndexedDB via `idb`
 - jsPDF and jsPDF AutoTable
 - vite-plugin-pwa
+- Vitest for unit tests
 - Playwright for E2E tests
+- ESLint + Prettier for code quality
+- GitHub Actions CI
 
 ## Requirements
 
@@ -120,8 +126,12 @@ npm run ci
 | `npm run typecheck` | Typecheck app code and Playwright test code. |
 | `npm run build` | Typecheck and build the production app into `dist/`. |
 | `npm run preview` | Serve the built app locally. |
+| `npm run test` | Run Vitest unit tests. |
+| `npm run test:watch` | Run Vitest in watch mode. |
+| `npm run lint` | Run ESLint on source code. |
+| `npm run format` | Format source code with Prettier. |
 | `npm run e2e` | Build the app and run Playwright E2E tests. |
-| `npm run ci` | Run the local CI gate: typecheck, build, and E2E tests. |
+| `npm run ci` | Run the full local CI gate: typecheck, lint, unit tests, build, and E2E tests. |
 
 ## Testing
 
@@ -131,7 +141,13 @@ The current E2E suite runs in:
 - Mobile Chromium using the Pixel 5 device profile
 - Timezone `Asia/Jakarta`
 
-Covered workflows include:
+Unit tests (`npm run test`) cover:
+
+- Currency formatting and parsing (`lib/format.ts`).
+- Date helpers, UUID generation (`types.ts`).
+- Calculation logic, share text generation.
+
+E2E workflows cover:
 
 - Invoice creation, reload persistence, paid status, and receipt creation.
 - Receipt duplicate prevention.
@@ -141,7 +157,8 @@ Covered workflows include:
 - First-run editor setup from an empty IndexedDB.
 - PDF download and non-empty file verification.
 - Global document sorting across invoices and receipts.
-- IndexedDB upgrade from an older schema missing required document indexes.
+- IndexedDB upgrade from v1 and v2 schemas.
+- Data export and import round-trip.
 
 Run the full local CI gate before every release:
 
@@ -183,10 +200,10 @@ Schema upgrades are handled in `src/lib/db.ts`. Current database version: `3`.
 
 This project uses SemVer.
 
-- Current version: `0.2.0`
-- Pre-1.0 minor releases may include meaningful workflow, data, and test coverage changes.
+- Current version: `1.0.0`
 - Patch releases should be reserved for narrow fixes that do not change expected behavior or data contracts.
-- A `1.0.0` release should wait until core billing workflows, offline behavior, PDF edge cases, and migration paths are covered by CI.
+- Minor releases should add features without breaking existing data or workflows.
+- Major releases may include breaking changes to data schemas or APIs.
 
 Before release:
 

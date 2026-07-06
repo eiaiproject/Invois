@@ -57,3 +57,18 @@ export async function openDocument(page: Page, number: string) {
   await page.getByRole('link', { name: escaped(number) }).click();
   await expect(page.getByRole('heading', { name: number })).toBeVisible();
 }
+
+/** Wait for the Seeder to finish populating the DB. */
+export async function waitForSeed(page: Page) {
+  await page.waitForFunction(() =>
+    new Promise<boolean>((resolve) => {
+      const req = indexedDB.open('invois');
+      req.onsuccess = () => {
+        const db = req.result;
+        const tx = db.transaction('business', 'readonly');
+        const cnt = tx.objectStore('business').count();
+        cnt.onsuccess = () => { db.close(); resolve(cnt.result > 0); };
+      };
+    })
+  );
+}

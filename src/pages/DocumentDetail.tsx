@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { getInvoice, getReceipt, getReceipts, deleteInvoice, deleteReceipt, saveInvoice, getBusiness } from '../lib/db';
 import { useToast } from '../context/toast';
-import { formatIDR, formatDateISO, shareInvoiceText, shareReceiptText } from '../lib/format';
+import { formatIDR, formatDateISO, copyInvoiceText, copyReceiptText } from '../lib/format';
 import type { Invoice, Receipt, BusinessProfile } from '../types';
 import { nowISO } from '../types';
 
@@ -35,18 +35,41 @@ export function DocumentDetail() {
 
   const handleDelete = async () => {
     if (!confirm(`Delete ${doc.number}?`)) return;
-    if (isReceipt) await deleteReceipt(doc.id);
-    else await deleteInvoice(doc.id);
-    toast(`${doc.number} deleted`, 'success');
-    nav('/documents');
+    try {
+      if (isReceipt) await deleteReceipt(doc.id);
+      else await deleteInvoice(doc.id);
+      toast(`${doc.number} deleted`, 'success');
+      nav('/documents');
+    } catch (err) {
+      console.error(err);
+      toast('Failed to delete document.', 'danger');
+    }
   };
 
   const handleMarkPaid = async () => {
     const inv = doc as Invoice;
-    const updated = { ...inv, status: 'paid' as const, updatedAt: nowISO() };
-    await saveInvoice(updated);
-    toast('Invoice marked as paid.', 'success');
-    setDoc(updated);
+    try {
+      const updated = { ...inv, status: 'paid' as const, updatedAt: nowISO() };
+      await saveInvoice(updated);
+      toast('Invoice marked as paid.', 'success');
+      setDoc(updated);
+    } catch (err) {
+      console.error(err);
+      toast('Failed to mark invoice as paid.', 'danger');
+    }
+  };
+
+  const handleMarkSent = async () => {
+    const inv = doc as Invoice;
+    try {
+      const updated = { ...inv, status: 'sent' as const, updatedAt: nowISO() };
+      await saveInvoice(updated);
+      toast('Invoice marked as sent.', 'success');
+      setDoc(updated);
+    } catch (err) {
+      console.error(err);
+      toast('Failed to mark invoice as sent.', 'danger');
+    }
   };
 
   const handleCreateReceipt = () => {
@@ -85,17 +108,18 @@ export function DocumentDetail() {
     toast('PDF downloaded.', 'success');
   };
 
-  const handleShare = async () => {
-    if (!biz) { toast('Set up your business profile first.', 'danger'); return; }
-    const { generateInvoicePDF, generateReceiptPDF, sharePDF } = await import('../lib/pdf');
-    if (isReceipt) {
-      const r = doc as Receipt;
-      await sharePDF(generateReceiptPDF(r, biz), `${r.number}.pdf`,
-        shareReceiptText(r.clientSnapshot.name, r.invoiceNumber || '', r.number));
-    } else {
-      const inv = doc as Invoice;
-      await sharePDF(generateInvoicePDF(inv, biz), `${inv.number}.pdf`,
-        shareInvoiceText(inv.clientSnapshot.name, inv.number, formatIDR(inv.total)));
+  const handleCopyText = async () => {
+    try {
+      let text = '';
+      if (isReceipt) {
+        text = copyReceiptText(doc as Receipt);
+      } else {
+        text = copyInvoiceText(doc as Invoice);
+      }
+      await navigator.clipboard.writeText(text);
+      toast('Copied to clipboard. Paste in chat to share.', 'success');
+    } catch {
+      toast('Failed to copy to clipboard.', 'danger');
     }
   };
 
@@ -186,17 +210,21 @@ export function DocumentDetail() {
           <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ width: 16, height: 16 }}><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
           Download PDF
         </button>
-        <button className="btn btn-secondary btn-block" onClick={handleShare}>
-          <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ width: 16, height: 16 }}><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
-          Share
+        <button className="btn btn-secondary btn-block" onClick={handleCopyText}>
+          <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ width: 16, height: 16 }}><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
+          Copy as plain text
         </button>
+        {!isReceipt && (doc as Invoice).status === 'draft' && (
+          <button className="btn btn-primary btn-block" style={{ background: 'var(--color-accent)' }} onClick={handleMarkSent}>
+            <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ width: 16, height: 16 }}><path d="M22 2L11 13"/><path d="M22 2l-7 20-4-9-9-4 20-7z"/></svg>
+            Mark as Sent
+          </button>
+        )}
         {!isReceipt && (doc as Invoice).status !== 'paid' && (doc as Invoice).status !== 'cancelled' && (
-          <>
-            <button className="btn btn-primary btn-block" style={{ background: 'var(--color-success)' }} onClick={handleMarkPaid}>
-              <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ width: 16, height: 16 }}><polyline points="20 6 9 17 4 12"/></svg>
-              Mark as Paid
-            </button>
-          </>
+          <button className="btn btn-primary btn-block" style={{ background: 'var(--color-success)' }} onClick={handleMarkPaid}>
+            <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ width: 16, height: 16 }}><polyline points="20 6 9 17 4 12"/></svg>
+            Mark as Paid
+          </button>
         )}
         {!isReceipt && (doc as Invoice).status === 'paid' && !linkedReceipt && (
             <button className="btn btn-secondary btn-block" onClick={handleCreateReceipt}>

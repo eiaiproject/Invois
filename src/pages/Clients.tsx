@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { getClients, getClient, saveClient } from '../lib/db';
 import { useToast } from '../context/toast';
-import { confirmDiscard, useUnsavedChanges } from '../lib/useUnsavedChanges';
+import { useUnsavedChanges } from '../lib/useUnsavedChanges';
 import { newId, nowISO } from '../types';
 import type { Client } from '../types';
 
@@ -165,7 +165,7 @@ export function ClientEditor() {
         </div>
         <div className="form-actions">
           <button className="btn btn-primary btn-block" onClick={handleSave}>{isEdit ? 'Save Changes' : 'Add Client'}</button>
-          <button className="btn btn-secondary" onClick={() => { if (confirmDiscard(dirty)) nav('/clients'); }}>Cancel</button>
+          <button className="btn btn-secondary" onClick={() => nav('/clients')}>Cancel</button>
         </div>
       </div>
     </div>

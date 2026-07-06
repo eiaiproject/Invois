@@ -1,3 +1,5 @@
+import type { Invoice, Receipt } from '../types';
+
 /* ─── Currency ─── */
 
 export function formatIDR(amount: number): string {
@@ -26,40 +28,68 @@ export function formatDateISO(value: string | undefined): string {
   return shortDate.format(new Date(year, month - 1, day));
 }
 
-/* ─── Greeting ─── */
+/* ─── Copy as plain text ─── */
 
-export function getGreeting(): string {
-  const h = new Date().getHours();
-  if (h < 12) return 'Good morning';
-  if (h < 17) return 'Good afternoon';
-  return 'Good evening';
-}
-
-/* ─── Invoice calc ─── */
-
-export interface CalcLine {
-  quantity: number;
-  price: number;
-}
-
-export function calcAmount(qty: number, price: number) {
-  return qty * price;
-}
-
-export function calcTotals(items: CalcLine[], discount: number, taxRate: number) {
-  const subtotal = items.reduce((s, i) => s + calcAmount(i.quantity, i.price), 0);
+export function calcTotals(items: { quantity: number; price: number }[], discount: number, taxRate: number) {
+  const subtotal = items.reduce((s, i) => s + i.quantity * i.price, 0);
   const afterDiscount = Math.max(0, subtotal - discount);
   const taxAmount = Math.round(afterDiscount * taxRate / 100);
   const total = afterDiscount + taxAmount;
   return { subtotal, discount, taxAmount, total };
 }
 
-/* ─── Share copy ─── */
 
-export function shareInvoiceText(clientName: string, number: string, total: string) {
-  return `Hi ${clientName}, here is invoice ${number} for ${total}. Please find the attached PDF. Thank you.`;
+
+export function copyInvoiceText(invoice: Invoice): string {
+  const lines: string[] = [];
+  lines.push(`INVOICE ${invoice.number}`);
+  lines.push(`Date: ${formatDateISO(invoice.issueDate)}`);
+  if (invoice.dueDate) lines.push(`Due: ${formatDateISO(invoice.dueDate)}`);
+  lines.push('');
+  lines.push(`Bill To: ${invoice.clientSnapshot.name}`);
+  if (invoice.clientSnapshot.email) lines.push(`Email: ${invoice.clientSnapshot.email}`);
+  if (invoice.clientSnapshot.phone) lines.push(`Phone: ${invoice.clientSnapshot.phone}`);
+  if (invoice.clientSnapshot.address) lines.push(`Address: ${invoice.clientSnapshot.address}`);
+  lines.push('');
+  for (const item of invoice.items) {
+    const desc = item.description ? ` (${item.description})` : '';
+    lines.push(`• ${item.name}${desc} — ${item.quantity} × ${formatIDR(item.price)} = ${formatIDR(item.amount)}`);
+  }
+  lines.push('');
+  lines.push(`Subtotal: ${formatIDR(invoice.subtotal)}`);
+  if (invoice.discount > 0) lines.push(`Discount: -${formatIDR(invoice.discount)}`);
+  lines.push(`Tax (${invoice.taxRate}%): ${formatIDR(invoice.taxAmount)}`);
+  lines.push(`Total: ${formatIDR(invoice.total)}`);
+  if (invoice.paymentMethod) {
+    lines.push('');
+    lines.push(`Payment: ${invoice.paymentMethod}`);
+  }
+  if (invoice.bankName) lines.push(`Bank: ${invoice.bankName}`);
+  if (invoice.bankAccountNumber) lines.push(`Account: ${invoice.bankAccountNumber}`);
+  if (invoice.bankAccountHolder) lines.push(`Holder: ${invoice.bankAccountHolder}`);
+  if (invoice.notes) {
+    lines.push('');
+    lines.push(`Notes: ${invoice.notes}`);
+  }
+  if (invoice.terms) lines.push(`Terms: ${invoice.terms}`);
+  return lines.join('\n');
 }
 
-export function shareReceiptText(clientName: string, invoiceNumber: string, receiptNumber: string) {
-  return `Hi ${clientName}, payment for ${invoiceNumber} has been received. Here is your receipt ${receiptNumber}. Thank you.`;
+export function copyReceiptText(receipt: Receipt): string {
+  const lines: string[] = [];
+  lines.push(`RECEIPT ${receipt.number}`);
+  if (receipt.invoiceNumber) lines.push(`Invoice Ref: ${receipt.invoiceNumber}`);
+  lines.push(`Date: ${formatDateISO(receipt.paymentDate)}`);
+  lines.push('');
+  lines.push(`Received From: ${receipt.clientSnapshot.name}`);
+  if (receipt.clientSnapshot.email) lines.push(`Email: ${receipt.clientSnapshot.email}`);
+  if (receipt.clientSnapshot.phone) lines.push(`Phone: ${receipt.clientSnapshot.phone}`);
+  lines.push('');
+  lines.push(`Amount Paid: ${formatIDR(receipt.amountPaid)}`);
+  if (receipt.paymentMethod) lines.push(`Payment Method: ${receipt.paymentMethod}`);
+  if (receipt.notes) {
+    lines.push('');
+    lines.push(`Notes: ${receipt.notes}`);
+  }
+  return lines.join('\n');
 }

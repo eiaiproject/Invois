@@ -1,10 +1,9 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
-import { getInvoice, getReceipt, getReceipts, saveInvoice, saveReceipt, getBusiness, getClients, getItems, nextNumber, peekNextNumber, isDBEmpty } from '../lib/db';
+import { getInvoice, getReceipt, getReceipts, saveInvoice, saveReceipt, getBusiness, getClients, getItems, nextNumber, peekNextNumber } from '../lib/db';
 import { useToast } from '../context/toast';
-import { formatIDR, formatIDRInput, parseIDRInput, calcAmount, calcTotals, formatDateISO, shareInvoiceText, shareReceiptText } from '../lib/format';
+import { formatIDR, formatIDRInput, parseIDRInput, calcTotals, formatDateISO, copyInvoiceText, copyReceiptText } from '../lib/format';
 import { useUnsavedChanges } from '../lib/useUnsavedChanges';
-import { seedDB } from '../lib/seed';
 import type { Invoice, Receipt, InvoiceItem, BusinessProfile, Client, Item } from '../types';
 import { addDaysISO, newId, nowISO, todayISO } from '../types';
 
@@ -77,7 +76,6 @@ export function DocumentEditor() {
     setInitialSnapshot('');
     setValidationError(null);
     (async () => {
-      if (await isDBEmpty()) await seedDB();
       const [bizData, clientData, itemData] = await Promise.all([getBusiness(), getClients(), getItems()]);
       setBiz(bizData);
       setClients(clientData);
@@ -130,24 +128,19 @@ export function DocumentEditor() {
       }
       setLoading(false);
     })();
-  }, [type, id, query]);
+  }, [type, id]);
 
   useEffect(() => {
     if (!loading && !initialSnapshot) setInitialSnapshot(stateSnapshot);
   }, [initialSnapshot, loading, stateSnapshot]);
 
   // ─── Invoice calculations ───
-  const updateLineItem = (idx: number, field: keyof InvoiceItem, value: any) => {
+  const updateLineItem = (idx: number, field: 'name' | 'description' | 'quantity' | 'price' | 'unit', value: string | number) => {
     setLineItems(prev => prev.map((item, i) => {
       if (i !== idx) return item;
-      const updated = { ...item, [field]: value };
-      if (field === 'quantity' || field === 'price') {
-        updated.amount = calcAmount(
-          field === 'quantity' ? parseIDRInput(value.toString()) || Number(value) : item.quantity,
-          field === 'price' ? parseIDRInput(value.toString()) || Number(value) : item.price
-        );
-      }
-      return updated;
+      const next = { ...item, [field]: value };
+      if (field === 'quantity' || field === 'price') next.amount = Number(item.quantity) * Number(item.price);
+      return next;
     }));
   };
 
@@ -178,7 +171,7 @@ export function DocumentEditor() {
       items: filledLineItems.map(i => ({
         ...i,
         name: i.name.trim(),
-        amount: calcAmount(i.quantity, i.price),
+        amount: i.quantity * i.price,
       })),
       subtotal: totals.subtotal,
       discount: inv.discount || 0,
@@ -273,6 +266,9 @@ export function DocumentEditor() {
         toast('Invoice saved.', 'success');
       }
       nav('/documents');
+    } catch (err) {
+      console.error(err);
+      toast('Failed to save. Please try again.', 'danger');
     } finally { setSaving(false); }
   };
 
@@ -293,17 +289,19 @@ export function DocumentEditor() {
     }
   };
 
-  const handleShare = async () => {
-    let text = '';
-    if (isReceipt) {
-      const r = buildReceipt();
-      text = shareReceiptText(r.clientSnapshot.name, r.invoiceNumber || '', r.number);
-    } else {
-      const i = buildInvoice();
-      text = shareInvoiceText(i.clientSnapshot.name, i.number, formatIDR(i.total));
+  const handleCopyText = async () => {
+    try {
+      let text = '';
+      if (isReceipt) {
+        text = copyReceiptText(buildReceipt());
+      } else {
+        text = copyInvoiceText(buildInvoice());
+      }
+      await navigator.clipboard.writeText(text);
+      toast('Copied to clipboard. Paste in chat to share.', 'success');
+    } catch {
+      toast('Failed to copy to clipboard.', 'danger');
     }
-    await navigator.clipboard.writeText(text);
-    toast('Copied to clipboard. Paste in chat to share.', 'success');
   };
 
   const selectClient = (clientId: string) => {
@@ -314,17 +312,6 @@ export function DocumentEditor() {
     } else {
       setInv(r => ({ ...r, clientId: c.id, clientSnapshot: { name: c.name, email: c.email, phone: c.phone, address: c.address } }));
     }
-  };
-
-  const addItemFromCatalog = (itemId: string) => {
-    const item = items.find(i => i.id === itemId);
-    if (!item) return;
-    const nextItem = { id: newId(), name: item.name, description: item.description || '', quantity: 1, unit: item.unit, price: item.price, amount: item.price };
-    setLineItems(prev => {
-      const first = prev[0];
-      if (prev.length === 1 && first && !first.name && !first.description && !first.price) return [nextItem];
-      return [...prev, nextItem];
-    });
   };
 
   if (loading) return <div style={{ padding: 40, textAlign: 'center' }}><div className="spinner" />;</div>;
@@ -418,7 +405,7 @@ export function DocumentEditor() {
           {isReceipt ? renderReceiptPreview() : renderInvoicePreview()}
           <div className="action-bar">
             <button className="btn btn-primary btn-block" onClick={handleDownloadPDF}>Download PDF</button>
-            <button className="btn btn-secondary btn-block" onClick={handleShare}>Copy Text</button>
+            <button className="btn btn-secondary btn-block" onClick={handleCopyText}>Copy as plain text</button>
           </div>
           <button className="btn btn-ghost btn-block mt-12" onClick={() => setPreview(false)}>Back to editor</button>
         </div>
@@ -489,8 +476,8 @@ export function DocumentEditor() {
                   {(() => {
                     const clientName = isReceipt ? (rec.clientSnapshot?.name || '') : (inv.clientSnapshot?.name || '');
                     if (!clientName.trim()) return null;
-                    const q = clientName.toLowerCase();
-                    const matches = clients.filter(c => c.name.toLowerCase().includes(q) && c.name.toLowerCase() !== q);
+                    const t = clientName.toLowerCase().trim();
+                    const matches = clients.filter(c => c.name.toLowerCase() !== t && c.name.toLowerCase().includes(t));
                     if (matches.length === 0) return null;
                     return (
                       <div style={{ position: 'relative', marginTop: -8 }}>
@@ -522,8 +509,8 @@ export function DocumentEditor() {
 	                          <div style={{ position: 'relative' }}>
 	                            <input id={`item-${item.id}-name`} className="input" name={`item-${idx + 1}-name`} aria-label={`Item ${idx + 1} name`} placeholder="Type item name or search catalog…" value={item.name} onChange={e => { setValidationError(err => err?.fieldId === `item-${item.id}-name` ? null : err); updateLineItem(idx, 'name', e.target.value); }} onFocus={e => e.target.select()} style={{ fontWeight: 600, marginBottom: 6 }} aria-invalid={validationError?.fieldId === `item-${item.id}-name`} aria-describedby={validationError?.fieldId === `item-${item.id}-name` ? `item-${item.id}-name-error` : undefined} role="combobox" aria-expanded={false} aria-autocomplete="list" />
 	                            {item.name.trim() && (() => {
-	                              const q = item.name.toLowerCase();
-	                              const matches = items.filter(c => c.name.toLowerCase().includes(q) && c.name.toLowerCase() !== q);
+	                              const t = item.name.toLowerCase().trim();
+	                              const matches = items.filter(c => c.name.toLowerCase() !== t && c.name.toLowerCase().includes(t));
 	                              if (matches.length === 0) return null;
 	                              return (
 	                                <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, background: 'var(--color-surface)', border: '1px solid var(--color-border)', borderTop: 'none', borderRadius: '0 0 var(--radius-md) var(--radius-md)', boxShadow: 'var(--shadow-elevated)', zIndex: 10, maxHeight: 140, overflowY: 'auto' }} role="listbox">
@@ -549,7 +536,7 @@ export function DocumentEditor() {
                             </div>
                             <div style={{ display: 'flex', flexDirection: 'column' }}>
                               <span className="field-label">Amount</span>
-                              <span style={{ padding: '11px 14px', fontWeight: 700, fontVariantNumeric: 'tabular-nums', color: 'var(--color-text)', minHeight: 44, display: 'flex', alignItems: 'center' }}>{formatIDR(calcAmount(item.quantity, item.price))}</span>
+                              <span style={{ padding: '11px 14px', fontWeight: 700, fontVariantNumeric: 'tabular-nums', color: 'var(--color-text)', minHeight: 44, display: 'flex', alignItems: 'center' }}>{formatIDR(item.quantity * item.price)}</span>
                             </div>
                           </div>
                           {lineItems.length > 1 && (
@@ -677,7 +664,7 @@ export function DocumentEditor() {
             {isReceipt ? renderReceiptPreview() : renderInvoicePreview()}
             <div className="form-actions mt-16">
               <button className="btn btn-secondary" onClick={handleDownloadPDF}>Download PDF</button>
-              <button className="btn btn-secondary" onClick={handleShare}>Copy Text</button>
+              <button className="btn btn-secondary" onClick={handleCopyText}>Copy as plain text</button>
             </div>
           </div>
         </div>

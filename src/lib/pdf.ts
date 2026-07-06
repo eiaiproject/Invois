@@ -273,11 +273,30 @@ export function generateInvoicePDF(invoice: Invoice, biz: BusinessProfile): jsPD
 
 /* ─── Receipt PDF ─── */
 
-export function generateReceiptPDF(receipt: Receipt, _biz: BusinessProfile): jsPDF {
+export function generateReceiptPDF(receipt: Receipt, biz: BusinessProfile): jsPDF {
   const doc = new jsPDF({ unit: 'mm', format: 'a4' });
   const w = doc.internal.pageSize.getWidth();
   const margin = 20;
-  let y = 28;
+  let y = 22;
+
+  // ── Business info (left)
+  if (biz.name) {
+    doc.setFontSize(11);
+    doc.setFont('helvetica', 'bold');
+    setRGB(doc, C.text);
+    doc.text(biz.name, margin, y);
+    if (biz.address) {
+      setRGB(doc, C.muted);
+      doc.setFontSize(9);
+      doc.setFont('helvetica', 'normal');
+      doc.text(biz.address, margin, y + 5.5);
+    }
+    if (biz.email) {
+      setRGB(doc, C.muted);
+      doc.setFontSize(9);
+      doc.text(biz.email, margin, y + 10.5);
+    }
+  }
 
   // ── Title
   doc.setFontSize(28);
