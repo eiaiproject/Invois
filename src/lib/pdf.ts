@@ -399,7 +399,7 @@ export async function sharePDF(doc: jsPDF, filename: string, shareText?: string)
 
   if (navigator.canShare && navigator.canShare({ files: [file] })) {
     try {
-      await navigator.share({ files: [file], title: filename, text: shareText || '' });
+      await navigator.share({ files: [file], title: filename, text: shareText ?? '' });
       return true;
     } catch { return false; }
   }

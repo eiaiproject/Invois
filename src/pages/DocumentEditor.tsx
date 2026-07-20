@@ -70,62 +70,63 @@ export function DocumentEditor() {
   const dirty = !loading && !!initialSnapshot && stateSnapshot !== initialSnapshot && !saving;
   useUnsavedChanges(dirty);
 
+  // ─── Data loading ───
+  const loadNewReceipt = async () => {
+    const params = new URLSearchParams(query);
+    const clientId = params.get('clientId') || undefined;
+    const amount = parseIDRInput(params.get('amount') || '');
+    const number = await peekNextNumber('receipt');
+    setSuggestedNumber(number);
+    setRec({
+      ...blankReceipt(number),
+      invoiceId: params.get('invoiceId') || undefined,
+      invoiceNumber: params.get('invoiceNumber') || undefined,
+      clientId,
+      clientSnapshot: {
+        name: params.get('clientName') || '',
+        email: undefined,
+        phone: undefined,
+        address: undefined,
+      },
+      amountPaid: amount,
+    });
+  };
+
+  const loadNewInvoice = async (bizData: BusinessProfile | undefined) => {
+    const num = await peekNextNumber('invoice');
+    setSuggestedNumber(num);
+    const invData = blankInvoice(num, bizData);
+    setInv(invData);
+    setLineItems(invData.items || []);
+  };
+
+  const loadExistingDoc = async () => {
+    if (!id) return;
+    if (isReceipt) {
+      const existing = await getReceipt(id);
+      if (existing) setRec(existing);
+    } else {
+      const existing = await getInvoice(id);
+      if (existing) {
+        setInv(existing);
+        setLineItems(existing.items);
+      }
+    }
+  };
+
   // Load data
   useEffect(() => {
     setLoading(true);
     setInitialSnapshot('');
     setValidationError(null);
     (async () => {
-      const [bizData, clientData, itemData] = await Promise.all([getBusiness(), getClients(), getItems()]);
+      const [bizData, clientData] = await Promise.all([getBusiness(), getClients()]);
       setBiz(bizData);
       setClients(clientData);
-      setItems(itemData);
-
-      if (isReceipt && id === undefined) {
-        const params = new URLSearchParams(query);
-        const clientId = params.get('clientId') || undefined;
-        const client = clientId ? clientData.find(c => c.id === clientId) : undefined;
-        const amount = parseIDRInput(params.get('amount') || '');
-        const number = await peekNextNumber('receipt');
-        setSuggestedNumber(number);
-        setRec({
-          ...blankReceipt(number),
-          invoiceId: params.get('invoiceId') || undefined,
-          invoiceNumber: params.get('invoiceNumber') || undefined,
-          clientId: client?.id,
-          clientSnapshot: {
-            name: client?.name || params.get('clientName') || '',
-            email: client?.email,
-            phone: client?.phone,
-            address: client?.address,
-          },
-          amountPaid: amount,
-        });
-        setLoading(false);
-        return;
-      }
-      if (!isReceipt && id === undefined) {
-        const num = await peekNextNumber('invoice');
-        setSuggestedNumber(num);
-        const invData = blankInvoice(num, bizData);
-        setInv(invData);
-        setLineItems(invData.items || []);
-        setLoading(false);
-        return;
-      }
-      // Edit mode
-      if (id) {
-        if (isReceipt) {
-          const existing = await getReceipt(id);
-          if (existing) setRec(existing);
-        } else {
-          const existing = await getInvoice(id);
-          if (existing) {
-            setInv(existing);
-            setLineItems(existing.items);
-          }
-        }
-      }
+      setItems(await getItems());
+      if (isReceipt && id === undefined) await loadNewReceipt();
+      else if (!isReceipt && id === undefined) await loadNewInvoice(bizData);
+      else await loadExistingDoc();
       setLoading(false);
     })();
   }, [type, id]);
@@ -231,40 +232,46 @@ export function DocumentEditor() {
     return current;
   };
 
+  // ─── Save helpers ───
+  const saveReceiptFlow = async (status?: string) => {
+    const r = { ...buildReceipt(status as Receipt['status']), number: await saveNumber('receipt', rec.number) };
+    if (r.invoiceId && !isEdit) {
+      const existingReceipt = (await getReceipts()).find(existing =>
+        existing.invoiceId === r.invoiceId &&
+        existing.status !== 'cancelled'
+      );
+      if (existingReceipt) {
+        toast('Receipt already exists for this invoice.', 'danger');
+        nav(`/documents/receipt/${existingReceipt.id}`);
+        return;
+      }
+    }
+    await saveReceipt(r);
+    if (r.invoiceId && r.status === 'paid') {
+      const linkedInvoice = await getInvoice(r.invoiceId);
+      if (linkedInvoice && linkedInvoice.status !== 'paid') {
+        await saveInvoice({ ...linkedInvoice, status: 'paid', updatedAt: nowISO() });
+      }
+    }
+    setInitialSnapshot(stateSnapshot);
+    toast('Receipt saved.', 'success');
+  };
+
+  const saveInvoiceFlow = async (status?: string) => {
+    const i = { ...buildInvoice(status as Invoice['status']), number: await saveNumber('invoice', inv.number) };
+    await saveInvoice(i);
+    setInitialSnapshot(stateSnapshot);
+    toast('Invoice saved.', 'success');
+  };
+
   // ─── Save ───
   const handleSave = async (status?: string) => {
     const err = validate();
     if (err) { showValidationError(err); return; }
     setSaving(true);
     try {
-      if (isReceipt) {
-        const r = { ...buildReceipt(status as Receipt['status']), number: await saveNumber('receipt', rec.number) };
-        if (r.invoiceId && !isEdit) {
-          const existingReceipt = (await getReceipts()).find(existing =>
-            existing.invoiceId === r.invoiceId &&
-            existing.status !== 'cancelled'
-          );
-          if (existingReceipt) {
-            toast('Receipt already exists for this invoice.', 'danger');
-            nav(`/documents/receipt/${existingReceipt.id}`);
-            return;
-          }
-        }
-        await saveReceipt(r);
-        if (r.invoiceId && r.status === 'paid') {
-          const linkedInvoice = await getInvoice(r.invoiceId);
-          if (linkedInvoice && linkedInvoice.status !== 'paid') {
-            await saveInvoice({ ...linkedInvoice, status: 'paid', updatedAt: nowISO() });
-          }
-        }
-        setInitialSnapshot(stateSnapshot);
-        toast('Receipt saved.', 'success');
-      } else {
-        const i = { ...buildInvoice(status as Invoice['status']), number: await saveNumber('invoice', inv.number) };
-        await saveInvoice(i);
-        setInitialSnapshot(stateSnapshot);
-        toast('Invoice saved.', 'success');
-      }
+      if (isReceipt) await saveReceiptFlow(status);
+      else await saveInvoiceFlow(status);
       nav('/documents');
     } catch (err) {
       console.error(err);
@@ -387,6 +394,8 @@ export function DocumentEditor() {
     );
   };
 
+  const saveLabel = saving ? 'Saving…' : isEdit ? 'Save Changes' : 'Save';
+
   return (
     <div>
       <div className="page-head">
@@ -463,12 +472,12 @@ export function DocumentEditor() {
                       <input id="document-client-name" name="clientName" autoComplete="organization" className="input" placeholder="Search or enter client name…" value={rec.clientSnapshot?.name || ''} onChange={e => {
                         setValidationError(err => err?.fieldId === 'document-client-name' ? null : err);
                         setRec(r => ({ ...r, clientId: undefined, clientSnapshot: { ...r.clientSnapshot, name: e.target.value } }));
-                      }} onFocus={e => e.target.select()} aria-invalid={validationError?.fieldId === 'document-client-name'} aria-describedby={validationError?.fieldId === 'document-client-name' ? 'document-client-name-error' : undefined} role="combobox" aria-expanded={false} aria-autocomplete="list" />
+                      }} onFocus={e => e.target.select()} aria-invalid={validationError?.fieldId === 'document-client-name'} aria-describedby={validationError?.fieldId === 'document-client-name' ? 'document-client-name-error' : undefined} role="combobox" aria-expanded={false} aria-autocomplete="list" aria-controls="client-suggestions" />
                     ) : (
                       <input id="document-client-name" name="clientName" autoComplete="organization" className="input" placeholder="Search or enter client name…" value={inv.clientSnapshot?.name || ''} onChange={e => {
                         setValidationError(err => err?.fieldId === 'document-client-name' ? null : err);
                         setInv(i => ({ ...i, clientId: undefined, clientSnapshot: { ...i.clientSnapshot, name: e.target.value } }));
-                      }} onFocus={e => e.target.select()} aria-invalid={validationError?.fieldId === 'document-client-name'} aria-describedby={validationError?.fieldId === 'document-client-name' ? 'document-client-name-error' : undefined} role="combobox" aria-expanded={false} aria-autocomplete="list" />
+                      }} onFocus={e => e.target.select()} aria-invalid={validationError?.fieldId === 'document-client-name'} aria-describedby={validationError?.fieldId === 'document-client-name' ? 'document-client-name-error' : undefined} role="combobox" aria-expanded={false} aria-autocomplete="list" aria-controls="client-suggestions" />
                     )}
                     {validationError?.fieldId === 'document-client-name' && <div id="document-client-name-error" className="field-error" role="alert">{validationError.message}</div>}
                   </div>
@@ -480,7 +489,7 @@ export function DocumentEditor() {
                     const matches = clients.filter(c => c.name.toLowerCase() !== t && c.name.toLowerCase().includes(t));
                     if (matches.length === 0) return null;
                     return (
-                      <div className="suggestion-dropdown" style={{ position: 'absolute', top: '100%', left: 0, right: 0 }} role="listbox">
+                      <div id="client-suggestions" className="suggestion-dropdown" style={{ position: 'absolute', top: '100%', left: 0, right: 0 }} role="listbox">
                         {matches.slice(0, 5).map(c => (
                           <button key={c.id} type="button" role="option" className="suggestion-dropdown-item" onMouseDown={e => e.preventDefault()} onClick={() => selectClient(c.id)}>
                             <span className="avatar-small">{c.name.charAt(0).toUpperCase()}</span>
@@ -505,13 +514,13 @@ export function DocumentEditor() {
 	                      {lineItems.map((item, idx) => (
 	                        <div key={item.id} style={{ marginBottom: 16 }}>
 	                          <div style={{ position: 'relative' }}>
-	                            <input id={`item-${item.id}-name`} className="input" name={`item-${idx + 1}-name`} aria-label={`Item ${idx + 1} name`} placeholder="Type item name or search catalog…" value={item.name} onChange={e => { setValidationError(err => err?.fieldId === `item-${item.id}-name` ? null : err); updateLineItem(idx, 'name', e.target.value); }} onFocus={e => e.target.select()} style={{ fontWeight: 600, marginBottom: 6 }} aria-invalid={validationError?.fieldId === `item-${item.id}-name`} aria-describedby={validationError?.fieldId === `item-${item.id}-name` ? `item-${item.id}-name-error` : undefined} role="combobox" aria-expanded={false} aria-autocomplete="list" />
+	                            <input id={`item-${item.id}-name`} className="input" name={`item-${idx + 1}-name`} aria-label={`Item ${idx + 1} name`} placeholder="Type item name or search catalog…" value={item.name} onChange={e => { setValidationError(err => err?.fieldId === `item-${item.id}-name` ? null : err); updateLineItem(idx, 'name', e.target.value); }} onFocus={e => e.target.select()} style={{ fontWeight: 600, marginBottom: 6 }} aria-invalid={validationError?.fieldId === `item-${item.id}-name`} aria-describedby={validationError?.fieldId === `item-${item.id}-name` ? `item-${item.id}-name-error` : undefined} role="combobox" aria-expanded={false} aria-autocomplete="list" aria-controls={`item-${item.id}-suggestions`} />
 	                            {item.name.trim() && (() => {
 	                              const t = item.name.toLowerCase().trim();
 	                              const matches = items.filter(c => c.name.toLowerCase() !== t && c.name.toLowerCase().includes(t));
 	                              if (matches.length === 0) return null;
 	                              return (
-	                                <div className="suggestion-dropdown" style={{ position: 'absolute', top: '100%', left: 0, right: 0, maxHeight: 140 }} role="listbox">
+	                                <div id={`item-${item.id}-suggestions`} className="suggestion-dropdown" style={{ position: 'absolute', top: '100%', left: 0, right: 0, maxHeight: 140 }} role="listbox">
 	                                  {matches.slice(0, 4).map(c => (
 	                                    <button key={c.id} type="button" role="option" className="suggestion-dropdown-item" onMouseDown={e => e.preventDefault()} onClick={() => { updateLineItem(idx, 'name', c.name); updateLineItem(idx, 'price', c.price); }}>
 	                                      <span style={{ fontWeight: 600 }}>{c.name}</span>
@@ -526,7 +535,7 @@ export function DocumentEditor() {
 	                          <div className="field-row-3" style={{ marginBottom: 4 }}>
                             <div>
                               <label className="field-label" htmlFor={`item-${item.id}-quantity`}>Qty</label>
-                              <input id={`item-${item.id}-quantity`} name={`item-${idx + 1}-quantity`} type="number" className="input num" min="1" value={item.quantity} onChange={e => updateLineItem(idx, 'quantity', Math.max(1, parseInt(e.target.value) || 1))} />
+                              <input id={`item-${item.id}-quantity`} name={`item-${idx + 1}-quantity`} type="number" className="input num" min="1" value={item.quantity} onChange={e => updateLineItem(idx, 'quantity', Math.max(1, Number.parseInt(e.target.value) || 1))} />
                             </div>
                             <div>
                               <label className="field-label" htmlFor={`item-${item.id}-price`}>Price</label>
@@ -563,7 +572,7 @@ export function DocumentEditor() {
                         </div>
                         <div className="field">
                           <label className="field-label" htmlFor="invoice-tax-rate">Tax (%)</label>
-                          <input id="invoice-tax-rate" name="taxRate" type="number" className="input num" min="0" max="100" value={inv.taxRate ?? 11} onChange={e => setInv(i => ({ ...i, taxRate: parseFloat(e.target.value) || 0 }))} />
+                          <input id="invoice-tax-rate" name="taxRate" type="number" className="input num" min="0" max="100" value={inv.taxRate ?? 11} onChange={e => setInv(i => ({ ...i, taxRate: Number.parseFloat(e.target.value) || 0 }))} />
                         </div>
                       </div>
                       <div className="totals">
@@ -652,7 +661,7 @@ export function DocumentEditor() {
             {/* Actions */}
             <div className="action-bar">
               <button type="button" className="btn btn-primary btn-block" onClick={() => handleSave()} disabled={saving}>
-                {saving ? 'Saving…' : isEdit ? 'Save Changes' : 'Save'}
+                {saveLabel}
               </button>
             </div>
           </div>

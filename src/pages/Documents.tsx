@@ -19,6 +19,7 @@ export function Documents() {
   const typeParam = searchParams.get('type');
   const filter: 'all' | 'invoice' | 'receipt' = typeParam === 'invoice' || typeParam === 'receipt' ? typeParam : 'all';
   const search = searchParams.get('q') || '';
+  const filterLabels: Record<string, string> = { all: 'All', invoice: 'Invoices', receipt: 'Receipts' };
 
   const load = async () => {
     try {
@@ -160,7 +161,7 @@ export function Documents() {
       <div className="filter-row">
         {(['all', 'invoice', 'receipt'] as const).map(f => (
           <button type="button" key={f} className={`chip${filter === f ? ' active' : ''}`} aria-pressed={filter === f} onClick={() => updateListState({ type: f })}>
-            {f === 'all' ? 'All' : f === 'invoice' ? 'Invoices' : 'Receipts'}
+            {filterLabels[f]}
           </button>
         ))}
       </div>
@@ -194,7 +195,7 @@ export function Documents() {
       )}
 
       {showSheet && (
-        <div className="scrim" onClick={closeSheet} onKeyDown={e => { if (e.key === 'Escape' || e.key === ' ') closeSheet(); }} role="dialog" aria-modal="true" aria-labelledby="create-document-title" tabIndex={-1}>
+        <div className="scrim" onClick={closeSheet} onKeyDown={e => { if (e.key === 'Escape' || e.key === ' ' || e.key === 'Enter') { e.preventDefault(); closeSheet(); } }} role="button" aria-label="Close" tabIndex={0}>
           <div ref={sheetRef} className="sheet" role="document" aria-labelledby="create-document-title" onClick={e => e.stopPropagation()}>
             <div className="sheet-handle" aria-hidden="true" />
             <h2 id="create-document-title">Create New</h2>

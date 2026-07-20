@@ -154,6 +154,7 @@
   margin-bottom: 16px;
   text-wrap: balance;
   font-weight: 800;
+  animation: l-hero-in 0.5s var(--ease-out) both;
 }
 .l-hero-text p {
   font-size: clamp(1rem, 2.2vw, 1.15rem);
@@ -162,12 +163,14 @@
   margin-bottom: 20px;
   max-width: 480px;
   text-wrap: pretty;
+  animation: l-hero-in 0.5s var(--ease-out) 0.06s both;
 }
 .l-hero-actions {
   display: flex;
   gap: 8px;
   flex-wrap: wrap;
   justify-content: center;
+  animation: l-hero-in 0.5s var(--ease-out) 0.12s both;
 }
 .l-hero-assurance {
   display: grid;
@@ -255,16 +258,7 @@
   from { opacity: 0; transform: translateY(12px); }
   to   { opacity: 1; transform: translateY(0); }
 }
-.l-hero-heading,
-.l-hero-text h1 {
-  animation: l-hero-in 0.5s var(--ease-out) both;
-}
-.l-hero-text p {
-  animation: l-hero-in 0.5s var(--ease-out) 0.06s both;
-}
-.l-hero-actions {
-  animation: l-hero-in 0.5s var(--ease-out) 0.12s both;
-}
+
 .l-preview {
   margin-top: 20px;
   padding-bottom: 20px;
