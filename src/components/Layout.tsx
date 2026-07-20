@@ -51,7 +51,7 @@ export function Layout({ children }: { readonly children?: ReactNode }) {
         <div className="top-bar-inner">
           <div className="brand">
             <img className="brand-mark" src="/favicon.svg" alt="" aria-hidden="true" />
-            Invois
+            <span>Invois</span>
           </div>
         </div>
       </header>

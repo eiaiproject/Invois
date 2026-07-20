@@ -16,8 +16,10 @@ export function useToast() { return useContext(ToastContext); }
 export function ToastProvider({ children }: { readonly children: ReactNode }) {
   const [toasts, setToasts] = useState<ToastItem[]>([]);
 
+  const removeToast = (id: string) => (prev: ToastItem[]) => prev.filter(t => t.id !== id);
+
   const scheduleRemove = useCallback((id: string) => {
-    setTimeout(() => setToasts(prev => prev.filter(t => t.id !== id)), 2800);
+    setTimeout(() => setToasts(removeToast(id)), 2800);
   }, []);
 
   const toast = useCallback((msg: string, type: ToastItem['type'] = 'default') => {

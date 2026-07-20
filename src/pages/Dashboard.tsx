@@ -23,13 +23,16 @@ interface Stats {
 
 let dashboardLoadPromise: Promise<{ biz: BusinessProfile | undefined; stats: Stats }> | null = null;
 
-function loadDashboard() {
-  if (!dashboardLoadPromise) {
-    dashboardLoadPromise ??= (async () => ({
-      biz: await getBusiness(),
-      stats: await getDashboardStats(),
-    }))().finally(() => { dashboardLoadPromise = null; });
+async function fetchDashboardData() {
+  try {
+    return { biz: await getBusiness(), stats: await getDashboardStats() };
+  } finally {
+    dashboardLoadPromise = null;
   }
+}
+
+function loadDashboard() {
+  dashboardLoadPromise ??= fetchDashboardData();
   return dashboardLoadPromise;
 }
 
@@ -176,7 +179,7 @@ export function Dashboard() {
         </button>
       </div>
       {infoOpen && (
-        <div className="scrim" onClick={() => setInfoOpen(false)} onKeyDown={e => { if (e.key === 'Escape' || e.key === ' ') setInfoOpen(false); }} role="dialog" aria-modal="true" aria-labelledby="app-info-title" tabIndex={-1}>
+        <dialog className="scrim" open onClick={() => setInfoOpen(false)} onKeyDown={e => { if (e.key === 'Escape' || e.key === ' ') setInfoOpen(false); }} aria-labelledby="app-info-title">
           <div className="sheet" onClick={e => e.stopPropagation()}>
             <div className="sheet-handle" />
             <h2 id="app-info-title">App Info</h2>
@@ -202,7 +205,7 @@ export function Dashboard() {
               <button type="button" className="btn btn-primary" onClick={() => setInfoOpen(false)}>Close</button>
             </div>
           </div>
-        </div>
+        </dialog>
       )}
     </div>
   );

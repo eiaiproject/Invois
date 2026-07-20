@@ -195,8 +195,8 @@ export function Documents() {
       )}
 
       {showSheet && (
-        <div className="scrim" onClick={closeSheet} onKeyDown={e => { if (e.key === 'Escape' || e.key === ' ' || e.key === 'Enter') { e.preventDefault(); closeSheet(); } }} role="button" aria-label="Close" tabIndex={0}>
-          <div ref={sheetRef} className="sheet" role="document" aria-labelledby="create-document-title" onClick={e => e.stopPropagation()}>
+        <dialog className="scrim" open onClick={closeSheet} onKeyDown={e => { if (e.key === 'Escape' || e.key === ' ' || e.key === 'Enter') { e.preventDefault(); closeSheet(); } }} aria-label="Close">
+          <div ref={sheetRef} className="sheet" aria-labelledby="create-document-title" onClick={e => e.stopPropagation()}>
             <div className="sheet-handle" aria-hidden="true" />
             <h2 id="create-document-title">Create New</h2>
             <button type="button" ref={firstSheetButtonRef} className="btn btn-secondary btn-block mb-12" onClick={() => { setShowSheet(false); nav('/documents/new/invoice'); }}>
@@ -209,7 +209,7 @@ export function Documents() {
               <button type="button" className="btn btn-ghost btn-block" onClick={closeSheet}>Cancel</button>
             </div>
           </div>
-        </div>
+        </dialog>
       )}
     </div>
   );

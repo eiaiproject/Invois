@@ -226,47 +226,17 @@ export async function importAllData(data: ExportData): Promise<{ imported: boole
   const db = await getDB();
   const counts = { business: 0, clients: 0, items: 0, invoices: 0, receipts: 0 };
 
-  if (Array.isArray(data.business)) {
-    const tx = db.transaction('business', 'readwrite');
-    for (const b of data.business) {
-      await tx.store.put(b);
-      counts.business++;
-    }
-    await tx.done;
-  }
-
-  if (Array.isArray(data.clients)) {
-    const tx = db.transaction('clients', 'readwrite');
-    for (const c of data.clients) {
-      await tx.store.put(c);
-      counts.clients++;
-    }
-    await tx.done;
-  }
-
-  if (Array.isArray(data.items)) {
-    const tx = db.transaction('items', 'readwrite');
-    for (const i of data.items) {
-      await tx.store.put(i);
-      counts.items++;
-    }
-    await tx.done;
-  }
-
-  if (Array.isArray(data.invoices)) {
-    const tx = db.transaction('invoices', 'readwrite');
-    for (const inv of data.invoices) {
-      await tx.store.put(inv);
-      counts.invoices++;
-    }
-    await tx.done;
-  }
-
-  if (Array.isArray(data.receipts)) {
-    const tx = db.transaction('receipts', 'readwrite');
-    for (const r of data.receipts) {
-      await tx.store.put(r);
-      counts.receipts++;
+  const stores: [keyof ExportData, keyof typeof counts][] = [
+    ['business', 'business'], ['clients', 'clients'], ['items', 'items'],
+    ['invoices', 'invoices'], ['receipts', 'receipts'],
+  ];
+  for (const [storeName, countKey] of stores) {
+    const arr = data[storeName];
+    if (!Array.isArray(arr)) continue;
+    const tx = db.transaction(storeName, 'readwrite');
+    for (const item of arr) {
+      await tx.store.put(item);
+      counts[countKey]++;
     }
     await tx.done;
   }

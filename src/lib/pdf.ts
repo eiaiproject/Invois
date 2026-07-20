@@ -397,7 +397,7 @@ export async function sharePDF(doc: jsPDF, filename: string, shareText?: string)
   const blob = doc.output('blob');
   const file = new File([blob], filename, { type: 'application/pdf' });
 
-  if (navigator.canShare && navigator.canShare({ files: [file] })) {
+  if (navigator.canShare?.({ files: [file] })) {
     try {
       await navigator.share({ files: [file], title: filename, text: shareText ?? '' });
       return true;

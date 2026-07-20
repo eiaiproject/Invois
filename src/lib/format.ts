@@ -49,12 +49,11 @@ export function copyInvoiceText(invoice: Invoice): string {
   parts.push('');
   const clientParts: string[] = [
     `Bill To: ${invoice.clientSnapshot.name}`,
+    ...(invoice.clientSnapshot.email ? [`Email: ${invoice.clientSnapshot.email}`] : []),
+    ...(invoice.clientSnapshot.phone ? [`Phone: ${invoice.clientSnapshot.phone}`] : []),
+    ...(invoice.clientSnapshot.address ? [`Address: ${invoice.clientSnapshot.address}`] : []),
   ];
-  if (invoice.clientSnapshot.email) clientParts.push(`Email: ${invoice.clientSnapshot.email}`);
-  if (invoice.clientSnapshot.phone) clientParts.push(`Phone: ${invoice.clientSnapshot.phone}`);
-  if (invoice.clientSnapshot.address) clientParts.push(`Address: ${invoice.clientSnapshot.address}`);
-  parts.push(...clientParts);
-  parts.push('');
+  parts.push(...clientParts, '');
   for (const item of invoice.items) {
     const desc = item.description ? ` (${item.description})` : '';
     parts.push(`• ${item.name}${desc} — ${item.quantity} × ${formatIDR(item.price)} = ${formatIDR(item.amount)}`);
@@ -62,10 +61,10 @@ export function copyInvoiceText(invoice: Invoice): string {
   parts.push('');
   const totalsParts: string[] = [
     `Subtotal: ${formatIDR(invoice.subtotal)}`,
+    ...(invoice.discount > 0 ? [`Discount: -${formatIDR(invoice.discount)}`] : []),
+    `Tax (${invoice.taxRate}%): ${formatIDR(invoice.taxAmount)}`,
+    `Total: ${formatIDR(invoice.total)}`,
   ];
-  if (invoice.discount > 0) totalsParts.push(`Discount: -${formatIDR(invoice.discount)}`);
-  totalsParts.push(`Tax (${invoice.taxRate}%): ${formatIDR(invoice.taxAmount)}`);
-  totalsParts.push(`Total: ${formatIDR(invoice.total)}`);
   parts.push(...totalsParts);
   if (invoice.paymentMethod) parts.push('', `Payment: ${invoice.paymentMethod}`);
   if (invoice.bankName) parts.push(`Bank: ${invoice.bankName}`);
@@ -79,14 +78,16 @@ export function copyInvoiceText(invoice: Invoice): string {
 export function copyReceiptText(receipt: Receipt): string {
   const parts: string[] = [
     `RECEIPT ${receipt.number}`,
+    ...(receipt.invoiceNumber ? [`Invoice Ref: ${receipt.invoiceNumber}`] : []),
+    `Date: ${formatDateISO(receipt.paymentDate)}`,
+    '',
+    `Received From: ${receipt.clientSnapshot.name}`,
+    ...(receipt.clientSnapshot.email ? [`Email: ${receipt.clientSnapshot.email}`] : []),
+    ...(receipt.clientSnapshot.phone ? [`Phone: ${receipt.clientSnapshot.phone}`] : []),
+    '',
+    `Amount Paid: ${formatIDR(receipt.amountPaid)}`,
+    ...(receipt.paymentMethod ? [`Payment Method: ${receipt.paymentMethod}`] : []),
+    ...(receipt.notes ? ['', `Notes: ${receipt.notes}`] : []),
   ];
-  if (receipt.invoiceNumber) parts.push(`Invoice Ref: ${receipt.invoiceNumber}`);
-  parts.push(`Date: ${formatDateISO(receipt.paymentDate)}`);
-  parts.push('', `Received From: ${receipt.clientSnapshot.name}`);
-  if (receipt.clientSnapshot.email) parts.push(`Email: ${receipt.clientSnapshot.email}`);
-  if (receipt.clientSnapshot.phone) parts.push(`Phone: ${receipt.clientSnapshot.phone}`);
-  parts.push('', `Amount Paid: ${formatIDR(receipt.amountPaid)}`);
-  if (receipt.paymentMethod) parts.push(`Payment Method: ${receipt.paymentMethod}`);
-  if (receipt.notes) parts.push('', `Notes: ${receipt.notes}`);
   return parts.join('\n');
 }

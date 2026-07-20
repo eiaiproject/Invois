@@ -324,6 +324,42 @@ export function DocumentEditor() {
 
   if (loading) return <div style={{ padding: 40, textAlign: 'center' }}><div className="spinner" />;</div>;
 
+  const renderClientSuggestions = () => {
+    const clientName = isReceipt ? (rec.clientSnapshot?.name || '') : (inv.clientSnapshot?.name || '');
+    if (!clientName.trim()) return null;
+    const t = clientName.toLowerCase().trim();
+    const matches = clients.filter(c => c.name.toLowerCase() !== t && c.name.toLowerCase().includes(t));
+    if (matches.length === 0) return null;
+    return (
+      <div id="client-suggestions" className="suggestion-dropdown" style={{ position: 'absolute', top: '100%', left: 0, right: 0 }}>
+        {matches.slice(0, 5).map(c => (
+          <button key={c.id} type="button" className="suggestion-dropdown-item" onMouseDown={e => e.preventDefault()} onClick={() => selectClient(c.id)} aria-selected={false}>
+            <span className="avatar-small">{c.name.charAt(0).toUpperCase()}</span>
+            <span style={{ fontWeight: 600 }}>{c.name}</span>
+            {c.email && <span className="item-meta">{c.email}</span>}
+          </button>
+        ))}
+      </div>
+    );
+  };
+
+  const renderItemSuggestions = (item: InvoiceItem, idx: number) => {
+    if (!item.name.trim()) return null;
+    const t = item.name.toLowerCase().trim();
+    const matches = items.filter(c => c.name.toLowerCase() !== t && c.name.toLowerCase().includes(t));
+    if (matches.length === 0) return null;
+    return (
+      <div id={`item-${item.id}-suggestions`} className="suggestion-dropdown" style={{ position: 'absolute', top: '100%', left: 0, right: 0, maxHeight: 140 }}>
+        {matches.slice(0, 4).map(c => (
+          <button key={c.id} type="button" className="suggestion-dropdown-item" onMouseDown={e => e.preventDefault()} onClick={() => { updateLineItem(idx, 'name', c.name); updateLineItem(idx, 'price', c.price); }} aria-selected={false}>
+            <span style={{ fontWeight: 600 }}>{c.name}</span>
+            <span className="item-meta">{formatIDR(c.price)}</span>
+          </button>
+        ))}
+      </div>
+    );
+  };
+
   // ─── Live preview (inline) ───
   const renderInvoicePreview = () => {
     const i = buildInvoice();
@@ -395,7 +431,9 @@ export function DocumentEditor() {
     );
   };
 
-  const saveLabel = saving ? 'Saving…' : isEdit ? 'Save Changes' : 'Save';
+  let saveLabel = 'Save';
+  if (saving) saveLabel = 'Saving…';
+  else if (isEdit) saveLabel = 'Save Changes';
   const docTypeHeading = `${isEdit ? 'Edit' : 'New'} ${isReceipt ? 'Receipt' : 'Invoice'}`;
 
   return (
@@ -484,24 +522,7 @@ export function DocumentEditor() {
                     {validationError?.fieldId === 'document-client-name' && <div id="document-client-name-error" className="field-error" role="alert">{validationError.message}</div>}
                   </div>
                   {/* Client suggestions */}
-                  {(() => {
-                    const clientName = isReceipt ? (rec.clientSnapshot?.name || '') : (inv.clientSnapshot?.name || '');
-                    if (!clientName.trim()) return null;
-                    const t = clientName.toLowerCase().trim();
-                    const matches = clients.filter(c => c.name.toLowerCase() !== t && c.name.toLowerCase().includes(t));
-                    if (matches.length === 0) return null;
-                    return (
-                      <div id="client-suggestions" className="suggestion-dropdown" style={{ position: 'absolute', top: '100%', left: 0, right: 0 }} role="listbox">
-                        {matches.slice(0, 5).map(c => (
-                          <button key={c.id} type="button" role="option" className="suggestion-dropdown-item" onMouseDown={e => e.preventDefault()} onClick={() => selectClient(c.id)}>
-                            <span className="avatar-small">{c.name.charAt(0).toUpperCase()}</span>
-                            <span style={{ fontWeight: 600 }}>{c.name}</span>
-                            {c.email && <span className="item-meta">{c.email}</span>}
-                          </button>
-                        ))}
-                      </div>
-                    );
-                  })()}
+                  {renderClientSuggestions()}
                 </div>
               )}
 
@@ -517,21 +538,7 @@ export function DocumentEditor() {
 	                        <div key={item.id} style={{ marginBottom: 16 }}>
 	                          <div style={{ position: 'relative' }}>
 	                            <input id={`item-${item.id}-name`} className="input" name={`item-${idx + 1}-name`} aria-label={`Item ${idx + 1} name`} placeholder="Type item name or search catalog…" value={item.name} onChange={e => { setValidationError(err => err?.fieldId === `item-${item.id}-name` ? null : err); updateLineItem(idx, 'name', e.target.value); }} onFocus={e => e.target.select()} style={{ fontWeight: 600, marginBottom: 6 }} aria-invalid={validationError?.fieldId === `item-${item.id}-name`} aria-describedby={validationError?.fieldId === `item-${item.id}-name` ? `item-${item.id}-name-error` : undefined} role="combobox" aria-expanded={false} aria-autocomplete="list" aria-controls={`item-${item.id}-suggestions`} />
-	                            {item.name.trim() && (() => {
-	                              const t = item.name.toLowerCase().trim();
-	                              const matches = items.filter(c => c.name.toLowerCase() !== t && c.name.toLowerCase().includes(t));
-	                              if (matches.length === 0) return null;
-	                              return (
-	                                <div id={`item-${item.id}-suggestions`} className="suggestion-dropdown" style={{ position: 'absolute', top: '100%', left: 0, right: 0, maxHeight: 140 }} role="listbox">
-	                                  {matches.slice(0, 4).map(c => (
-	                                    <button key={c.id} type="button" role="option" className="suggestion-dropdown-item" onMouseDown={e => e.preventDefault()} onClick={() => { updateLineItem(idx, 'name', c.name); updateLineItem(idx, 'price', c.price); }}>
-	                                      <span style={{ fontWeight: 600 }}>{c.name}</span>
-	                                      <span className="item-meta">{formatIDR(c.price)}</span>
-	                                    </button>
-	                                  ))}
-	                                </div>
-	                              );
-	                            })()}
+	                            {renderItemSuggestions(item, idx)}
 	                          </div>
 	                          {validationError?.fieldId === `item-${item.id}-name` && <div id={`item-${item.id}-name-error`} className="field-error" role="alert">{validationError.message}</div>}
 	                          <div className="field-row-3" style={{ marginBottom: 4 }}>

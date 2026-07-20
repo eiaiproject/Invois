@@ -638,11 +638,8 @@ button.section-title {
 }
 @media (max-width: 360px) {
   .line-item { grid-template-columns: 1fr; gap: 4px; padding: 8px 0; }
-  .line-item .qty, .line-item .price, .line-item .amount-wrap { display: revert; }
+  .line-item .qty, .line-item .price, .line-item .amount-wrap { display: revert; grid-row: 2; }
   .line-item .name { grid-row: 1; }
-  .line-item .qty,
-  .line-item .price,
-  .line-item .amount-wrap { grid-row: 2; }
   .line-item .remove { grid-row: 1; justify-self: end; }
 }
 

@@ -62,12 +62,14 @@ export async function openDocument(page: Page, number: string) {
 export async function waitForSeed(page: Page) {
   const hasSeedData = () => new Promise<boolean>((resolve) => {
     const req = indexedDB.open('invois');
-    req.onsuccess = () => {
-      const db = req.result;
-      const tx = db.transaction('business', 'readonly');
-      const cnt = tx.objectStore('business').count();
-      cnt.onsuccess = () => { db.close(); resolve(cnt.result > 0); };
-    };
+    req.onsuccess = () => checkBusinessCount(req, resolve);
   });
   await page.waitForFunction(hasSeedData);
+}
+
+function checkBusinessCount(req: IDBRequest<IDBDatabase>, resolve: (v: boolean) => void) {
+  const db = req.result;
+  const tx = db.transaction('business', 'readonly');
+  const cnt = tx.objectStore('business').count();
+  cnt.onsuccess = () => { db.close(); resolve(cnt.result > 0); };
 }
