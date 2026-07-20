@@ -1,240 +1,300 @@
-# Invois
+<p align="center">
+  <img src="public/favicon.svg" alt="Invois" width="64" height="64" />
+</p>
 
-Invois is an offline-first invoice and receipt maker for freelancers and small businesses. It helps users create invoices, mark invoices as paid, generate matching receipts, manage reusable clients and items, and export professional PDFs from desktop or mobile.
+<h1 align="center">Invois</h1>
 
-## Status
+<p align="center">
+  <strong>Offline-first invoice and receipt maker for freelancers and small businesses.</strong>
+</p>
 
-- Version: `1.0.0`
-- Release stage: stable
-- App type: client-side PWA
-- Live app: https://invois.pages.dev
-- Data storage: browser IndexedDB, local to the current device/browser profile
-- CI gate: `npm run ci`
+<p align="center">
+  <a href="https://invois.pages.dev" target="_blank">Live App</a>
+  ·
+  <a href="#features">Features</a>
+  ·
+  <a href="#getting-started">Getting Started</a>
+  ·
+  <a href="#tech-stack">Tech Stack</a>
+</p>
+
+<p align="center">
+  <img src="https://img.shields.io/badge/version-1.1.0-596949" alt="Version" />
+  <img src="https://img.shields.io/badge/status-stable-3F6B49" alt="Status: Stable" />
+  <img src="https://img.shields.io/badge/license-MIT-7A5F3A" alt="License: MIT" />
+  <img src="https://img.shields.io/badge/PWA-offline%20ready-596949" alt="PWA: Offline Ready" />
+</p>
+
+---
+
+## Overview
+
+Invois is a client-side **Progressive Web App** that lets you create invoices, convert paid work into receipts, manage reusable clients and items, and export professional PDFs — all without an internet connection or user account. Data stays on your device, in your browser's IndexedDB.
+
+---
 
 ## Features
 
-- Create, edit, delete, search, and filter invoices and receipts.
-- Convert paid invoices into linked receipts.
-- Prevent duplicate receipts for the same linked invoice.
-- Manage client and item catalogs for faster invoice creation.
-- Save business profile, bank details, default notes, terms, and tax rate.
-- Auto-number documents by month, for example `INV-2026-07-0001`.
-- Preview invoice and receipt layouts in the editor.
-- Generate and download PDFs.
-- Export and import all data as JSON backup.
-- Mark invoices as Sent or Paid.
-- Fuzzy search for clients and catalog items.
-- Work offline after the app and assets are cached by the PWA service worker.
-- Use responsive desktop and mobile layouts.
+- **📄 Invoice & Receipt Management** — Create, edit, delete, search, and filter documents.
+- **🔗 Invoice-to-Receipt Flow** — Mark an invoice as paid and instantly generate a matching receipt. Duplicate prevention built in.
+- **📇 Client & Item Catalogs** — Save reusable clients and items for faster document creation.
+- **🏢 Business Profile** — Save bank details, default notes, terms, and tax rate.
+- **🔢 Auto-Numbering** — Documents are automatically numbered by month (`INV-2026-07-0001`).
+- **👁️ Live Preview** — See invoice and receipt layouts while editing (desktop side-by-side, mobile toggle).
+- **📥 PDF Export** — Download individual PDFs or batch-export all documents as a ZIP archive.
+- **📤 Data Backup** — Export and import all data as a single JSON file.
+- **🌙 Dark Mode** — Automatically adapts to your system theme preference.
+- **📱 Responsive** — Works on desktop, tablet, and mobile with a dedicated bottom navigation.
+- **⚡ Offline-First** — Fully functional without internet after the initial load.
+- **🔍 Fuzzy Search** — Search clients, items, and documents as you type.
+- **⌨️ Keyboard-Friendly** — Section shortcuts (1–3) on landing page, accessible form controls.
+
+---
 
 ## Tech Stack
 
-- React 18
-- TypeScript
-- Vite
-- React Router
-- IndexedDB via `idb`
-- jsPDF and jsPDF AutoTable
-- vite-plugin-pwa
-- Vitest for unit tests
-- Playwright for E2E tests
-- ESLint + Prettier for code quality
-- GitHub Actions CI
+| Layer | Technology |
+|-------|-----------|
+| **Framework** | React 18 |
+| **Language** | TypeScript |
+| **Build Tool** | Vite 7 |
+| **Routing** | React Router v6 |
+| **Storage** | IndexedDB via `idb` |
+| **PDF** | jsPDF + jsPDF AutoTable |
+| **Icons** | [reicon](https://reicon.dev) (tree-shakeable SVG) |
+| **ZIP** | JSZip |
+| **PWA** | vite-plugin-pwa |
+| **Unit Tests** | Vitest + Testing Library |
+| **E2E Tests** | Playwright (Chromium, Mobile Chrome) |
+| **Linting** | ESLint |
+| **Formatting** | Prettier |
+| **CI** | GitHub Actions |
 
-## Requirements
-
-- Node.js `^20.19.0` or `>=22.12.0`
-- npm
-- A modern Chromium-based browser for the current E2E setup
-
-If Playwright browsers are not installed yet, run:
-
-```bash
-npx playwright install
-```
+---
 
 ## Getting Started
 
-Install dependencies:
+### Prerequisites
+
+- **Node.js** `^20.19.0` or `>=22.12.0`
+- **npm**
+- A modern Chromium-based browser (for E2E tests)
+
+### Installation
 
 ```bash
+# Clone the repository
+git clone https://github.com/irawananggie/invois.git
+cd invois
+
+# Install dependencies
 npm install
+
+# Install Playwright browsers (first time only)
+npx playwright install
 ```
 
-Start the development server:
+### Development
 
 ```bash
 npm run dev
 ```
 
-The app runs at:
+Open [http://localhost:5173](http://localhost:5173) in your browser.
 
-```text
-http://localhost:5173
-```
-
-Build the production app:
+### Production Build
 
 ```bash
 npm run build
-```
-
-Preview the production build:
-
-```bash
 npm run preview
 ```
 
-The preview server runs at:
+The preview server runs at [http://localhost:4173](http://localhost:4173).
 
-```text
-http://localhost:4173
+---
+
+## Scripts
+
+| Script | Description |
+|--------|-------------|
+| `npm run dev` | Start the Vite development server |
+| `npm run typecheck` | Run TypeScript type checking |
+| `npm run build` | Typecheck and build for production |
+| `npm run preview` | Serve the production build locally |
+| `npm run test` | Run Vitest unit tests |
+| `npm run test:watch` | Run Vitest in watch mode |
+| `npm run lint` | Run ESLint |
+| `npm run format` | Format code with Prettier |
+| `npm run e2e` | Build and run Playwright E2E tests |
+| `npm run ci` | Full CI gate: typecheck → lint → test → build → e2e |
+
+---
+
+## Testing
+
+### Unit Tests (`npm run test`)
+
+39 tests covering:
+- Currency formatting and IDR parsing (`lib/format.ts`)
+- Date helpers, UUID generation (`types.ts`)
+- Invoice/receipt calculation logic
+- Share text generation
+
+### E2E Tests (`npm run e2e`)
+
+50 tests across **Desktop Chromium** and **Mobile Chrome** (Pixel 5) covering:
+
+| Suite | Tests | Scope |
+|-------|:-----:|-------|
+| Landing page | 3 | Hero, mobile nav, keyboard shortcuts |
+| Dashboard | 2 | Info modal, create buttons |
+| Navigation | 2 | Bottom nav (mobile), sidebar (desktop) |
+| Clients CRUD | 2 | Create/edit/search, validation |
+| Items CRUD | 2 | Create/edit/search, validation |
+| Document Editor | 3 | Receipt creation, preview toggle, validation |
+| Document Detail | 2 | Full invoice lifecycle, receipt actions |
+| Settings | 2 | Profile save/persistence |
+| Download All | 1 | ZIP batch export |
+| Search & Filter | 1 | Type filter + text search |
+| Document workflows | 6 | Invoice lifecycle, PDF, DB upgrades, import/export |
+
+---
+
+## Project Structure
+
+```
+.
+├── public/                       # PWA icons, favicon, manifest
+├── src/
+│   ├── components/               # Reusable React components
+│   │   ├── Layout.tsx            # App shell (sidebar, topbar, bottom nav)
+│   │   └── Reicon.tsx            # reicon SVG wrapper
+│   ├── context/
+│   │   └── toast.tsx             # Toast notification provider
+│   ├── lib/
+│   │   ├── db.ts                 # IndexedDB operations & schema upgrades
+│   │   ├── format.ts             # IDR formatting, date utils, share text
+│   │   ├── pdf.ts                # PDF generation & ZIP batch download
+│   │   ├── seed.ts               # First-run data seeder
+│   │   └── useUnsavedChanges.ts  # Unsaved changes prompt hook
+│   ├── pages/
+│   │   ├── Landing.tsx           # Marketing landing page
+│   │   ├── Dashboard.tsx         # Stats & recent documents
+│   │   ├── Documents.tsx         # Document list with search & filter
+│   │   ├── DocumentEditor.tsx    # Invoice/receipt create & edit form
+│   │   ├── DocumentDetail.tsx    # Single document view & actions
+│   │   ├── Clients.tsx           # Client list & editor
+│   │   ├── Items.tsx             # Item catalog list & editor
+│   │   └── Settings.tsx          # Business profile & data management
+│   ├── styles/
+│   │   ├── app.css               # Design system, components, layouts
+│   │   └── landing.css           # Landing page styles
+│   ├── App.tsx                   # Route definitions
+│   ├── main.tsx                  # React entry point
+│   └── types.ts                  # Domain types & helpers
+├── tests/e2e/
+│   ├── all-flows.spec.ts         # Comprehensive E2E test suite
+│   ├── document-workflows.spec.ts # Document lifecycle tests
+│   ├── helpers.ts                # E2E test utilities
+│   └── invoice-smoke.spec.ts     # Invoice smoke tests
+├── public/                       # Static assets
+├── index.html                    # HTML entry point
+├── package.json
+├── playwright.config.ts
+├── tsconfig.json
+├── tsconfig.playwright.json
+└── vite.config.ts
 ```
 
-## Live App
+---
 
-Production deployment:
+## Deployment
 
-```text
-https://invois.pages.dev
-```
-
-The app is hosted on Cloudflare Pages.
-
-## Cloudflare Pages Deployment
-
-Use these build settings:
+### Cloudflare Pages
 
 | Setting | Value |
-| --- | --- |
+|---------|-------|
 | Framework preset | Vite |
 | Build command | `npm run build` |
 | Build output directory | `dist` |
 | Node.js version | `20.19.0` or newer |
 
-Run the local CI gate before deploying:
-
 ```bash
+# Run CI gate before deploying
 npm run ci
 ```
 
-## Scripts
+### Build Output
 
-| Script | Purpose |
-| --- | --- |
-| `npm run dev` | Start the Vite development server. |
-| `npm run typecheck` | Typecheck app code and Playwright test code. |
-| `npm run build` | Typecheck and build the production app into `dist/`. |
-| `npm run preview` | Serve the built app locally. |
-| `npm run test` | Run Vitest unit tests. |
-| `npm run test:watch` | Run Vitest in watch mode. |
-| `npm run lint` | Run ESLint on source code. |
-| `npm run format` | Format source code with Prettier. |
-| `npm run e2e` | Build the app and run Playwright E2E tests. |
-| `npm run ci` | Run the full local CI gate: typecheck, lint, unit tests, build, and E2E tests. |
+```
+dist/
+├── index.html
+├── manifest.webmanifest
+├── registerSW.js
+├── sw.js                          # Service worker
+├── workbox-*.js                   # Workbox runtime
+└── assets/
+    ├── index-*.css                # Global styles (~44 KB)
+    ├── index-*.js                 # App bundle (~221 KB)
+    ├── pdf-*.js                   # PDF library (lazy-loaded)
+    └── ...                        # Route-level code-split chunks
+```
 
-## Testing
+---
 
-The current E2E suite runs in:
+## Versioning
 
-- Desktop Chromium
-- Mobile Chromium using the Pixel 5 device profile
-- Timezone `Asia/Jakarta`
+This project follows [SemVer 2.0.0](https://semver.org/).
 
-Unit tests (`npm run test`) cover:
-
-- Currency formatting and parsing (`lib/format.ts`).
-- Date helpers, UUID generation (`types.ts`).
-- Calculation logic, share text generation.
-
-E2E workflows cover:
-
-- Invoice creation, reload persistence, paid status, and receipt creation.
-- Receipt duplicate prevention.
-- Dashboard paid/unpaid totals.
-- Jakarta-local date handling.
-- Required field validation.
-- First-run editor setup from an empty IndexedDB.
-- PDF download and non-empty file verification.
-- Global document sorting across invoices and receipts.
-- IndexedDB upgrade from v1 and v2 schemas.
-- Data export and import round-trip.
-
-Run the full local CI gate before every release:
+| Release | Criteria |
+|---------|----------|
+| **Major** | Breaking changes to data schemas or APIs |
+| **Minor** | New features, backward-compatible |
+| **Patch** | Bug fixes, performance improvements, no behavior changes |
 
 ```bash
-npm run ci
+# Check current version
+node -e "console.log(require('./package.json').version)"
+
+# Bump version (without git tag)
+npm version <major|minor|patch> --no-git-tag-version
 ```
 
-## Project Structure
+### Version History
 
-```text
-.
-|-- public/                 # PWA icons and static assets
-|-- src/
-|   |-- components/         # Shared layout components
-|   |-- context/            # React context providers
-|   |-- lib/                # IndexedDB, formatting, PDF, seed, and hooks
-|   |-- pages/              # Route-level app screens
-|   |-- styles/             # App and landing page styles
-|   |-- App.tsx             # Route setup
-|   |-- main.tsx            # React entrypoint
-|   `-- types.ts            # Domain types and date/id helpers
-|-- tests/e2e/              # Playwright E2E tests
-|-- package.json            # Scripts and dependencies
-|-- playwright.config.ts    # E2E configuration
-|-- tsconfig.json           # App TypeScript configuration
-|-- tsconfig.playwright.json
-`-- vite.config.ts          # Vite and PWA configuration
-```
+- **1.1.0** — UI/UX overhaul, dark mode, reicon icons, skeleton loading, batch ZIP export, comprehensive E2E tests
+- **1.0.0** — Initial stable release: invoice/receipt CRUD, PDF generation, client/item catalogs, offline PWA
 
-## Data and Offline Behavior
+---
 
-Invois stores all user data in IndexedDB under the `invois` database. Data stays in the current browser profile and is not synced to a server.
+## Data & Privacy
 
-The app seeds a starter business profile, sample clients, catalog items, and sample documents only when the database is completely empty. Existing user data should not be overwritten by seed data.
+- **All data stays on your device.** Invois does not use a backend server, cloud sync, or analytics.
+- Storage uses the browser's **IndexedDB** under the `invois` database. Data is scoped to the browser profile.
+- Clearing browser site data for the app origin will remove all stored data. Export a JSON backup first.
+- The app seeds sample data **only when the database is completely empty**.
+- Current database schema version: `3` (auto-migration handled in `src/lib/db.ts`).
 
-Schema upgrades are handled in `src/lib/db.ts`. Current database version: `3`.
-
-## Release and Versioning
-
-This project uses SemVer.
-
-- Current version: `1.0.0`
-- Patch releases should be reserved for narrow fixes that do not change expected behavior or data contracts.
-- Minor releases should add features without breaking existing data or workflows.
-- Major releases may include breaking changes to data schemas or APIs.
-
-Before release:
-
-```bash
-npm run ci
-```
-
-To bump versions without creating a Git tag:
-
-```bash
-npm version <version> --no-git-tag-version
-```
+---
 
 ## Troubleshooting
 
-If E2E tests fail because browsers are missing:
+| Issue | Solution |
+|-------|----------|
+| E2E tests fail: "browser not found" | Run `npx playwright install` |
+| Stale data during development | Clear IndexedDB via DevTools → Application → Storage |
+| PWA shows stale content | Unregister service worker in DevTools → Application → Service Workers |
+| Port conflict (5173/4173) | Stop the process using the port or use a different port |
+| Build fails with type errors | Run `npm run typecheck` and fix errors before building |
 
-```bash
-npx playwright install
-```
-
-If local data is stale during manual testing, clear the browser site data for the local app origin, or delete the `invois` IndexedDB database in DevTools.
-
-If the preview server port is already in use, stop the process using port `4173` or run Vite preview with another port.
-
-If PWA behavior looks stale during manual testing, unregister the service worker and clear cache storage in browser DevTools.
+---
 
 ## License
 
-MIT License.
+MIT License. Copyright © 2026 [Anggie Irawan](https://anggieirawan.my.id).
 
-Copyright (c) 2026 Anggie Irawan.
+---
 
-Portfolio: https://anggieirawan.my.id
+<p align="center">
+  <a href="https://invois.pages.dev" target="_blank">Try Invois →</a>
+</p>
