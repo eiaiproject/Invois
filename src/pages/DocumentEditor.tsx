@@ -6,55 +6,8 @@ import { formatIDR, formatIDRInput, parseIDRInput, calcTotals, formatDateISO, co
 import { useUnsavedChanges } from '../lib/useUnsavedChanges';
 import type { Invoice, Receipt, InvoiceItem, BusinessProfile, Client, Item } from '../types';
 import { addDaysISO, newId, nowISO, todayISO } from '../types';
-
-type EditorValidationError = { fieldId: string; message: string; section: string };
-
-function renderClientSuggestions(
-  isReceipt: boolean,
-  rec: Partial<Receipt>,
-  inv: Partial<Invoice>,
-  clients: Client[],
-  onSelect: (id: string) => void,
-) {
-  const clientName = isReceipt ? (rec.clientSnapshot?.name || '') : (inv.clientSnapshot?.name || '');
-  if (!clientName.trim()) return null;
-  const t = clientName.toLowerCase().trim();
-  const matches = clients.filter(c => c.name.toLowerCase() !== t && c.name.toLowerCase().includes(t));
-  if (matches.length === 0) return null;
-  return (
-    <div id="client-suggestions" className="suggestion-dropdown" style={{ position: 'absolute', top: '100%', left: 0, right: 0 }}>
-      {matches.slice(0, 5).map(c => (
-        <button key={c.id} type="button" className="suggestion-dropdown-item" onMouseDown={e => e.preventDefault()} onClick={() => onSelect(c.id)}>
-          <span className="avatar-small">{c.name.charAt(0).toUpperCase()}</span>
-          <span style={{ fontWeight: 600 }}>{c.name}</span>
-          {c.email && <span className="item-meta">{c.email}</span>}
-        </button>
-      ))}
-    </div>
-  );
-}
-
-function renderItemSuggestions(
-  item: InvoiceItem,
-  idx: number,
-  items: Item[],
-  onPick: (idx: number, name: string, price: number) => void,
-) {
-  if (!item.name.trim()) return null;
-  const t = item.name.toLowerCase().trim();
-  const matches = items.filter(c => c.name.toLowerCase() !== t && c.name.toLowerCase().includes(t));
-  if (matches.length === 0) return null;
-  return (
-    <div id={`item-${item.id}-suggestions`} className="suggestion-dropdown" style={{ position: 'absolute', top: '100%', left: 0, right: 0, maxHeight: 140 }}>
-      {matches.slice(0, 4).map(c => (
-        <button key={c.id} type="button" className="suggestion-dropdown-item" onMouseDown={e => e.preventDefault()} onClick={() => onPick(idx, c.name, c.price)}>
-          <span style={{ fontWeight: 600 }}>{c.name}</span>
-          <span className="item-meta">{formatIDR(c.price)}</span>
-        </button>
-      ))}
-    </div>
-  );
-}
+import { DocumentEditorForm } from '../components/DocumentEditorForm';
+import type { EditorValidationError } from '../components/editorTypes';
 
 function renderInvoicePreview(i: Invoice, biz: BusinessProfile | undefined) {
   return (
@@ -483,218 +436,32 @@ export function DocumentEditor() {
       )}
 
       {!preview && (
-        <div className={`split editor-preview`}>
+        <div className="split editor-preview">
           <div>
-            {/* ─── Form ─── */}
-            <div className="card card-pad-lg">
-
-              {/* Basic info */}
-              <button type="button" className="section-title" aria-expanded={expanded.basic} onClick={() => setExpanded(e => ({ ...e, basic: !e.basic }))} style={{ width: '100%' }}>
-                Basic Info {expanded.basic ? '▾' : '▸'}
-              </button>
-              {expanded.basic && (
-                <div className="mt-8">
-                  <div className="field">
-                    <label className="field-label" htmlFor="document-number">Number</label>
-                    {isReceipt ? (
-                      <input id="document-number" name="documentNumber" autoComplete="off" className="input" value={rec.number || ''} onChange={e => setRec(r => ({ ...r, number: e.target.value }))} />
-                    ) : (
-                      <input id="document-number" name="documentNumber" autoComplete="off" className="input" value={inv.number || ''} onChange={e => setInv(i => ({ ...i, number: e.target.value }))} />
-                    )}
-                  </div>
-                  {isReceipt ? (
-                    <div className="field">
-                      <label className="field-label" htmlFor="payment-date">Payment Date</label>
-                      <input id="payment-date" name="paymentDate" type="date" className="input" value={rec.paymentDate || ''} onChange={e => setRec(r => ({ ...r, paymentDate: e.target.value }))} />
-                    </div>
-                  ) : (
-                    <div className="field-row">
-                      <div className="field">
-                        <label className="field-label" htmlFor="issue-date">Issue Date</label>
-                        <input id="issue-date" name="issueDate" type="date" className="input" value={inv.issueDate || ''} onChange={e => setInv(i => ({ ...i, issueDate: e.target.value }))} />
-                      </div>
-                      <div className="field">
-                        <label className="field-label" htmlFor="due-date">Due Date</label>
-                        <input id="due-date" name="dueDate" type="date" className="input" value={inv.dueDate || ''} onChange={e => setInv(i => ({ ...i, dueDate: e.target.value }))} />
-                      </div>
-                    </div>
-                  )}
-                </div>
-              )}
-
-              {/* Client */}
-              <button type="button" className="section-title" aria-expanded={expanded.client} onClick={() => setExpanded(e => ({ ...e, client: !e.client }))} style={{ width: '100%' }}>
-                Client {expanded.client ? '▾' : '▸'}
-              </button>
-              {expanded.client && (
-                <div className="mt-8">
-                  <div className="field" style={{ position: 'relative' }}>
-                    <label className="field-label" htmlFor="document-client-name">Client Name</label>
-                    {isReceipt ? (
-                      <input id="document-client-name" name="clientName" autoComplete="organization" className="input" placeholder="Search or enter client name…" value={rec.clientSnapshot?.name || ''} onChange={e => {
-                        setValidationError(err => err?.fieldId === 'document-client-name' ? null : err);
-                        setRec(r => ({ ...r, clientId: undefined, clientSnapshot: { ...r.clientSnapshot, name: e.target.value } }));
-                      }} onFocus={e => e.target.select()} aria-invalid={validationError?.fieldId === 'document-client-name'} aria-describedby={validationError?.fieldId === 'document-client-name' ? 'document-client-name-error' : undefined} role="combobox" aria-expanded={false} aria-autocomplete="list" aria-controls="client-suggestions" />
-                    ) : (
-                      <input id="document-client-name" name="clientName" autoComplete="organization" className="input" placeholder="Search or enter client name…" value={inv.clientSnapshot?.name || ''} onChange={e => {
-                        setValidationError(err => err?.fieldId === 'document-client-name' ? null : err);
-                        setInv(i => ({ ...i, clientId: undefined, clientSnapshot: { ...i.clientSnapshot, name: e.target.value } }));
-                      }} onFocus={e => e.target.select()} aria-invalid={validationError?.fieldId === 'document-client-name'} aria-describedby={validationError?.fieldId === 'document-client-name' ? 'document-client-name-error' : undefined} role="combobox" aria-expanded={false} aria-autocomplete="list" aria-controls="client-suggestions" />
-                    )}
-                    {validationError?.fieldId === 'document-client-name' && <div id="document-client-name-error" className="field-error" role="alert">{validationError.message}</div>}
-                  </div>
-                  {/* Client suggestions */}
-                  {renderClientSuggestions(isReceipt, rec, inv, clients, selectClient)}
-                </div>
-              )}
-
-              {/* Items (invoice only) */}
-              {!isReceipt && (
-                <>
-                  <button type="button" className="section-title" aria-expanded={expanded.items} onClick={() => setExpanded(e => ({ ...e, items: !e.items }))} style={{ width: '100%' }}>
-                    Items {expanded.items ? '▾' : '▸'}
-                  </button>
-                  {expanded.items && (
-                    <div className="mt-8">
-	                      {lineItems.map((item, idx) => (
-	                        <div key={item.id} style={{ marginBottom: 16 }}>
-	                          <div style={{ position: 'relative' }}>
-	                            <input id={`item-${item.id}-name`} className="input" name={`item-${idx + 1}-name`} aria-label={`Item ${idx + 1} name`} placeholder="Type item name or search catalog…" value={item.name} onChange={e => { setValidationError(err => err?.fieldId === `item-${item.id}-name` ? null : err); updateLineItem(idx, 'name', e.target.value); }} onFocus={e => e.target.select()} style={{ fontWeight: 600, marginBottom: 6 }} aria-invalid={validationError?.fieldId === `item-${item.id}-name`} aria-describedby={validationError?.fieldId === `item-${item.id}-name` ? `item-${item.id}-name-error` : undefined} role="combobox" aria-expanded={false} aria-autocomplete="list" aria-controls={`item-${item.id}-suggestions`} />
-	                            {renderItemSuggestions(item, idx, items, pickItem)}
-	                          </div>
-	                          {validationError?.fieldId === `item-${item.id}-name` && <div id={`item-${item.id}-name-error`} className="field-error" role="alert">{validationError.message}</div>}
-	                          <div className="field-row-3" style={{ marginBottom: 4 }}>
-                            <div>
-                              <label className="field-label" htmlFor={`item-${item.id}-quantity`}>Qty</label>
-                              <input id={`item-${item.id}-quantity`} name={`item-${idx + 1}-quantity`} type="number" className="input num" min="1" value={item.quantity} onChange={e => updateLineItem(idx, 'quantity', Math.max(1, Number.parseInt(e.target.value) || 1))} />
-                            </div>
-                            <div>
-                              <label className="field-label" htmlFor={`item-${item.id}-price`}>Price</label>
-                              <input id={`item-${item.id}-price`} name={`item-${idx + 1}-price`} className="input num" value={formatIDRInput(item.price)} onChange={e => updateLineItem(idx, 'price', parseIDRInput(e.target.value))} inputMode="numeric" />
-                            </div>
-                            <div style={{ display: 'flex', flexDirection: 'column' }}>
-                              <span className="field-label">Amount</span>
-                              <span style={{ padding: '11px 14px', fontWeight: 700, fontVariantNumeric: 'tabular-nums', color: 'var(--color-text)', minHeight: 44, display: 'flex', alignItems: 'center' }}>{formatIDR(item.quantity * item.price)}</span>
-                            </div>
-                          </div>
-                          {lineItems.length > 1 && (
-                            <button type="button" className="btn btn-ghost btn-sm" style={{ color: 'var(--color-danger)' }} onClick={() => removeLineItem(idx)}>Remove item</button>
-                          )}
-                        </div>
-                      ))}
-                      <button type="button" className="btn btn-secondary btn-sm" onClick={addLineItem}>+ Add item</button>
-                    </div>
-                  )}
-                </>
-              )}
-
-              {/* Adjustments (invoice only) */}
-              {!isReceipt && (
-                <>
-                  <button type="button" className="section-title" aria-expanded={expanded.adjustments} onClick={() => setExpanded(e => ({ ...e, adjustments: !e.adjustments }))} style={{ width: '100%' }}>
-                    Adjustments {expanded.adjustments ? '▾' : '▸'}
-                  </button>
-                  {expanded.adjustments && (
-                    <div className="mt-8">
-                      <div className="field-row">
-                        <div className="field">
-                          <label className="field-label" htmlFor="invoice-discount">Discount (Rp)</label>
-                          <input id="invoice-discount" name="discount" className="input num" value={formatIDRInput(inv.discount || 0)} onChange={e => setInv(i => ({ ...i, discount: parseIDRInput(e.target.value) }))} inputMode="numeric" />
-                        </div>
-                        <div className="field">
-                          <label className="field-label" htmlFor="invoice-tax-rate">Tax (%)</label>
-                          <input id="invoice-tax-rate" name="taxRate" type="number" className="input num" min="0" max="100" value={inv.taxRate ?? 11} onChange={e => setInv(i => ({ ...i, taxRate: Number.parseFloat(e.target.value) || 0 }))} />
-                        </div>
-                      </div>
-                      <div className="totals">
-                        <div className="row"><span className="muted">Subtotal</span><span className="v num">{formatIDR(totals.subtotal)}</span></div>
-                        {totals.discount > 0 && <div className="row"><span className="muted">Discount</span><span className="v num">-{formatIDR(totals.discount)}</span></div>}
-                        <div className="row"><span className="muted">Tax ({inv.taxRate || 0}%)</span><span className="v num">{formatIDR(totals.taxAmount)}</span></div>
-                        <div className="row grand"><span>Total</span><span className="v num">{formatIDR(totals.total)}</span></div>
-                      </div>
-                    </div>
-                  )}
-                </>
-              )}
-
-              {/* Payment */}
-              <button type="button" className="section-title" aria-expanded={expanded.payment} onClick={() => setExpanded(e => ({ ...e, payment: !e.payment }))} style={{ width: '100%' }}>
-                Payment {expanded.payment ? '▾' : '▸'}
-              </button>
-              {expanded.payment && (
-                <div className="mt-8">
-                  <div className="field">
-                    <label className="field-label" htmlFor="payment-method">Payment Method</label>
-                    {isReceipt ? (
-                      <input id="payment-method" name="paymentMethod" autoComplete="off" className="input" value={rec.paymentMethod || ''} onChange={e => setRec(r => ({ ...r, paymentMethod: e.target.value }))} placeholder="Bank Transfer…" />
-                    ) : (
-                      <>
-                        <input id="payment-method" name="paymentMethod" autoComplete="off" className="input" value={inv.paymentMethod || ''} onChange={e => setInv(i => ({ ...i, paymentMethod: e.target.value }))} placeholder="Bank Transfer…" />
-                        <div className="field-row" style={{ marginTop: 8 }}>
-                          <div className="field">
-                            <label className="field-label" htmlFor="invoice-bank-name">Bank</label>
-                            <input id="invoice-bank-name" name="bankName" autoComplete="off" className="input" value={inv.bankName || ''} onChange={e => setInv(i => ({ ...i, bankName: e.target.value }))} />
-                          </div>
-                          <div className="field">
-                            <label className="field-label" htmlFor="invoice-bank-account-number">Account Number</label>
-                            <input id="invoice-bank-account-number" name="bankAccountNumber" autoComplete="off" className="input num" value={inv.bankAccountNumber || ''} onChange={e => setInv(i => ({ ...i, bankAccountNumber: e.target.value }))} />
-                          </div>
-                        </div>
-                        <div className="field">
-                          <label className="field-label" htmlFor="invoice-bank-account-holder">Account Holder</label>
-                          <input id="invoice-bank-account-holder" name="bankAccountHolder" autoComplete="off" className="input" value={inv.bankAccountHolder || ''} onChange={e => setInv(i => ({ ...i, bankAccountHolder: e.target.value }))} />
-                        </div>
-                      </>
-                    )}
-                  </div>
-	                  {isReceipt && (
-	                    <div className="field">
-	                      <label className="field-label" htmlFor="amount-paid">Amount Paid (Rp)</label>
-	                      <input id="amount-paid" name="amountPaid" className="input num" value={formatIDRInput(rec.amountPaid || 0)} onChange={e => { setValidationError(err => err?.fieldId === 'amount-paid' ? null : err); setRec(r => ({ ...r, amountPaid: parseIDRInput(e.target.value) })); }} inputMode="numeric" aria-invalid={validationError?.fieldId === 'amount-paid'} aria-describedby={validationError?.fieldId === 'amount-paid' ? 'amount-paid-error' : undefined} />
-	                      {validationError?.fieldId === 'amount-paid' && <div id="amount-paid-error" className="field-error" role="alert">{validationError.message}</div>}
-	                    </div>
-	                  )}
-                  {!isReceipt && (
-                    <div className="totals">
-                      <div className="row grand"><span>Total</span><span className="v num">{formatIDR(totals.total)}</span></div>
-                    </div>
-                  )}
-                </div>
-              )}
-
-              {/* Notes */}
-              <button type="button" className="section-title" aria-expanded={expanded.notes} onClick={() => setExpanded(e => ({ ...e, notes: !e.notes }))} style={{ width: '100%' }}>
-                Notes &amp; Terms {expanded.notes ? '▾' : '▸'}
-              </button>
-              {expanded.notes && (
-                <div className="mt-8">
-                  <div className="field">
-                    <label className="field-label" htmlFor="document-notes">Notes</label>
-                    <textarea id="document-notes" name="notes" autoComplete="off" className="textarea" rows={2} value={isReceipt ? (rec.notes || '') : (inv.notes || '')} onChange={e => isReceipt ? setRec(r => ({ ...r, notes: e.target.value })) : setInv(i => ({ ...i, notes: e.target.value }))} placeholder="Thank you for your business…" />
-                  </div>
-                  {!isReceipt && (
-                    <div className="field">
-                      <label className="field-label" htmlFor="document-terms">Terms</label>
-                      <textarea id="document-terms" name="terms" autoComplete="off" className="textarea" rows={2} value={inv.terms || ''} onChange={e => setInv(i => ({ ...i, terms: e.target.value }))} placeholder="Payment is due within 7 days…" />
-                    </div>
-                  )}
-                </div>
-              )}
-            </div>
-
-            {/* Mobile totals summary */}
-            {isReceipt && (
-              <div className="totals mt-16">
-                <div className="row grand"><span>Total</span><span className="v num">{formatIDR(rec.amountPaid || 0)}</span></div>
-              </div>
-            )}
-
-            {/* Actions */}
-            <div className="action-bar">
-              <button type="button" className="btn btn-primary btn-block" onClick={() => handleSave()} disabled={saving}>
-                {saveLabel}
-              </button>
-            </div>
+            <DocumentEditorForm
+              isReceipt={isReceipt}
+              saving={saving}
+              saveLabel={saveLabel}
+              inv={inv}
+              rec={rec}
+              lineItems={lineItems}
+              totals={totals}
+              expanded={expanded}
+              validationError={validationError}
+              clients={clients}
+              items={items}
+              setInv={setInv}
+              setRec={setRec}
+              setLineItems={setLineItems}
+              setExpanded={setExpanded}
+              setValidationError={setValidationError}
+              selectClient={selectClient}
+              pickItem={pickItem}
+              updateLineItem={updateLineItem}
+              addLineItem={addLineItem}
+              removeLineItem={removeLineItem}
+              handleSave={() => handleSave()}
+            />
           </div>
 
           {/* Desktop preview pane */}
