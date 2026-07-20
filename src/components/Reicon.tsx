@@ -1,9 +1,9 @@
 import type { IconFunction } from 'reicon';
 
 interface ReiconProps {
-  icon: IconFunction;
-  size?: number;
-  className?: string;
+  readonly icon: IconFunction;
+  readonly size?: number;
+  readonly className?: string;
 }
 
 export function Reicon({ icon, size = 24, className = '' }: ReiconProps) {

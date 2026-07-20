@@ -125,7 +125,6 @@ export function generateInvoicePDF(invoice: Invoice, biz: BusinessProfile): jsPD
     doc.setFont('helvetica', 'bold');
     setRGB(doc, C.text);
     doc.text(biz.name, bizX, bizY);
-    bizX = margin;
     if (biz.address) {
       setRGB(doc, C.muted);
       doc.setFontSize(9);

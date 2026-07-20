@@ -197,8 +197,8 @@ export function ClientEditor() {
           <textarea id="client-notes" name="notes" autoComplete="off" className="textarea" rows={2} value={form.notes} onChange={e => setForm(f => ({ ...f, notes: e.target.value }))} placeholder="Any internal notes…" />
         </div>
         <div className="form-actions">
-          <button className="btn btn-primary btn-block" onClick={handleSave}>{isEdit ? 'Save Changes' : 'Add Client'}</button>
-          <button className="btn btn-secondary" onClick={() => nav('/clients')}>Cancel</button>
+          <button type="button" className="btn btn-primary btn-block" onClick={handleSave}>{isEdit ? 'Save Changes' : 'Add Client'}</button>
+          <button type="button" className="btn btn-secondary" onClick={() => nav('/clients')}>Cancel</button>
         </div>
       </div>
     </div>

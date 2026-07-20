@@ -61,7 +61,7 @@ export function Documents() {
         'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
       ) || []).filter(el => !el.hasAttribute('disabled') && el.tabIndex !== -1);
       const first = focusable[0];
-      const last = focusable[focusable.length - 1];
+      const last = focusable.at(-1);
       if (!first || !last) return;
 
       if (e.shiftKey && document.activeElement === first) {
@@ -121,11 +121,11 @@ export function Documents() {
         </div>
         {docs && docs.length > 0 && (
           <div style={{ display: 'flex', gap: 8 }}>
-            <button className="btn btn-secondary" onClick={handleDownloadAll} disabled={downloading}>
+            <button type="button" className="btn btn-secondary" onClick={handleDownloadAll} disabled={downloading}>
               <Reicon icon={Download} size={16} />
               {downloading ? 'Downloading…' : 'Download All'}
             </button>
-            <button className="btn btn-primary" onClick={openSheet}>
+            <button type="button" className="btn btn-primary" onClick={openSheet}>
               <Reicon icon={Plus} size={16} />
               Create
             </button>
@@ -159,7 +159,7 @@ export function Documents() {
 
       <div className="filter-row">
         {(['all', 'invoice', 'receipt'] as const).map(f => (
-          <button key={f} className={`chip${filter === f ? ' active' : ''}`} aria-pressed={filter === f} onClick={() => updateListState({ type: f })}>
+          <button type="button" key={f} className={`chip${filter === f ? ' active' : ''}`} aria-pressed={filter === f} onClick={() => updateListState({ type: f })}>
             {f === 'all' ? 'All' : f === 'invoice' ? 'Invoices' : 'Receipts'}
           </button>
         ))}
@@ -169,7 +169,7 @@ export function Documents() {
         <div className="empty">
           <h3>{search ? 'No matches' : 'No documents yet'}</h3>
           <p>{search ? 'Try a different search.' : 'Create your first invoice to get started.'}</p>
-          {!search && <button className="btn btn-primary" onClick={() => nav('/documents/new/invoice')}>Create Invoice</button>}
+          {!search && <button type="button" className="btn btn-primary" onClick={() => nav('/documents/new/invoice')}>Create Invoice</button>}
         </div>
       ) : (
         <div className="doc-list">
@@ -194,18 +194,18 @@ export function Documents() {
       )}
 
       {showSheet && (
-        <div className="scrim" onClick={closeSheet}>
-          <div ref={sheetRef} className="sheet" role="dialog" aria-modal="true" aria-labelledby="create-document-title" onClick={e => e.stopPropagation()}>
+        <div className="scrim" onClick={closeSheet} onKeyDown={e => { if (e.key === 'Escape' || e.key === ' ') closeSheet(); }} role="dialog" aria-modal="true" aria-labelledby="create-document-title" tabIndex={-1}>
+          <div ref={sheetRef} className="sheet" role="document" aria-labelledby="create-document-title" onClick={e => e.stopPropagation()}>
             <div className="sheet-handle" aria-hidden="true" />
             <h2 id="create-document-title">Create New</h2>
-            <button ref={firstSheetButtonRef} className="btn btn-secondary btn-block mb-12" onClick={() => { setShowSheet(false); nav('/documents/new/invoice'); }}>
+            <button type="button" ref={firstSheetButtonRef} className="btn btn-secondary btn-block mb-12" onClick={() => { setShowSheet(false); nav('/documents/new/invoice'); }}>
               Create Invoice
             </button>
-            <button className="btn btn-secondary btn-block" onClick={() => { setShowSheet(false); nav('/documents/new/receipt'); }}>
+            <button type="button" className="btn btn-secondary btn-block" onClick={() => { setShowSheet(false); nav('/documents/new/receipt'); }}>
               Create Receipt
             </button>
             <div className="actions">
-              <button className="btn btn-ghost btn-block" onClick={closeSheet}>Cancel</button>
+              <button type="button" className="btn btn-ghost btn-block" onClick={closeSheet}>Cancel</button>
             </div>
           </div>
         </div>

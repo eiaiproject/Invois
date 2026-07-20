@@ -16,8 +16,7 @@ interface InvoisDB {
 let dbPromise: Promise<IDBPDatabase<InvoisDB>> | null = null;
 
 function getDB() {
-  if (!dbPromise) {
-    dbPromise = openDB<InvoisDB>(DB_NAME, DB_VERSION, {
+  dbPromise ??= openDB<InvoisDB>(DB_NAME, DB_VERSION, {
       upgrade(db, _oldVersion, _newVersion, tx) {
         if (!db.objectStoreNames.contains('business')) db.createObjectStore('business', { keyPath: 'id' });
         if (!db.objectStoreNames.contains('clients')) db.createObjectStore('clients', { keyPath: 'id' });
@@ -29,7 +28,6 @@ function getDB() {
         if (!db.objectStoreNames.contains('counters')) db.createObjectStore('counters');
       }
     });
-  }
   return dbPromise;
 }
 
@@ -219,10 +217,10 @@ export async function exportAllData(): Promise<ExportData> {
 
 export async function importAllData(data: ExportData): Promise<{ imported: boolean; counts: Record<string, number> }> {
   if (!data || typeof data !== 'object') {
-    throw new Error('Invalid import file format.');
+    throw new TypeError('Invalid import file format.');
   }
   if (!Array.isArray(data.invoices) || !Array.isArray(data.receipts)) {
-    throw new Error('Import file is missing required data (invoices or receipts).');
+    throw new TypeError('Import file is missing required data (invoices or receipts).');
   }
 
   const db = await getDB();

@@ -183,8 +183,8 @@
   justify-self: center;
 }
 .l-hero-assurance li {
-  --note-bg: var(--color-surface);
-  --note-border: var(--color-border);
+  --note-bg: var(--color-primary-soft);
+  --note-border: transparent;
   --note-mark: var(--color-primary);
   display: inline-flex;
   align-items: center;
@@ -208,11 +208,6 @@
   border-radius: 50%;
   background: var(--note-mark);
   flex: 0 0 auto;
-}
-.l-hero-assurance li {
-  --note-bg: var(--color-primary-soft);
-  --note-border: transparent;
-  --note-mark: var(--color-primary);
 }
 @media (min-width: 720px) {
   .l-hero-actions {
@@ -255,16 +250,6 @@
   box-shadow: var(--shadow-glow-primary);
 }
 
-/* ── Invoice card hover (delight + animate) ── */
-.l-invoice-card {
-  transition: transform 0.3s var(--ease-out), box-shadow 0.3s var(--ease-out);
-}
-.l-invoice-card:hover {
-  transform: translateY(-3px) rotate(-0.5deg);
-  box-shadow: var(--shadow-float);
-  will-change: transform;
-}
-
 /* ── Hero entrance animation (animate: gentler distances) ── */
 @keyframes l-hero-in {
   from { opacity: 0; transform: translateY(12px); }
@@ -281,14 +266,10 @@
   animation: l-hero-in 0.5s var(--ease-out) 0.12s both;
 }
 .l-preview {
-  animation: l-hero-in 0.6s var(--ease-out) 0.25s both;
-}
-
-/* ── Product preview ── */
-.l-preview {
   margin-top: 20px;
   padding-bottom: 20px;
   position: relative;
+  animation: l-hero-in 0.6s var(--ease-out) 0.25s both;
 }
 @media (min-width: 720px) {
   .l-preview {
@@ -314,11 +295,12 @@
   overflow: hidden;
   flex-shrink: 0;
   line-height: 1.25;
-  transition: transform var(--dur) var(--ease-out), box-shadow var(--dur) var(--ease-out);
+  transition: transform 0.3s var(--ease-out), box-shadow 0.3s var(--ease-out);
 }
 .l-invoice-card:hover {
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-elevated);
+  transform: translateY(-3px) rotate(-0.5deg);
+  box-shadow: var(--shadow-float);
+  will-change: transform;
 }
 .l-invoice-header {
   padding: 14px 16px 12px;
@@ -434,7 +416,7 @@
   font-size: 12px;
   border-bottom: 1px solid var(--color-border);
 }
-.l-items td.name-col { font-weight: 600; word-break: break-word; }
+.l-items td.name-col { font-weight: 600; overflow-wrap: break-word; }
 .l-items td.qty-col {
   color: var(--color-text-muted);
   font-family: var(--font-mono);

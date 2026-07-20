@@ -176,11 +176,11 @@ export function Settings() {
         </div>
         <div className="field">
           <label className="field-label" htmlFor="default-tax-rate">Default Tax Rate (%)</label>
-          <input id="default-tax-rate" name="defaultTaxRate" type="number" className="input num" min="0" max="100" value={form.defaultTaxRate ?? 11} onChange={e => update('defaultTaxRate', parseFloat(e.target.value) || 0)} />
+          <input id="default-tax-rate" name="defaultTaxRate" type="number" className="input num" min="0" max="100" value={form.defaultTaxRate ?? 11} onChange={e => update('defaultTaxRate', Number.parseFloat(e.target.value) || 0)} />
         </div>
       </div>
 
-      <button className="btn btn-primary btn-lg btn-block mb-24" onClick={handleSave}>
+      <button type="button" className="btn btn-primary btn-lg btn-block mb-24" onClick={handleSave}>
         Save Settings
       </button>
 
@@ -191,11 +191,11 @@ export function Settings() {
           Export your invoices, receipts, clients, and items as a JSON file. Import to restore on this or another device.
         </p>
         <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
-          <button className="btn btn-secondary" onClick={handleExport}>
+          <button type="button" className="btn btn-secondary" onClick={handleExport}>
             <Reicon icon={Download} size={16} />
             Export Data
           </button>
-          <button className="btn btn-secondary" onClick={() => importRef.current?.click()} disabled={importing}>
+          <button type="button" className="btn btn-secondary" onClick={() => importRef.current?.click()} disabled={importing}>
             <Reicon icon={Upload} size={16} />
             {importing ? 'Importing…' : 'Import Data'}
           </button>

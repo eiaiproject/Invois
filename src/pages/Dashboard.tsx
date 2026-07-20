@@ -25,7 +25,7 @@ let dashboardLoadPromise: Promise<{ biz: BusinessProfile | undefined; stats: Sta
 
 function loadDashboard() {
   if (!dashboardLoadPromise) {
-    dashboardLoadPromise = (async () => ({
+    dashboardLoadPromise ??= (async () => ({
       biz: await getBusiness(),
       stats: await getDashboardStats(),
     }))().finally(() => { dashboardLoadPromise = null; });
@@ -89,7 +89,10 @@ export function Dashboard() {
   );
 
   const h = new Date().getHours();
-  const greet = h < 12 ? 'Good morning' : h < 17 ? 'Good afternoon' : 'Good evening';
+  let greet: string;
+  if (h < 12) greet = 'Good morning';
+  else if (h < 17) greet = 'Good afternoon';
+  else greet = 'Good evening';
 
   return (
     <div>
@@ -98,23 +101,18 @@ export function Dashboard() {
           <h1 className="greet">{greet}</h1>
           {biz?.name && <div className="biz-name">{biz.name}</div>}
         </div>
-        <button
-          className="btn btn-ghost btn-icon"
-          onClick={() => setInfoOpen(true)}
-          aria-label="App info"
-          title="App info"
-        >
+        <button type="button" className="btn btn-ghost btn-icon" onClick={() => setInfoOpen(true)} aria-label="App info" title="App info">
           <Reicon icon={InfoCircle} size={20} />
         </button>
       </div>
       {loadError && <p className="muted mt-8">Dashboard data could not load. Try refreshing the page.</p>}
 
       <div className="quick-actions hide-mobile">
-        <button className="btn btn-primary btn-lg" onClick={() => nav('/documents/new/invoice')}>
+        <button type="button" className="btn btn-primary btn-lg" onClick={() => nav('/documents/new/invoice')}>
           <Reicon icon={Plus} size={16} />
           Create Invoice
         </button>
-        <button className="btn btn-secondary btn-lg" onClick={() => nav('/documents/new/receipt')}>
+        <button type="button" className="btn btn-secondary btn-lg" onClick={() => nav('/documents/new/receipt')}>
           <Reicon icon={Plus} size={16} />
           Create Receipt
         </button>
@@ -168,17 +166,17 @@ export function Dashboard() {
       </div>
 
       <div className="mobile-actions hide-desktop">
-        <button className="btn btn-primary btn-block" onClick={() => nav('/documents/new/invoice')}>
+        <button type="button" className="btn btn-primary btn-block" onClick={() => nav('/documents/new/invoice')}>
           <Reicon icon={Plus} size={16} />
           Create Invoice
         </button>
-        <button className="btn btn-secondary btn-block" onClick={() => nav('/documents/new/receipt')}>
+        <button type="button" className="btn btn-secondary btn-block" onClick={() => nav('/documents/new/receipt')}>
           <Reicon icon={Plus} size={16} />
           Create Receipt
         </button>
       </div>
       {infoOpen && (
-        <div className="scrim" onClick={() => setInfoOpen(false)} role="dialog" aria-modal="true" aria-labelledby="app-info-title">
+        <div className="scrim" onClick={() => setInfoOpen(false)} onKeyDown={e => { if (e.key === 'Escape' || e.key === ' ') setInfoOpen(false); }} role="dialog" aria-modal="true" aria-labelledby="app-info-title" tabIndex={-1}>
           <div className="sheet" onClick={e => e.stopPropagation()}>
             <div className="sheet-handle" />
             <h2 id="app-info-title">App Info</h2>
@@ -201,7 +199,7 @@ export function Dashboard() {
               </div>
             </div>
             <div className="actions" style={{ marginTop: 18 }}>
-              <button className="btn btn-primary" onClick={() => setInfoOpen(false)}>Close</button>
+              <button type="button" className="btn btn-primary" onClick={() => setInfoOpen(false)}>Close</button>
             </div>
           </div>
         </div>

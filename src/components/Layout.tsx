@@ -12,7 +12,7 @@ const mobileNav = [
   { to: '/settings', label: 'Settings', icon: Settings },
 ];
 
-export function Layout({ children }: { children?: ReactNode }) {
+export function Layout({ children }: { readonly children?: ReactNode }) {
   const [scrolled, setScrolled] = useState(false);
   const loc = useLocation();
 
@@ -33,7 +33,7 @@ export function Layout({ children }: { children?: ReactNode }) {
       <aside className="sidebar">
         <div className="brand">
           <img className="brand-mark" src="/favicon.svg" alt="" aria-hidden="true" />
-          Invois
+          <span>Invois</span>
         </div>
         <div className="sidebar-section">Menu</div>
         {mobileNav.map(n => (

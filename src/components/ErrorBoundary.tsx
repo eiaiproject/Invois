@@ -84,6 +84,7 @@ export class ErrorBoundary extends Component<Props, State> {
             </p>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
               <button
+                type="button"
                 onClick={this.handleReset}
                 style={{
                   padding: '12px 20px',
@@ -99,6 +100,7 @@ export class ErrorBoundary extends Component<Props, State> {
                 Try again
               </button>
               <button
+                type="button"
                 onClick={this.handleClearData}
                 style={{
                   padding: '12px 20px',

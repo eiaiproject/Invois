@@ -394,7 +394,7 @@ export function DocumentEditor() {
           <h1>{isEdit ? 'Edit' : 'New'} {isReceipt ? 'Receipt' : 'Invoice'}</h1>
           <p className="sub">{inv.number || rec.number}</p>
         </div>
-        <button className="btn btn-ghost" aria-pressed={preview} onClick={() => setPreview(p => !p)}>
+        <button type="button" className="btn btn-ghost" aria-pressed={preview} onClick={() => setPreview(p => !p)}>
           {preview ? 'Edit form' : 'Preview PDF'}
         </button>
       </div>
@@ -404,10 +404,10 @@ export function DocumentEditor() {
         <div className="hide-desktop">
           {isReceipt ? renderReceiptPreview() : renderInvoicePreview()}
           <div className="action-bar">
-            <button className="btn btn-primary btn-block" onClick={handleDownloadPDF}>Download PDF</button>
-            <button className="btn btn-secondary btn-block" onClick={handleCopyText}>Copy as plain text</button>
+            <button type="button" className="btn btn-primary btn-block" onClick={handleDownloadPDF}>Download PDF</button>
+            <button type="button" className="btn btn-secondary btn-block" onClick={handleCopyText}>Copy as plain text</button>
           </div>
-          <button className="btn btn-ghost btn-block mt-12" onClick={() => setPreview(false)}>Back to editor</button>
+          <button type="button" className="btn btn-ghost btn-block mt-12" onClick={() => setPreview(false)}>Back to editor</button>
         </div>
       )}
 
@@ -538,11 +538,11 @@ export function DocumentEditor() {
                             </div>
                           </div>
                           {lineItems.length > 1 && (
-                            <button className="btn btn-ghost btn-sm" style={{ color: 'var(--color-danger)' }} onClick={() => removeLineItem(idx)}>Remove item</button>
+                            <button type="button" className="btn btn-ghost btn-sm" style={{ color: 'var(--color-danger)' }} onClick={() => removeLineItem(idx)}>Remove item</button>
                           )}
                         </div>
                       ))}
-                      <button className="btn btn-secondary btn-sm" onClick={addLineItem}>+ Add item</button>
+                      <button type="button" className="btn btn-secondary btn-sm" onClick={addLineItem}>+ Add item</button>
                     </div>
                   )}
                 </>
@@ -651,7 +651,7 @@ export function DocumentEditor() {
 
             {/* Actions */}
             <div className="action-bar">
-              <button className="btn btn-primary btn-block" onClick={() => handleSave()} disabled={saving}>
+              <button type="button" className="btn btn-primary btn-block" onClick={() => handleSave()} disabled={saving}>
                 {saving ? 'Saving…' : isEdit ? 'Save Changes' : 'Save'}
               </button>
             </div>
@@ -661,8 +661,8 @@ export function DocumentEditor() {
           <div className="preview-pane hide-mobile">
             {isReceipt ? renderReceiptPreview() : renderInvoicePreview()}
             <div className="form-actions mt-16">
-              <button className="btn btn-secondary" onClick={handleDownloadPDF}>Download PDF</button>
-              <button className="btn btn-secondary" onClick={handleCopyText}>Copy as plain text</button>
+              <button type="button" className="btn btn-secondary" onClick={handleDownloadPDF}>Download PDF</button>
+              <button type="button" className="btn btn-secondary" onClick={handleCopyText}>Copy as plain text</button>
             </div>
           </div>
         </div>

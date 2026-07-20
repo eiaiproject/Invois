@@ -159,8 +159,8 @@ export function DocumentDetail() {
       {!isReceipt && (
         <div className="card card-pad-lg detail-card">
           <div className="section-title">Items</div>
-          {(doc as Invoice).items.map((item, idx) => (
-            <div key={idx} className="item-row">
+          {(doc as Invoice).items.map((item) => (
+            <div key={item.id} className="item-row">
               <div>
                 <div className="item-name">{item.name}</div>
                 {item.description && <div className="item-meta">{item.description}</div>}
@@ -208,47 +208,47 @@ export function DocumentDetail() {
 
       {/* Actions */}
       <div className="detail-actions">
-        <button className="btn btn-primary btn-block btn-lg" onClick={handleDownloadPDF}>
+        <button type="button" className="btn btn-primary btn-block btn-lg" onClick={handleDownloadPDF}>
           <Reicon icon={Download} size={16} />
           Download PDF
         </button>
-        <button className="btn btn-secondary btn-block" onClick={handleCopyText}>
+        <button type="button" className="btn btn-secondary btn-block" onClick={handleCopyText}>
           <Reicon icon={Copy} size={16} />
           Copy as plain text
         </button>
         {!isReceipt && (doc as Invoice).status === 'draft' && (
-          <button className="btn btn-primary btn-block" style={{ background: 'var(--color-accent)' }} onClick={handleMarkSent}>
+          <button type="button" className="btn btn-primary btn-block" style={{ background: 'var(--color-accent)' }} onClick={handleMarkSent}>
             <Reicon icon={Send} size={16} />
             Mark as Sent
           </button>
         )}
         {!isReceipt && (doc as Invoice).status !== 'paid' && (doc as Invoice).status !== 'cancelled' && (
-          <button className="btn btn-primary btn-block" style={{ background: 'var(--color-success)' }} onClick={handleMarkPaid}>
+          <button type="button" className="btn btn-primary btn-block" style={{ background: 'var(--color-success)' }} onClick={handleMarkPaid}>
             <Reicon icon={Check} size={16} />
             Mark as Paid
           </button>
         )}
         {!isReceipt && (doc as Invoice).status === 'paid' && !linkedReceipt && (
-            <button className="btn btn-secondary btn-block" onClick={handleCreateReceipt}>
+            <button type="button" className="btn btn-secondary btn-block" onClick={handleCreateReceipt}>
               <Reicon icon={ReceiptText} size={16} />
               Create Receipt from this Invoice
             </button>
         )}
         {!isReceipt && linkedReceipt && (
-          <button className="btn btn-secondary btn-block" onClick={() => nav(`/documents/receipt/${linkedReceipt.id}`)}>
+          <button type="button" className="btn btn-secondary btn-block" onClick={() => nav(`/documents/receipt/${linkedReceipt.id}`)}>
             <Reicon icon={ReceiptText} size={16} />
             View Receipt
           </button>
         )}
-        <button className="btn btn-secondary btn-block" onClick={() => nav(`/documents/${type}/${id}/edit`)}>
+        <button type="button" className="btn btn-secondary btn-block" onClick={() => nav(`/documents/${type}/${id}/edit`)}>
           <Reicon icon={Edit} size={16} />
           Edit
         </button>
-        <button className="btn btn-secondary btn-block" onClick={handleNewDocument}>
+        <button type="button" className="btn btn-secondary btn-block" onClick={handleNewDocument}>
           <Reicon icon={Plus} size={16} />
           {isReceipt ? 'New Receipt' : 'New Invoice'}
         </button>
-        <button className="btn btn-danger btn-block" onClick={handleDelete}>
+        <button type="button" className="btn btn-danger btn-block" onClick={handleDelete}>
           <Reicon icon={Trash} size={16} />
           Delete
         </button>

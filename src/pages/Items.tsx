@@ -186,7 +186,7 @@ export function ItemEditor() {
         <div className="field-row">
           <div className="field">
             <label className="field-label" htmlFor="item-price">Default Price (Rp) *</label>
-            <input id="item-price" name="price" className="input num" type="number" min="0" value={form.price} onChange={e => { setErrors(prev => ({ ...prev, price: undefined })); setForm(f => ({ ...f, price: parseInt(e.target.value) || 0 })); }} inputMode="numeric" aria-invalid={!!errors.price} aria-describedby={errors.price ? 'item-price-error' : undefined} />
+            <input id="item-price" name="price" className="input num" type="number" min="0" value={form.price} onChange={e => { setErrors(prev => ({ ...prev, price: undefined })); setForm(f => ({ ...f, price: Number.parseInt(e.target.value) || 0 })); }} inputMode="numeric" aria-invalid={!!errors.price} aria-describedby={errors.price ? 'item-price-error' : undefined} />
             {errors.price && <div id="item-price-error" className="field-error" role="alert">{errors.price}</div>}
           </div>
           <div className="field">
@@ -200,8 +200,8 @@ export function ItemEditor() {
           </div>
         </div>
         <div className="form-actions">
-          <button className="btn btn-primary btn-block" onClick={handleSave}>{isEdit ? 'Save Changes' : 'Add Item'}</button>
-          <button className="btn btn-secondary" onClick={() => nav('/items')}>Cancel</button>
+          <button type="button" className="btn btn-primary btn-block" onClick={handleSave}>{isEdit ? 'Save Changes' : 'Add Item'}</button>
+          <button type="button" className="btn btn-secondary" onClick={() => nav('/items')}>Cancel</button>
         </div>
       </div>
     </div>

@@ -78,7 +78,7 @@ export function Landing() {
     const sectionIds = ['workflow', 'features', 'trust'];
     const handleKey = (e: KeyboardEvent) => {
       if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
-      const num = parseInt(e.key);
+      const num = Number.parseInt(e.key);
       if (num >= 1 && num <= 3) {
         const el = document.getElementById(sectionIds[num - 1]);
         if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -97,7 +97,7 @@ export function Landing() {
         <div className="l-header-inner">
           <Link to="/" className="brand" aria-label="Invois home">
             <img className="brand-mark" src="/favicon.svg" alt="" aria-hidden="true" />
-            Invois
+            <span>Invois</span>
           </Link>
 
           {/* Desktop nav */}
@@ -111,6 +111,7 @@ export function Landing() {
             <Link to="/dashboard" className="btn btn-secondary btn-sm">Dashboard</Link>
             {/* Mobile hamburger */}
             <button
+              type="button"
               className="l-hamburger"
               onClick={() => setMobileNavOpen(!mobileNavOpen)}
               aria-expanded={mobileNavOpen}
@@ -440,7 +441,7 @@ export function Landing() {
         <div className="l-footer-inner">
           <div className="l-footer-brand">
             <img className="brand-mark" src="/favicon.svg" alt="" aria-hidden="true" />
-            Invois
+            <span>Invois</span>
           </div>
           <p className="l-footer-meta">
             &copy; {new Date().getFullYear()} Invois. All data stays on your device.

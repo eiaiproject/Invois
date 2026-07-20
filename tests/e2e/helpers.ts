@@ -1,7 +1,7 @@
 import { expect, type Page } from '@playwright/test';
 
 export function escaped(text: string) {
-  return new RegExp(text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
+  return new RegExp(text.replace(/[.*+?^${}()|[\]\\]/g, '\$&'));
 }
 
 export async function resetAppData(page: Page) {
@@ -20,7 +20,7 @@ export async function resetAppData(page: Page) {
     await new Promise<void>((resolve, reject) => {
       const request = indexedDB.deleteDatabase('invois');
       request.onsuccess = () => resolve();
-      request.onerror = () => reject(request.error);
+      request.onerror = () => reject(new Error(request.error?.message || 'Failed to delete database'));
       request.onblocked = () => resolve();
     });
   });
@@ -60,15 +60,14 @@ export async function openDocument(page: Page, number: string) {
 
 /** Wait for the Seeder to finish populating the DB. */
 export async function waitForSeed(page: Page) {
-  await page.waitForFunction(() =>
-    new Promise<boolean>((resolve) => {
-      const req = indexedDB.open('invois');
-      req.onsuccess = () => {
-        const db = req.result;
-        const tx = db.transaction('business', 'readonly');
-        const cnt = tx.objectStore('business').count();
-        cnt.onsuccess = () => { db.close(); resolve(cnt.result > 0); };
-      };
-    })
-  );
+  const hasSeedData = () => new Promise<boolean>((resolve) => {
+    const req = indexedDB.open('invois');
+    req.onsuccess = () => {
+      const db = req.result;
+      const tx = db.transaction('business', 'readonly');
+      const cnt = tx.objectStore('business').count();
+      cnt.onsuccess = () => { db.close(); resolve(cnt.result > 0); };
+    };
+  });
+  await page.waitForFunction(hasSeedData);
 }

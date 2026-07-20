@@ -8,8 +8,8 @@ export function formatIDR(amount: number): string {
 }
 
 export function parseIDRInput(raw: string): number {
-  const cleaned = raw.replace(/[^0-9]/g, '');
-  return cleaned ? parseInt(cleaned, 10) : 0;
+  const cleaned = raw.replace(/\D/g, '');
+  return cleaned ? Number.parseInt(cleaned, 10) : 0;
 }
 
 export function formatIDRInput(amount: number): string {
@@ -41,55 +41,52 @@ export function calcTotals(items: { quantity: number; price: number }[], discoun
 
 
 export function copyInvoiceText(invoice: Invoice): string {
-  const lines: string[] = [];
-  lines.push(`INVOICE ${invoice.number}`);
-  lines.push(`Date: ${formatDateISO(invoice.issueDate)}`);
-  if (invoice.dueDate) lines.push(`Due: ${formatDateISO(invoice.dueDate)}`);
-  lines.push('');
-  lines.push(`Bill To: ${invoice.clientSnapshot.name}`);
-  if (invoice.clientSnapshot.email) lines.push(`Email: ${invoice.clientSnapshot.email}`);
-  if (invoice.clientSnapshot.phone) lines.push(`Phone: ${invoice.clientSnapshot.phone}`);
-  if (invoice.clientSnapshot.address) lines.push(`Address: ${invoice.clientSnapshot.address}`);
-  lines.push('');
+  const parts: string[] = [
+    `INVOICE ${invoice.number}`,
+    `Date: ${formatDateISO(invoice.issueDate)}`,
+  ];
+  if (invoice.dueDate) parts.push(`Due: ${formatDateISO(invoice.dueDate)}`);
+  parts.push('');
+  const clientParts: string[] = [
+    `Bill To: ${invoice.clientSnapshot.name}`,
+  ];
+  if (invoice.clientSnapshot.email) clientParts.push(`Email: ${invoice.clientSnapshot.email}`);
+  if (invoice.clientSnapshot.phone) clientParts.push(`Phone: ${invoice.clientSnapshot.phone}`);
+  if (invoice.clientSnapshot.address) clientParts.push(`Address: ${invoice.clientSnapshot.address}`);
+  parts.push(...clientParts);
+  parts.push('');
   for (const item of invoice.items) {
     const desc = item.description ? ` (${item.description})` : '';
-    lines.push(`• ${item.name}${desc} — ${item.quantity} × ${formatIDR(item.price)} = ${formatIDR(item.amount)}`);
+    parts.push(`• ${item.name}${desc} — ${item.quantity} × ${formatIDR(item.price)} = ${formatIDR(item.amount)}`);
   }
-  lines.push('');
-  lines.push(`Subtotal: ${formatIDR(invoice.subtotal)}`);
-  if (invoice.discount > 0) lines.push(`Discount: -${formatIDR(invoice.discount)}`);
-  lines.push(`Tax (${invoice.taxRate}%): ${formatIDR(invoice.taxAmount)}`);
-  lines.push(`Total: ${formatIDR(invoice.total)}`);
-  if (invoice.paymentMethod) {
-    lines.push('');
-    lines.push(`Payment: ${invoice.paymentMethod}`);
-  }
-  if (invoice.bankName) lines.push(`Bank: ${invoice.bankName}`);
-  if (invoice.bankAccountNumber) lines.push(`Account: ${invoice.bankAccountNumber}`);
-  if (invoice.bankAccountHolder) lines.push(`Holder: ${invoice.bankAccountHolder}`);
-  if (invoice.notes) {
-    lines.push('');
-    lines.push(`Notes: ${invoice.notes}`);
-  }
-  if (invoice.terms) lines.push(`Terms: ${invoice.terms}`);
-  return lines.join('\n');
+  parts.push('');
+  const totalsParts: string[] = [
+    `Subtotal: ${formatIDR(invoice.subtotal)}`,
+  ];
+  if (invoice.discount > 0) totalsParts.push(`Discount: -${formatIDR(invoice.discount)}`);
+  totalsParts.push(`Tax (${invoice.taxRate}%): ${formatIDR(invoice.taxAmount)}`);
+  totalsParts.push(`Total: ${formatIDR(invoice.total)}`);
+  parts.push(...totalsParts);
+  if (invoice.paymentMethod) parts.push('', `Payment: ${invoice.paymentMethod}`);
+  if (invoice.bankName) parts.push(`Bank: ${invoice.bankName}`);
+  if (invoice.bankAccountNumber) parts.push(`Account: ${invoice.bankAccountNumber}`);
+  if (invoice.bankAccountHolder) parts.push(`Holder: ${invoice.bankAccountHolder}`);
+  if (invoice.notes) parts.push('', `Notes: ${invoice.notes}`);
+  if (invoice.terms) parts.push(`Terms: ${invoice.terms}`);
+  return parts.join('\n');
 }
 
 export function copyReceiptText(receipt: Receipt): string {
-  const lines: string[] = [];
-  lines.push(`RECEIPT ${receipt.number}`);
-  if (receipt.invoiceNumber) lines.push(`Invoice Ref: ${receipt.invoiceNumber}`);
-  lines.push(`Date: ${formatDateISO(receipt.paymentDate)}`);
-  lines.push('');
-  lines.push(`Received From: ${receipt.clientSnapshot.name}`);
-  if (receipt.clientSnapshot.email) lines.push(`Email: ${receipt.clientSnapshot.email}`);
-  if (receipt.clientSnapshot.phone) lines.push(`Phone: ${receipt.clientSnapshot.phone}`);
-  lines.push('');
-  lines.push(`Amount Paid: ${formatIDR(receipt.amountPaid)}`);
-  if (receipt.paymentMethod) lines.push(`Payment Method: ${receipt.paymentMethod}`);
-  if (receipt.notes) {
-    lines.push('');
-    lines.push(`Notes: ${receipt.notes}`);
-  }
-  return lines.join('\n');
+  const parts: string[] = [
+    `RECEIPT ${receipt.number}`,
+  ];
+  if (receipt.invoiceNumber) parts.push(`Invoice Ref: ${receipt.invoiceNumber}`);
+  parts.push(`Date: ${formatDateISO(receipt.paymentDate)}`);
+  parts.push('', `Received From: ${receipt.clientSnapshot.name}`);
+  if (receipt.clientSnapshot.email) parts.push(`Email: ${receipt.clientSnapshot.email}`);
+  if (receipt.clientSnapshot.phone) parts.push(`Phone: ${receipt.clientSnapshot.phone}`);
+  parts.push('', `Amount Paid: ${formatIDR(receipt.amountPaid)}`);
+  if (receipt.paymentMethod) parts.push(`Payment Method: ${receipt.paymentMethod}`);
+  if (receipt.notes) parts.push('', `Notes: ${receipt.notes}`);
+  return parts.join('\n');
 }
