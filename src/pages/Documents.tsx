@@ -195,7 +195,7 @@ export function Documents() {
       )}
 
       {showSheet && (
-        <dialog className="scrim" open onClick={closeSheet} onKeyDown={e => { if (e.key === 'Escape' || e.key === ' ' || e.key === 'Enter') { e.preventDefault(); closeSheet(); } }} aria-label="Close">
+        <dialog className="scrim" open onKeyDown={e => { if (e.key === 'Escape') { e.preventDefault(); closeSheet(); } }} aria-label="Close">
           <div ref={sheetRef} className="sheet" aria-labelledby="create-document-title" onClick={e => e.stopPropagation()}>
             <div className="sheet-handle" aria-hidden="true" />
             <h2 id="create-document-title">Create New</h2>

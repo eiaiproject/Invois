@@ -179,7 +179,7 @@ export function Dashboard() {
         </button>
       </div>
       {infoOpen && (
-        <dialog className="scrim" open onClick={() => setInfoOpen(false)} onKeyDown={e => { if (e.key === 'Escape' || e.key === ' ') setInfoOpen(false); }} aria-labelledby="app-info-title">
+        <dialog className="scrim" open onKeyDown={e => { if (e.key === 'Escape') setInfoOpen(false); }} aria-labelledby="app-info-title">
           <div className="sheet" onClick={e => e.stopPropagation()}>
             <div className="sheet-handle" />
             <h2 id="app-info-title">App Info</h2>
