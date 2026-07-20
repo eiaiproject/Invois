@@ -262,6 +262,7 @@
 .l-invoice-card:hover {
   transform: translateY(-3px) rotate(-0.5deg);
   box-shadow: var(--shadow-float);
+  will-change: transform;
 }
 
 /* ── Hero entrance animation (animate: gentler distances) ── */
@@ -534,6 +535,7 @@
   overflow: hidden;
   line-height: 1.25;
   animation: l-float 6s ease-in-out infinite;
+  will-change: transform;
 }
 @keyframes l-float {
   0%, 100% { transform: translateY(0); }

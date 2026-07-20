@@ -4,6 +4,8 @@ import { getItems, saveItem, getItem } from '../lib/db';
 import { useToast } from '../context/toast';
 import { formatIDR } from '../lib/format';
 import { useUnsavedChanges } from '../lib/useUnsavedChanges';
+import { Plus } from 'reicon';
+import { Reicon } from '../components/Reicon';
 import { newId, nowISO } from '../types';
 import type { Item } from '../types';
 
@@ -12,14 +14,14 @@ const EMPTY_ITEM_FORM = {
 };
 
 export function Items() {
-  const [items, setItems] = useState<Item[]>([]);
+  const [items, setItems] = useState<Item[] | null>(null);
   const [searchParams, setSearchParams] = useSearchParams();
   const search = searchParams.get('q') || '';
 
   const load = async () => setItems(await getItems());
   useEffect(() => { load(); }, []);
 
-  const filtered = items.filter(i => {
+  const filtered = (items || []).filter(i => {
     if (!search) return true;
     const q = search.toLowerCase();
     return i.name.toLowerCase().includes(q) || i.description?.toLowerCase().includes(q);
@@ -38,11 +40,11 @@ export function Items() {
       <div className="page-head">
         <div>
           <h1>Items</h1>
-          <p className="sub">{items.length} items &amp; services</p>
+          <p className="sub">{items ? `${items.length} items & services` : 'Loading…'}</p>
         </div>
-        {items.length > 0 && (
+        {items && items.length > 0 && (
           <Link to="/items/new" className="btn btn-primary">
-            <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 5v14M5 12h14"/></svg>
+            <Reicon icon={Plus} size={16} />
             Add Item
           </Link>
         )}
@@ -54,8 +56,37 @@ export function Items() {
         placeholder="Search items…"
         value={search}
         onChange={e => updateSearch(e.target.value)}
+        enterKeyHint="search"
+        onKeyDown={e => e.key === 'Enter' && e.currentTarget.blur()}
       />
 
+      {!items ? (
+        <>
+          <div className="skeleton" style={{ height: 44, borderRadius: 'var(--radius-md)', marginBottom: 12 }} />
+          <div className="skeleton-row">
+            <div style={{ flex: 1 }}>
+              <div className="skeleton skeleton-text" style={{ width: 180 }} />
+              <div className="skeleton skeleton-text short" />
+            </div>
+            <div className="skeleton" style={{ width: 80, height: 20, borderRadius: 4 }} />
+          </div>
+          <div className="skeleton-row">
+            <div style={{ flex: 1 }}>
+              <div className="skeleton skeleton-text" style={{ width: 140 }} />
+              <div className="skeleton skeleton-text short" />
+            </div>
+            <div className="skeleton" style={{ width: 80, height: 20, borderRadius: 4 }} />
+          </div>
+          <div className="skeleton-row">
+            <div style={{ flex: 1 }}>
+              <div className="skeleton skeleton-text" style={{ width: 160 }} />
+              <div className="skeleton skeleton-text short" />
+            </div>
+            <div className="skeleton" style={{ width: 80, height: 20, borderRadius: 4 }} />
+          </div>
+        </>
+      ) : (
+        <>
       {filtered.length === 0 ? (
         <div className="empty">
           <h3>{search ? 'No matches' : 'No items yet'}</h3>
@@ -76,6 +107,8 @@ export function Items() {
             </Link>
           ))}
         </div>
+      )}
+        </>
       )}
 
     </div>

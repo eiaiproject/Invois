@@ -1,5 +1,6 @@
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
+import JSZip from 'jszip';
 import type { Invoice, Receipt, BusinessProfile } from '../types';
 import { formatIDR, formatDateISO } from './format';
 
@@ -406,4 +407,37 @@ export async function sharePDF(doc: jsPDF, filename: string, shareText?: string)
   // Fallback: download
   downloadPDF(doc, filename);
   return false;
+}
+
+/* ─── Download all as ZIP ─── */
+
+export async function downloadAllAsZip(
+  invoices: Invoice[],
+  receipts: Receipt[],
+  biz: BusinessProfile
+): Promise<void> {
+  const zip = new JSZip();
+  const folder = zip.folder('invois-documents');
+  if (!folder) return;
+
+  for (const inv of invoices) {
+    const doc = generateInvoicePDF(inv, biz);
+    const blob = doc.output('blob');
+    folder.file(`${inv.number}.pdf`, blob);
+  }
+
+  for (const rec of receipts) {
+    const doc = generateReceiptPDF(rec, biz);
+    const blob = doc.output('blob');
+    folder.file(`${rec.number}.pdf`, blob);
+  }
+
+  const zipBlob = await folder.generateAsync({ type: 'blob' });
+  const date = new Date().toISOString().slice(0, 10);
+  const url = URL.createObjectURL(zipBlob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `invois-documents-${date}.zip`;
+  a.click();
+  URL.revokeObjectURL(url);
 }

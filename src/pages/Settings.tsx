@@ -2,6 +2,8 @@ import { useEffect, useRef, useState } from 'react';
 import { getBusiness, saveBusiness, exportAllData, importAllData, type ExportData } from '../lib/db';
 import { useToast } from '../context/toast';
 import { useUnsavedChanges } from '../lib/useUnsavedChanges';
+import { Download, Upload } from 'reicon';
+import { Reicon } from '../components/Reicon';
 import type { BusinessProfile } from '../types';
 
 const DEFAULT: BusinessProfile = {
@@ -190,11 +192,11 @@ export function Settings() {
         </p>
         <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
           <button className="btn btn-secondary" onClick={handleExport}>
-            <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ width: 16, height: 16 }}><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" /><polyline points="7 10 12 15 17 10" /><line x1="12" y1="15" x2="12" y2="3" /></svg>
+            <Reicon icon={Download} size={16} />
             Export Data
           </button>
           <button className="btn btn-secondary" onClick={() => importRef.current?.click()} disabled={importing}>
-            <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ width: 16, height: 16 }}><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" /><polyline points="17 8 12 3 7 8" /><line x1="12" y1="3" x2="12" y2="15" /></svg>
+            <Reicon icon={Upload} size={16} />
             {importing ? 'Importing…' : 'Import Data'}
           </button>
           <input

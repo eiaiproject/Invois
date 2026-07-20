@@ -1,13 +1,16 @@
 import { useEffect, useRef, useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
-import { getInvoices, getReceipts } from '../lib/db';
+import { getInvoices, getReceipts, getBusiness } from '../lib/db';
 import { formatIDR, formatDateISO } from '../lib/format';
+import { Plus, Download } from 'reicon';
+import { Reicon } from '../components/Reicon';
 
 type Doc = { kind: 'invoice' | 'receipt'; data: any };
 
 export function Documents() {
   const [docs, setDocs] = useState<Doc[]>([]);
   const [showSheet, setShowSheet] = useState(false);
+  const [downloading, setDownloading] = useState(false);
   const firstSheetButtonRef = useRef<HTMLButtonElement>(null);
   const sheetRef = useRef<HTMLDivElement>(null);
   const sheetOpenerRef = useRef<HTMLElement | null>(null);
@@ -31,6 +34,21 @@ export function Documents() {
   };
 
   useEffect(() => { load(); }, []);
+
+  const handleDownloadAll = async () => {
+    setDownloading(true);
+    try {
+      const [invoices, receipts, biz] = await Promise.all([getInvoices(), getReceipts(), getBusiness()]);
+      if (!biz) { alert('Please set up your business profile in Settings first.'); return; }
+      const { downloadAllAsZip } = await import('../lib/pdf');
+      await downloadAllAsZip(invoices, receipts, biz);
+    } catch (err) {
+      console.error(err);
+      alert('Failed to download documents.');
+    } finally {
+      setDownloading(false);
+    }
+  };
 
   useEffect(() => {
     if (!showSheet) return;
@@ -84,7 +102,7 @@ export function Documents() {
     setSearchParams(params, { replace: true });
   };
 
-  const filtered = docs.filter(d => {
+  const filtered = (docs || []).filter(d => {
     if (filter !== 'all' && d.kind !== filter) return false;
     if (search) {
       const q = search.toLowerCase();
@@ -99,22 +117,44 @@ export function Documents() {
       <div className="page-head">
         <div>
           <h1>Documents</h1>
-          <p className="sub">{docs.length} total</p>
+          <p className="sub">{docs ? `${docs.length} total` : 'Loading…'}</p>
         </div>
-        {docs.length > 0 && (
-          <button className="btn btn-primary" onClick={openSheet}>
-            <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 5v14M5 12h14"/></svg>
-            Create
-          </button>
+        {docs && docs.length > 0 && (
+          <div style={{ display: 'flex', gap: 8 }}>
+            <button className="btn btn-secondary" onClick={handleDownloadAll} disabled={downloading}>
+              <Reicon icon={Download} size={16} />
+              {downloading ? 'Downloading…' : 'Download All'}
+            </button>
+            <button className="btn btn-primary" onClick={openSheet}>
+              <Reicon icon={Plus} size={16} />
+              Create
+            </button>
+          </div>
         )}
       </div>
 
+      {!docs ? (
+        <>
+          <div className="skeleton" style={{ height: 44, borderRadius: 'var(--radius-md)', marginBottom: 12 }} />
+          <div className="filter-row">
+            <div className="skeleton" style={{ width: 60, height: 44, borderRadius: 'var(--radius-pill)' }} />
+            <div className="skeleton" style={{ width: 80, height: 44, borderRadius: 'var(--radius-pill)' }} />
+            <div className="skeleton" style={{ width: 80, height: 44, borderRadius: 'var(--radius-pill)' }} />
+          </div>
+          <div className="skeleton skeleton-card" />
+          <div className="skeleton skeleton-card" />
+          <div className="skeleton skeleton-card" />
+        </>
+      ) : (
+        <>
       <input
         className="input search-box"
         aria-label="Search documents"
         placeholder="Search documents…"
         value={search}
         onChange={e => updateListState({ q: e.target.value })}
+        enterKeyHint="search"
+        onKeyDown={e => e.key === 'Enter' && e.currentTarget.blur()}
       />
 
       <div className="filter-row">
@@ -125,7 +165,7 @@ export function Documents() {
         ))}
       </div>
 
-      {filtered.length === 0 ? (
+        {filtered.length === 0 ? (
         <div className="empty">
           <h3>{search ? 'No matches' : 'No documents yet'}</h3>
           <p>{search ? 'Try a different search.' : 'Create your first invoice to get started.'}</p>
@@ -149,6 +189,8 @@ export function Documents() {
             </Link>
           ))}
         </div>
+      )}
+        </>
       )}
 
       {showSheet && (

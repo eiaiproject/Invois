@@ -395,7 +395,7 @@ export function DocumentEditor() {
           <p className="sub">{inv.number || rec.number}</p>
         </div>
         <button className="btn btn-ghost" aria-pressed={preview} onClick={() => setPreview(p => !p)}>
-          {preview ? 'Edit' : 'Preview'}
+          {preview ? 'Edit form' : 'Preview PDF'}
         </button>
       </div>
 
@@ -480,16 +480,14 @@ export function DocumentEditor() {
                     const matches = clients.filter(c => c.name.toLowerCase() !== t && c.name.toLowerCase().includes(t));
                     if (matches.length === 0) return null;
                     return (
-                      <div style={{ position: 'relative', marginTop: -8 }}>
-                        <div style={{ position: 'absolute', top: 4, left: 0, right: 0, background: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-md)', boxShadow: 'var(--shadow-elevated)', zIndex: 10, maxHeight: 160, overflowY: 'auto' }} role="listbox">
-                          {matches.slice(0, 5).map(c => (
-                            <button key={c.id} type="button" role="option" style={{ display: 'flex', alignItems: 'center', gap: 10, width: '100%', padding: '10px 14px', border: 'none', background: 'none', cursor: 'pointer', textAlign: 'left', fontSize: 14, borderBottom: '1px solid var(--color-border)' }} onMouseDown={e => e.preventDefault()} onClick={() => selectClient(c.id)}>
-                              <span style={{ width: 28, height: 28, borderRadius: 'var(--radius-sm)', background: 'var(--color-primary-soft)', display: 'grid', placeItems: 'center', fontWeight: 700, fontSize: 12, color: 'var(--color-primary)', flexShrink: 0 }}>{c.name.charAt(0).toUpperCase()}</span>
-                              <span style={{ fontWeight: 600 }}>{c.name}</span>
-                              {c.email && <span style={{ marginLeft: 'auto', fontSize: 12, color: 'var(--color-text-muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{c.email}</span>}
-                            </button>
-                          ))}
-                        </div>
+                      <div className="suggestion-dropdown" style={{ position: 'absolute', top: '100%', left: 0, right: 0 }} role="listbox">
+                        {matches.slice(0, 5).map(c => (
+                          <button key={c.id} type="button" role="option" className="suggestion-dropdown-item" onMouseDown={e => e.preventDefault()} onClick={() => selectClient(c.id)}>
+                            <span className="avatar-small">{c.name.charAt(0).toUpperCase()}</span>
+                            <span style={{ fontWeight: 600 }}>{c.name}</span>
+                            {c.email && <span className="item-meta">{c.email}</span>}
+                          </button>
+                        ))}
                       </div>
                     );
                   })()}
@@ -513,11 +511,11 @@ export function DocumentEditor() {
 	                              const matches = items.filter(c => c.name.toLowerCase() !== t && c.name.toLowerCase().includes(t));
 	                              if (matches.length === 0) return null;
 	                              return (
-	                                <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, background: 'var(--color-surface)', border: '1px solid var(--color-border)', borderTop: 'none', borderRadius: '0 0 var(--radius-md) var(--radius-md)', boxShadow: 'var(--shadow-elevated)', zIndex: 10, maxHeight: 140, overflowY: 'auto' }} role="listbox">
+	                                <div className="suggestion-dropdown" style={{ position: 'absolute', top: '100%', left: 0, right: 0, maxHeight: 140 }} role="listbox">
 	                                  {matches.slice(0, 4).map(c => (
-	                                    <button key={c.id} type="button" role="option" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', padding: '8px 14px', border: 'none', background: 'none', cursor: 'pointer', textAlign: 'left', fontSize: 13, borderBottom: '1px solid var(--color-border)' }} onMouseDown={e => e.preventDefault()} onClick={() => { updateLineItem(idx, 'name', c.name); updateLineItem(idx, 'price', c.price); }}>
+	                                    <button key={c.id} type="button" role="option" className="suggestion-dropdown-item" onMouseDown={e => e.preventDefault()} onClick={() => { updateLineItem(idx, 'name', c.name); updateLineItem(idx, 'price', c.price); }}>
 	                                      <span style={{ fontWeight: 600 }}>{c.name}</span>
-	                                      <span style={{ fontSize: 12, color: 'var(--color-text-muted)', fontFamily: 'var(--font-mono)' }}>{formatIDR(c.price)}</span>
+	                                      <span className="item-meta">{formatIDR(c.price)}</span>
 	                                    </button>
 	                                  ))}
 	                                </div>

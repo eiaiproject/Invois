@@ -3,6 +3,8 @@ import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { getClients, getClient, saveClient } from '../lib/db';
 import { useToast } from '../context/toast';
 import { useUnsavedChanges } from '../lib/useUnsavedChanges';
+import { Plus } from 'reicon';
+import { Reicon } from '../components/Reicon';
 import { newId, nowISO } from '../types';
 import type { Client } from '../types';
 
@@ -11,14 +13,14 @@ const EMPTY_CLIENT_FORM = {
 };
 
 export function Clients() {
-  const [clients, setClients] = useState<Client[]>([]);
+  const [clients, setClients] = useState<Client[] | null>(null);
   const [searchParams, setSearchParams] = useSearchParams();
   const search = searchParams.get('q') || '';
 
   const load = async () => setClients(await getClients());
   useEffect(() => { load(); }, []);
 
-  const filtered = clients.filter(c => {
+  const filtered = (clients || []).filter(c => {
     if (!search) return true;
     const q = search.toLowerCase();
     return c.name.toLowerCase().includes(q) || c.email?.toLowerCase().includes(q) || c.phone?.includes(q);
@@ -37,11 +39,11 @@ export function Clients() {
       <div className="page-head">
         <div>
           <h1>Clients</h1>
-          <p className="sub">{clients.length} clients</p>
+          <p className="sub">{clients ? `${clients.length} clients` : 'Loading…'}</p>
         </div>
-        {clients.length > 0 && (
+        {clients && clients.length > 0 && (
           <Link to="/clients/new" className="btn btn-primary">
-            <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 5v14M5 12h14"/></svg>
+            <Reicon icon={Plus} size={16} />
             Add Client
           </Link>
         )}
@@ -53,8 +55,37 @@ export function Clients() {
         placeholder="Search clients…"
         value={search}
         onChange={e => updateSearch(e.target.value)}
+        enterKeyHint="search"
+        onKeyDown={e => e.key === 'Enter' && e.currentTarget.blur()}
       />
 
+      {!clients ? (
+        <>
+          <div className="skeleton" style={{ height: 44, borderRadius: 'var(--radius-md)', marginBottom: 12 }} />
+          <div className="skeleton-row">
+            <div className="skeleton skeleton-avatar" />
+            <div style={{ flex: 1 }}>
+              <div className="skeleton skeleton-text" style={{ width: 180 }} />
+              <div className="skeleton skeleton-text short" />
+            </div>
+          </div>
+          <div className="skeleton-row">
+            <div className="skeleton skeleton-avatar" />
+            <div style={{ flex: 1 }}>
+              <div className="skeleton skeleton-text" style={{ width: 140 }} />
+              <div className="skeleton skeleton-text short" />
+            </div>
+          </div>
+          <div className="skeleton-row">
+            <div className="skeleton skeleton-avatar" />
+            <div style={{ flex: 1 }}>
+              <div className="skeleton skeleton-text" style={{ width: 160 }} />
+              <div className="skeleton skeleton-text short" />
+            </div>
+          </div>
+        </>
+      ) : (
+        <>
       {filtered.length === 0 ? (
         <div className="empty">
           <h3>{search ? 'No matches' : 'No clients yet'}</h3>
@@ -75,6 +106,8 @@ export function Clients() {
             </Link>
           ))}
         </div>
+      )}
+        </>
       )}
 
     </div>

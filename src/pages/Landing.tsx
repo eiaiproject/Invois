@@ -1,5 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { Menu, X, Check, DocumentText, Share } from 'reicon';
+import { Reicon } from '../components/Reicon';
 
 const navLinks = [
   { label: 'How it works', href: '#workflow' },
@@ -115,13 +117,7 @@ export function Landing() {
               aria-controls="mobile-nav"
               aria-label={mobileNavOpen ? 'Close menu' : 'Open menu'}
             >
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-                {mobileNavOpen ? (
-                  <><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></>
-                ) : (
-                  <><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></>
-                )}
-              </svg>
+              <Reicon icon={mobileNavOpen ? X : Menu} size={20} />
             </button>
           </div>
         </div>
@@ -246,16 +242,16 @@ export function Landing() {
 
                   <div className="l-controls">
                     <span className="l-status-badge l-status-paid">
-                      <svg width="10" height="10" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M3 8.5l3.5 3.5L13 4"/></svg>
+                      <Reicon icon={Check} size={10} />
                       Paid
                     </span>
                     <div className="l-controls-spacer" />
                     <span className="l-control-btn">
-                      <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                      <Reicon icon={DocumentText} size={12} />
                       PDF
                     </span>
                     <span className="l-control-btn">
-                      <svg viewBox="0 0 24 24"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+                      <Reicon icon={Share} size={12} />
                       Share
                     </span>
                   </div>
@@ -266,7 +262,7 @@ export function Landing() {
                   <div className="l-phone-notch"><div className="l-phone-notch-bar" /></div>
                   <div className="l-phone-content">
                     <div className="l-phone-receipt-badge">
-                      <svg width="8" height="8" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M3 8.5l3.5 3.5L13 4"/></svg>
+                      <Reicon icon={Check} size={8} />
                       Receipt
                     </div>
                     <div className="l-phone-title">RCPT-2026-07-0001</div>

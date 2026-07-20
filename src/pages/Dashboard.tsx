@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { getDashboardStats, getBusiness } from '../lib/db';
 import { formatIDR } from '../lib/format';
+import { InfoCircle, Plus } from 'reicon';
+import { Reicon } from '../components/Reicon';
 import type { BusinessProfile } from '../types';
 
 interface Stats {
@@ -63,7 +65,28 @@ export function Dashboard() {
     return () => { mounted = false; };
   }, []);
 
-  if (!stats) return <div style={{ padding: 40, textAlign: 'center' }}><div className="spinner" /></div>;
+  if (!stats) return (
+    <div>
+      <div className="flex between center">
+        <div>
+          <div className="skeleton" style={{ height: 32, width: 200, marginBottom: 8, borderRadius: 6 }} />
+          <div className="skeleton" style={{ height: 16, width: 120, borderRadius: 4 }} />
+        </div>
+        <div className="skeleton" style={{ width: 44, height: 44, borderRadius: 12 }} />
+      </div>
+      <div className="stat-grid mt-24">
+        <div className="skeleton skeleton-stat" />
+        <div className="skeleton skeleton-stat" />
+        <div className="skeleton skeleton-stat" />
+      </div>
+      <div className="mt-24">
+        <div className="skeleton skeleton-section" />
+        <div className="skeleton skeleton-card" />
+        <div className="skeleton skeleton-card" />
+        <div className="skeleton skeleton-card" />
+      </div>
+    </div>
+  );
 
   const h = new Date().getHours();
   const greet = h < 12 ? 'Good morning' : h < 17 ? 'Good afternoon' : 'Good evening';
@@ -81,18 +104,18 @@ export function Dashboard() {
           aria-label="App info"
           title="App info"
         >
-          <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="20" height="20"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
+          <Reicon icon={InfoCircle} size={20} />
         </button>
       </div>
       {loadError && <p className="muted mt-8">Dashboard data could not load. Try refreshing the page.</p>}
 
       <div className="quick-actions hide-mobile">
         <button className="btn btn-primary btn-lg" onClick={() => nav('/documents/new/invoice')}>
-          <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 5v14M5 12h14"/></svg>
+          <Reicon icon={Plus} size={16} />
           Create Invoice
         </button>
         <button className="btn btn-secondary btn-lg" onClick={() => nav('/documents/new/receipt')}>
-          <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 5v14M5 12h14"/></svg>
+          <Reicon icon={Plus} size={16} />
           Create Receipt
         </button>
       </div>
@@ -146,11 +169,11 @@ export function Dashboard() {
 
       <div className="mobile-actions hide-desktop">
         <button className="btn btn-primary btn-block" onClick={() => nav('/documents/new/invoice')}>
-          <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 5v14M5 12h14"/></svg>
+          <Reicon icon={Plus} size={16} />
           Create Invoice
         </button>
         <button className="btn btn-secondary btn-block" onClick={() => nav('/documents/new/receipt')}>
-          <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 5v14M5 12h14"/></svg>
+          <Reicon icon={Plus} size={16} />
           Create Receipt
         </button>
       </div>
