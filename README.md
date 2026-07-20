@@ -84,7 +84,7 @@ Invois is a client-side **Progressive Web App** that lets you create invoices, c
 
 ```bash
 # Clone the repository
-git clone https://github.com/irawananggie/invois.git
+git clone https://github.com/eiaiproject/Invois.git
 cd invois
 
 # Install dependencies
