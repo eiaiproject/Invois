@@ -396,12 +396,13 @@ export function DocumentEditor() {
   };
 
   const saveLabel = saving ? 'Saving…' : isEdit ? 'Save Changes' : 'Save';
+  const docTypeHeading = `${isEdit ? 'Edit' : 'New'} ${isReceipt ? 'Receipt' : 'Invoice'}`;
 
   return (
     <div>
       <div className="page-head">
         <div>
-          <h1>{isEdit ? 'Edit' : 'New'} {isReceipt ? 'Receipt' : 'Invoice'}</h1>
+          <h1>{docTypeHeading}</h1>
           <p className="sub">{inv.number || rec.number}</p>
         </div>
         <button type="button" className="btn btn-ghost" aria-pressed={preview} onClick={() => setPreview(p => !p)}>
