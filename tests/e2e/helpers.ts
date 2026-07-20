@@ -49,7 +49,7 @@ export async function createInvoice(page: Page, total = '1000000') {
   await page.getByRole('button', { name: 'Save' }).click();
 
   await expect(page).toHaveURL(/\/documents$/);
-  await expect(page.getByText(invoiceNumber)).toBeVisible();
+  await expect(page.getByText(invoiceNumber, { exact: true }).first()).toBeVisible();
   return invoiceNumber;
 }
 
