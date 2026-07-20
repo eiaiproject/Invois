@@ -186,8 +186,8 @@ export function Documents() {
       )}
 
       {showSheet && (
-        <dialog ref={sheetRef} className="scrim" aria-label="Close sheet" onClick={e => { if (e.target === e.currentTarget) closeSheet(); }} onClose={() => setShowSheet(false)}>
-          <div className="sheet" aria-labelledby="create-document-title" onClick={e => e.stopPropagation()}>
+        <dialog ref={sheetRef} className="scrim" aria-label="Close sheet" onClose={() => setShowSheet(false)}>
+          <div className="sheet" aria-labelledby="create-document-title">
             <div className="sheet-handle" aria-hidden="true" />
             <h2 id="create-document-title">Create New</h2>
             <button type="button" ref={firstSheetButtonRef} className="btn btn-secondary btn-block mb-12" onClick={() => { setShowSheet(false); nav('/documents/new/invoice'); }}>

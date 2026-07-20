@@ -67,7 +67,7 @@ function checkSeed(): Promise<boolean> {
       const cnt = db.transaction('business', 'readonly').objectStore('business').count();
       cnt.onsuccess = () => { resolve(cnt.result > 0); db.close(); };
     };
-    req.onerror = () => reject(req.error);
+    req.onerror = () => reject(new Error(req.error?.message ?? 'IDB open failed'));
   });
 }
 export async function waitForSeed(page: Page) {

@@ -186,8 +186,8 @@ export function Dashboard() {
         </button>
       </div>
       {infoOpen && (
-        <dialog ref={infoDialogRef} className="scrim" aria-labelledby="app-info-title" onClick={e => { if (e.target === e.currentTarget) setInfoOpen(false); }} onClose={() => setInfoOpen(false)}>
-          <div className="sheet" onClick={e => e.stopPropagation()}>
+        <dialog ref={infoDialogRef} className="scrim" aria-labelledby="app-info-title" onClose={() => setInfoOpen(false)}>
+          <div className="sheet">
             <div className="sheet-handle" />
             <h2 id="app-info-title">App Info</h2>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
