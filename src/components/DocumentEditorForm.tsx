@@ -3,7 +3,7 @@ import { formatIDR, formatIDRInput, parseIDRInput } from '../lib/format';
 import { renderClientSuggestions, renderItemSuggestions } from './DocumentEditorSuggestions';
 import type { Client, EditorValidationError, Invoice, InvoiceItem, Item, Receipt, Totals } from './editorTypes';
 
-export type DocumentEditorFormProps = {
+export type DocumentEditorFormProps = Readonly<{
   isReceipt: boolean;
   saving: boolean;
   saveLabel: string;
@@ -17,7 +17,6 @@ export type DocumentEditorFormProps = {
   items: Item[];
   setInv: Dispatch<SetStateAction<Partial<Invoice>>>;
   setRec: Dispatch<SetStateAction<Partial<Receipt>>>;
-  setLineItems: Dispatch<SetStateAction<InvoiceItem[]>>;
   setExpanded: Dispatch<SetStateAction<Record<string, boolean>>>;
   setValidationError: Dispatch<SetStateAction<EditorValidationError | null>>;
   selectClient: (id: string) => void;
@@ -26,13 +25,14 @@ export type DocumentEditorFormProps = {
   addLineItem: () => void;
   removeLineItem: (idx: number) => void;
   handleSave: () => void;
-};
+}>;
 
 function toggleSection(setExpanded: DocumentEditorFormProps['setExpanded'], key: string) {
   setExpanded(prev => ({ ...prev, [key]: !prev[key] }));
 }
 
-function SectionTitle({ title, open, onToggle }: { title: string; open: boolean; onToggle: () => void }) {
+function SectionTitle(props: Readonly<{ title: string; open: boolean; onToggle: () => void }>) {
+  const { title, open, onToggle } = props;
   return (
     <button type="button" className="section-title" aria-expanded={open} onClick={onToggle} style={{ width: '100%' }}>
       {title} {open ? '▾' : '▸'}
@@ -40,9 +40,8 @@ function SectionTitle({ title, open, onToggle }: { title: string; open: boolean;
   );
 }
 
-function BasicInfoSection({
-  isReceipt, inv, rec, expanded, setInv, setRec, setExpanded,
-}: Pick<DocumentEditorFormProps, 'isReceipt' | 'inv' | 'rec' | 'expanded' | 'setInv' | 'setRec' | 'setExpanded'>) {
+function BasicInfoSection(props: Readonly<Pick<DocumentEditorFormProps, 'isReceipt' | 'inv' | 'rec' | 'expanded' | 'setInv' | 'setRec' | 'setExpanded'>>) {
+  const { isReceipt, inv, rec, expanded, setInv, setRec, setExpanded } = props;
   return (
     <>
       <SectionTitle title="Basic Info" open={expanded.basic ?? false} onToggle={() => toggleSection(setExpanded, 'basic')} />
@@ -79,9 +78,8 @@ function BasicInfoSection({
   );
 }
 
-function ClientSection({
-  isReceipt, inv, rec, clients, expanded, validationError, setInv, setRec, setExpanded, setValidationError, selectClient,
-}: Pick<DocumentEditorFormProps, 'isReceipt' | 'inv' | 'rec' | 'clients' | 'expanded' | 'validationError' | 'setInv' | 'setRec' | 'setExpanded' | 'setValidationError' | 'selectClient'>) {
+function ClientSection(props: Readonly<Pick<DocumentEditorFormProps, 'isReceipt' | 'inv' | 'rec' | 'clients' | 'expanded' | 'validationError' | 'setInv' | 'setRec' | 'setExpanded' | 'setValidationError' | 'selectClient'>>) {
+  const { isReceipt, inv, rec, clients, expanded, validationError, setInv, setRec, setExpanded, setValidationError, selectClient } = props;
   const clientName = isReceipt ? (rec.clientSnapshot?.name || '') : (inv.clientSnapshot?.name || '');
   const ariaError = validationError?.fieldId === 'document-client-name' ? 'document-client-name-error' : undefined;
   return (
@@ -120,9 +118,8 @@ function ClientSection({
   );
 }
 
-function ItemsSection({
-  lineItems, items, expanded, validationError, setExpanded, setValidationError, pickItem, updateLineItem, addLineItem, removeLineItem,
-}: Pick<DocumentEditorFormProps, 'lineItems' | 'items' | 'expanded' | 'validationError' | 'setExpanded' | 'setValidationError' | 'pickItem' | 'updateLineItem' | 'addLineItem' | 'removeLineItem'>) {
+function ItemsSection(props: Readonly<Pick<DocumentEditorFormProps, 'lineItems' | 'items' | 'expanded' | 'validationError' | 'setExpanded' | 'setValidationError' | 'pickItem' | 'updateLineItem' | 'addLineItem' | 'removeLineItem'>>) {
+  const { lineItems, items, expanded, validationError, setExpanded, setValidationError, pickItem, updateLineItem, addLineItem, removeLineItem } = props;
   return (
     <>
       <SectionTitle title="Items" open={expanded.items ?? false} onToggle={() => toggleSection(setExpanded, 'items')} />
@@ -181,9 +178,8 @@ function ItemsSection({
   );
 }
 
-function AdjustmentsSection({
-  inv, totals, expanded, setInv, setExpanded,
-}: Pick<DocumentEditorFormProps, 'inv' | 'totals' | 'expanded' | 'setInv' | 'setExpanded'>) {
+function AdjustmentsSection(props: Readonly<Pick<DocumentEditorFormProps, 'inv' | 'totals' | 'expanded' | 'setInv' | 'setExpanded'>>) {
+  const { inv, totals, expanded, setInv, setExpanded } = props;
   return (
     <>
       <SectionTitle title="Adjustments" open={expanded.adjustments ?? false} onToggle={() => toggleSection(setExpanded, 'adjustments')} />
@@ -211,9 +207,8 @@ function AdjustmentsSection({
   );
 }
 
-function PaymentSection({
-  isReceipt, inv, rec, totals, expanded, validationError, setInv, setRec, setExpanded, setValidationError,
-}: Pick<DocumentEditorFormProps, 'isReceipt' | 'inv' | 'rec' | 'totals' | 'expanded' | 'validationError' | 'setInv' | 'setRec' | 'setExpanded' | 'setValidationError'>) {
+function PaymentSection(props: Readonly<Pick<DocumentEditorFormProps, 'isReceipt' | 'inv' | 'rec' | 'totals' | 'expanded' | 'validationError' | 'setInv' | 'setRec' | 'setExpanded' | 'setValidationError'>>) {
+  const { isReceipt, inv, rec, totals, expanded, validationError, setInv, setRec, setExpanded, setValidationError } = props;
   const showAmountError = validationError?.fieldId === 'amount-paid';
   return (
     <>
@@ -271,9 +266,8 @@ function PaymentSection({
   );
 }
 
-function NotesSection({
-  isReceipt, inv, rec, expanded, setInv, setRec, setExpanded,
-}: Pick<DocumentEditorFormProps, 'isReceipt' | 'inv' | 'rec' | 'expanded' | 'setInv' | 'setRec' | 'setExpanded'>) {
+function NotesSection(props: Readonly<Pick<DocumentEditorFormProps, 'isReceipt' | 'inv' | 'rec' | 'expanded' | 'setInv' | 'setRec' | 'setExpanded'>>) {
+  const { isReceipt, inv, rec, expanded, setInv, setRec, setExpanded } = props;
   return (
     <>
       <SectionTitle title="Notes & Terms" open={expanded.notes ?? false} onToggle={() => toggleSection(setExpanded, 'notes')} />

@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { getInvoice, getReceipt, getReceipts, saveInvoice, saveReceipt, getBusiness, getClients, getItems, nextNumber, peekNextNumber } from '../lib/db';
 import { useToast } from '../context/toast';
-import { formatIDR, formatIDRInput, parseIDRInput, calcTotals, formatDateISO, copyInvoiceText, copyReceiptText } from '../lib/format';
+import { formatIDR, parseIDRInput, calcTotals, formatDateISO, copyInvoiceText, copyReceiptText } from '../lib/format';
 import { useUnsavedChanges } from '../lib/useUnsavedChanges';
 import type { Invoice, Receipt, InvoiceItem, BusinessProfile, Client, Item } from '../types';
 import { addDaysISO, newId, nowISO, todayISO } from '../types';
@@ -452,7 +452,6 @@ export function DocumentEditor() {
               items={items}
               setInv={setInv}
               setRec={setRec}
-              setLineItems={setLineItems}
               setExpanded={setExpanded}
               setValidationError={setValidationError}
               selectClient={selectClient}
