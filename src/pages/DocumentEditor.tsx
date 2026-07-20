@@ -129,7 +129,8 @@ export function DocumentEditor() {
       else await loadExistingDoc();
       setLoading(false);
     })();
-  }, [type, id]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [type, id, isReceipt]);
 
   useEffect(() => {
     if (!loading && !initialSnapshot) setInitialSnapshot(stateSnapshot);
