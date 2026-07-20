@@ -16,15 +16,15 @@ export function useToast() { return useContext(ToastContext); }
 export function ToastProvider({ children }: { readonly children: ReactNode }) {
   const [toasts, setToasts] = useState<ToastItem[]>([]);
 
+  const scheduleRemove = useCallback((id: string) => {
+    setTimeout(() => setToasts(prev => prev.filter(t => t.id !== id)), 2800);
+  }, []);
+
   const toast = useCallback((msg: string, type: ToastItem['type'] = 'default') => {
     const id = crypto.randomUUID();
     setToasts(prev => [...prev, { id, msg, type }]);
     scheduleRemove(id);
-  }, []);
-
-  const scheduleRemove = useCallback((id: string) => {
-    setTimeout(() => setToasts(prev => prev.filter(t => t.id !== id)), 2800);
-  }, []);
+  }, [scheduleRemove]);
 
   const ctxVal = useMemo(() => ({ toasts, toast }), [toasts, toast]);
 

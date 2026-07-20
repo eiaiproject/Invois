@@ -119,7 +119,7 @@ export function generateInvoicePDF(invoice: Invoice, biz: BusinessProfile): jsPD
 
   // ── Business info (left)
   const bizY = 22;
-  let bizX = margin;
+  const bizX = margin;
   if (biz.name) {
     doc.setFontSize(11);
     doc.setFont('helvetica', 'bold');
