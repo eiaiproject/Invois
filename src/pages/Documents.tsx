@@ -195,7 +195,7 @@ export function Documents() {
       )}
 
       {showSheet && (
-        <dialog className="scrim" open onKeyDown={e => { if (e.key === 'Escape') { e.preventDefault(); closeSheet(); } }} aria-label="Close">
+        <div className="scrim" role="dialog" aria-modal="true" aria-label="Close sheet" onClick={closeSheet} onKeyDown={e => { if (e.key === 'Escape') { e.stopPropagation(); closeSheet(); } }} tabIndex={-1}>
           <div ref={sheetRef} className="sheet" aria-labelledby="create-document-title" onClick={e => e.stopPropagation()}>
             <div className="sheet-handle" aria-hidden="true" />
             <h2 id="create-document-title">Create New</h2>
@@ -209,7 +209,7 @@ export function Documents() {
               <button type="button" className="btn btn-ghost btn-block" onClick={closeSheet}>Cancel</button>
             </div>
           </div>
-        </dialog>
+        </div>
       )}
     </div>
   );

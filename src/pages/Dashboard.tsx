@@ -179,7 +179,7 @@ export function Dashboard() {
         </button>
       </div>
       {infoOpen && (
-        <dialog className="scrim" open onKeyDown={e => { if (e.key === 'Escape') setInfoOpen(false); }} aria-labelledby="app-info-title">
+        <div className="scrim" role="dialog" aria-modal="true" aria-labelledby="app-info-title" onClick={() => setInfoOpen(false)} onKeyDown={e => { if (e.key === 'Escape') { e.stopPropagation(); setInfoOpen(false); } }} tabIndex={-1}>
           <div className="sheet" onClick={e => e.stopPropagation()}>
             <div className="sheet-handle" />
             <h2 id="app-info-title">App Info</h2>
@@ -205,7 +205,7 @@ export function Dashboard() {
               <button type="button" className="btn btn-primary" onClick={() => setInfoOpen(false)}>Close</button>
             </div>
           </div>
-        </dialog>
+        </div>
       )}
     </div>
   );
