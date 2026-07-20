@@ -9,6 +9,121 @@ import { addDaysISO, newId, nowISO, todayISO } from '../types';
 
 type EditorValidationError = { fieldId: string; message: string; section: string };
 
+function renderClientSuggestions(
+  isReceipt: boolean,
+  rec: Partial<Receipt>,
+  inv: Partial<Invoice>,
+  clients: Client[],
+  onSelect: (id: string) => void,
+) {
+  const clientName = isReceipt ? (rec.clientSnapshot?.name || '') : (inv.clientSnapshot?.name || '');
+  if (!clientName.trim()) return null;
+  const t = clientName.toLowerCase().trim();
+  const matches = clients.filter(c => c.name.toLowerCase() !== t && c.name.toLowerCase().includes(t));
+  if (matches.length === 0) return null;
+  return (
+    <div id="client-suggestions" className="suggestion-dropdown" style={{ position: 'absolute', top: '100%', left: 0, right: 0 }}>
+      {matches.slice(0, 5).map(c => (
+        <button key={c.id} type="button" className="suggestion-dropdown-item" onMouseDown={e => e.preventDefault()} onClick={() => onSelect(c.id)}>
+          <span className="avatar-small">{c.name.charAt(0).toUpperCase()}</span>
+          <span style={{ fontWeight: 600 }}>{c.name}</span>
+          {c.email && <span className="item-meta">{c.email}</span>}
+        </button>
+      ))}
+    </div>
+  );
+}
+
+function renderItemSuggestions(
+  item: InvoiceItem,
+  idx: number,
+  items: Item[],
+  onPick: (idx: number, name: string, price: number) => void,
+) {
+  if (!item.name.trim()) return null;
+  const t = item.name.toLowerCase().trim();
+  const matches = items.filter(c => c.name.toLowerCase() !== t && c.name.toLowerCase().includes(t));
+  if (matches.length === 0) return null;
+  return (
+    <div id={`item-${item.id}-suggestions`} className="suggestion-dropdown" style={{ position: 'absolute', top: '100%', left: 0, right: 0, maxHeight: 140 }}>
+      {matches.slice(0, 4).map(c => (
+        <button key={c.id} type="button" className="suggestion-dropdown-item" onMouseDown={e => e.preventDefault()} onClick={() => onPick(idx, c.name, c.price)}>
+          <span style={{ fontWeight: 600 }}>{c.name}</span>
+          <span className="item-meta">{formatIDR(c.price)}</span>
+        </button>
+      ))}
+    </div>
+  );
+}
+
+function renderInvoicePreview(i: Invoice, biz: BusinessProfile | undefined) {
+  return (
+    <div className="pdf-page">
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 24 }}>
+        <div>
+          {biz?.name && <div style={{ fontWeight: 700, fontSize: 14 }}>{biz.name}</div>}
+          {biz?.address && <div className="meta" style={{ fontSize: 10, marginTop: 2 }}>{biz.address}</div>}
+          {biz?.email && <div className="meta" style={{ fontSize: 10 }}>{biz.email}</div>}
+          {biz?.phone && <div className="meta" style={{ fontSize: 10 }}>{biz.phone}</div>}
+        </div>
+        <div style={{ textAlign: 'right' }}>
+          <div style={{ fontWeight: 800, fontSize: 20, color: 'var(--color-primary)' }}>INVOICE</div>
+          <div style={{ fontSize: 10, color: 'var(--color-text-muted)', marginTop: 4 }}>No: <span className="num">{i.number}</span></div>
+          <div style={{ fontSize: 10, color: 'var(--color-text-muted)' }}>Date: <span className="num">{formatDateISO(i.issueDate)}</span></div>
+          {i.dueDate && <div style={{ fontSize: 10, color: 'var(--color-text-muted)' }}>Due: <span className="num">{formatDateISO(i.dueDate)}</span></div>}
+        </div>
+      </div>
+      <div style={{ fontSize: 10, color: 'var(--color-text-muted)', textTransform: 'uppercase', fontWeight: 700, marginBottom: 4 }}>Bill To</div>
+      <div style={{ fontWeight: 600, fontSize: 12 }}>{i.clientSnapshot.name || '—'}</div>
+      {i.clientSnapshot.address && <div style={{ fontSize: 10 }}>{i.clientSnapshot.address}</div>}
+      <table>
+        <thead><tr><th>Description</th><th className="num">Qty</th><th className="num">Price</th><th className="num">Amount</th></tr></thead>
+        <tbody>
+          {i.items.map(item => (
+            <tr key={item.id}>
+              <td>{item.name || '—'}</td>
+              <td className="num">{item.quantity}</td>
+              <td className="num">{formatIDR(item.price)}</td>
+              <td className="num">{formatIDR(item.amount)}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+      <div style={{ marginTop: 12, textAlign: 'right' }}>
+        <div style={{ fontSize: 11, color: 'var(--color-text-muted)' }}>Subtotal: <b className="num">{formatIDR(i.subtotal)}</b></div>
+        {i.discount > 0 && <div style={{ fontSize: 11, color: 'var(--color-text-muted)' }}>Discount: <b className="num">-{formatIDR(i.discount)}</b></div>}
+        <div style={{ fontSize: 11, color: 'var(--color-text-muted)' }}>Tax (<span className="num">{i.taxRate}</span>%): <b className="num">{formatIDR(i.taxAmount)}</b></div>
+        <div className="grand-total"><span>Total</span><span className="num">{formatIDR(i.total)}</span></div>
+      </div>
+    </div>
+  );
+}
+
+function renderReceiptPreview(r: Receipt) {
+  return (
+    <div className="pdf-page">
+      <div style={{ textAlign: 'right', fontWeight: 800, fontSize: 20, color: 'var(--color-primary)' }}>RECEIPT</div>
+      <div style={{ marginTop: 12, fontSize: 14, fontWeight: 600 }}>Payment received</div>
+      <div className="badge-paid-pill" style={{ margin: '10px 0', display: 'inline-block' }}>PAID</div>
+      <div style={{ fontSize: 10, color: 'var(--color-text-muted)', marginTop: 8 }}>
+        No: <span className="num">{r.number}</span><br />
+        {r.invoiceNumber && <>Invoice Ref: <span className="num">{r.invoiceNumber}</span><br /></>}
+        Date: <span className="num">{formatDateISO(r.paymentDate)}</span><br />
+        {r.paymentMethod && <>Method: {r.paymentMethod}</>}
+      </div>
+      <div style={{ marginTop: 16 }}>
+        <div style={{ fontSize: 10, color: 'var(--color-text-muted)', textTransform: 'uppercase', fontWeight: 700 }}>Received From</div>
+        <div style={{ fontWeight: 600, fontSize: 12 }}>{r.clientSnapshot.name || '—'}</div>
+      </div>
+      <div style={{ marginTop: 16 }}>
+        <div style={{ fontSize: 10, color: 'var(--color-text-muted)', textTransform: 'uppercase', fontWeight: 700 }}>Amount Paid</div>
+        <div className="num" style={{ fontWeight: 800, fontSize: 20, color: 'var(--color-primary)', marginTop: 4 }}>{formatIDR(r.amountPaid)}</div>
+      </div>
+      {r.notes && <div style={{ marginTop: 12, fontSize: 10, color: 'var(--color-text-muted)' }}>{r.notes}</div>}
+    </div>
+  );
+}
+
 function blankInvoice(number: string, biz?: BusinessProfile): Partial<Invoice> {
   return {
     number,
@@ -234,6 +349,19 @@ export function DocumentEditor() {
   };
 
   // ─── Save helpers ───
+  const runGuarded = async (action: () => Promise<void>) => {
+    setSaving(true);
+    try {
+      await action();
+      nav('/documents');
+    } catch (err) {
+      console.error(err);
+      toast('Failed to save. Please try again.', 'danger');
+    } finally {
+      setSaving(false);
+    }
+  };
+
   const saveReceiptFlow = async (status?: string) => {
     const r = { ...buildReceipt(status as Receipt['status']), number: await saveNumber('receipt', rec.number) };
     if (r.invoiceId && !isEdit) {
@@ -269,15 +397,7 @@ export function DocumentEditor() {
   const handleSave = async (status?: string) => {
     const err = validate();
     if (err) { showValidationError(err); return; }
-    setSaving(true);
-    try {
-      if (isReceipt) await saveReceiptFlow(status);
-      else await saveInvoiceFlow(status);
-      nav('/documents');
-    } catch (err) {
-      console.error(err);
-      toast('Failed to save. Please try again.', 'danger');
-    } finally { setSaving(false); }
+    await runGuarded(() => isReceipt ? saveReceiptFlow(status) : saveInvoiceFlow(status));
   };
 
   // ─── PDF ───
@@ -322,114 +442,16 @@ export function DocumentEditor() {
     }
   };
 
+  const pickItem = (idx: number, name: string, price: number) => {
+    updateLineItem(idx, 'name', name);
+    updateLineItem(idx, 'price', price);
+  };
+
   if (loading) return <div style={{ padding: 40, textAlign: 'center' }}><div className="spinner" />;</div>;
 
-  const renderClientSuggestions = () => {
-    const clientName = isReceipt ? (rec.clientSnapshot?.name || '') : (inv.clientSnapshot?.name || '');
-    if (!clientName.trim()) return null;
-    const t = clientName.toLowerCase().trim();
-    const matches = clients.filter(c => c.name.toLowerCase() !== t && c.name.toLowerCase().includes(t));
-    if (matches.length === 0) return null;
-    return (
-      <div id="client-suggestions" className="suggestion-dropdown" style={{ position: 'absolute', top: '100%', left: 0, right: 0 }}>
-        {matches.slice(0, 5).map(c => (
-          <button key={c.id} type="button" className="suggestion-dropdown-item" onMouseDown={e => e.preventDefault()} onClick={() => selectClient(c.id)}>
-            <span className="avatar-small">{c.name.charAt(0).toUpperCase()}</span>
-            <span style={{ fontWeight: 600 }}>{c.name}</span>
-            {c.email && <span className="item-meta">{c.email}</span>}
-          </button>
-        ))}
-      </div>
-    );
-  };
-
-  const renderItemSuggestions = (item: InvoiceItem, idx: number) => {
-    if (!item.name.trim()) return null;
-    const t = item.name.toLowerCase().trim();
-    const matches = items.filter(c => c.name.toLowerCase() !== t && c.name.toLowerCase().includes(t));
-    if (matches.length === 0) return null;
-    return (
-      <div id={`item-${item.id}-suggestions`} className="suggestion-dropdown" style={{ position: 'absolute', top: '100%', left: 0, right: 0, maxHeight: 140 }}>
-        {matches.slice(0, 4).map(c => (
-          <button key={c.id} type="button" className="suggestion-dropdown-item" onMouseDown={e => e.preventDefault()} onClick={() => { updateLineItem(idx, 'name', c.name); updateLineItem(idx, 'price', c.price); }}>
-            <span style={{ fontWeight: 600 }}>{c.name}</span>
-            <span className="item-meta">{formatIDR(c.price)}</span>
-          </button>
-        ))}
-      </div>
-    );
-  };
-
   // ─── Live preview (inline) ───
-  const renderInvoicePreview = () => {
-    const i = buildInvoice();
-    return (
-      <div className="pdf-page">
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 24 }}>
-          <div>
-            {biz?.name && <div style={{ fontWeight: 700, fontSize: 14 }}>{biz.name}</div>}
-            {biz?.address && <div className="meta" style={{ fontSize: 10, marginTop: 2 }}>{biz.address}</div>}
-            {biz?.email && <div className="meta" style={{ fontSize: 10 }}>{biz.email}</div>}
-            {biz?.phone && <div className="meta" style={{ fontSize: 10 }}>{biz.phone}</div>}
-          </div>
-          <div style={{ textAlign: 'right' }}>
-            <div style={{ fontWeight: 800, fontSize: 20, color: 'var(--color-primary)' }}>INVOICE</div>
-            <div style={{ fontSize: 10, color: 'var(--color-text-muted)', marginTop: 4 }}>No: <span className="num">{i.number}</span></div>
-            <div style={{ fontSize: 10, color: 'var(--color-text-muted)' }}>Date: <span className="num">{formatDateISO(i.issueDate)}</span></div>
-            {i.dueDate && <div style={{ fontSize: 10, color: 'var(--color-text-muted)' }}>Due: <span className="num">{formatDateISO(i.dueDate)}</span></div>}
-          </div>
-        </div>
-        <div style={{ fontSize: 10, color: 'var(--color-text-muted)', textTransform: 'uppercase', fontWeight: 700, marginBottom: 4 }}>Bill To</div>
-        <div style={{ fontWeight: 600, fontSize: 12 }}>{i.clientSnapshot.name || '—'}</div>
-        {i.clientSnapshot.address && <div style={{ fontSize: 10 }}>{i.clientSnapshot.address}</div>}
-        <table>
-          <thead><tr><th>Description</th><th className="num">Qty</th><th className="num">Price</th><th className="num">Amount</th></tr></thead>
-          <tbody>
-            {i.items.map(item => (
-              <tr key={item.id}>
-                <td>{item.name || '—'}</td>
-                <td className="num">{item.quantity}</td>
-                <td className="num">{formatIDR(item.price)}</td>
-                <td className="num">{formatIDR(item.amount)}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-        <div style={{ marginTop: 12, textAlign: 'right' }}>
-          <div style={{ fontSize: 11, color: 'var(--color-text-muted)' }}>Subtotal: <b className="num">{formatIDR(i.subtotal)}</b></div>
-          {i.discount > 0 && <div style={{ fontSize: 11, color: 'var(--color-text-muted)' }}>Discount: <b className="num">-{formatIDR(i.discount)}</b></div>}
-          <div style={{ fontSize: 11, color: 'var(--color-text-muted)' }}>Tax (<span className="num">{i.taxRate}</span>%): <b className="num">{formatIDR(i.taxAmount)}</b></div>
-          <div className="grand-total"><span>Total</span><span className="num">{formatIDR(i.total)}</span></div>
-        </div>
-      </div>
-    );
-  };
-
-  const renderReceiptPreview = () => {
-    const r = buildReceipt();
-    return (
-      <div className="pdf-page">
-        <div style={{ textAlign: 'right', fontWeight: 800, fontSize: 20, color: 'var(--color-primary)' }}>RECEIPT</div>
-        <div style={{ marginTop: 12, fontSize: 14, fontWeight: 600 }}>Payment received</div>
-        <div className="badge-paid-pill" style={{ margin: '10px 0', display: 'inline-block' }}>PAID</div>
-        <div style={{ fontSize: 10, color: 'var(--color-text-muted)', marginTop: 8 }}>
-          No: <span className="num">{r.number}</span><br />
-          {r.invoiceNumber && <>Invoice Ref: <span className="num">{r.invoiceNumber}</span><br /></>}
-          Date: <span className="num">{formatDateISO(r.paymentDate)}</span><br />
-          {r.paymentMethod && <>Method: {r.paymentMethod}</>}
-        </div>
-        <div style={{ marginTop: 16 }}>
-          <div style={{ fontSize: 10, color: 'var(--color-text-muted)', textTransform: 'uppercase', fontWeight: 700 }}>Received From</div>
-          <div style={{ fontWeight: 600, fontSize: 12 }}>{r.clientSnapshot.name || '—'}</div>
-        </div>
-        <div style={{ marginTop: 16 }}>
-          <div style={{ fontSize: 10, color: 'var(--color-text-muted)', textTransform: 'uppercase', fontWeight: 700 }}>Amount Paid</div>
-          <div className="num" style={{ fontWeight: 800, fontSize: 20, color: 'var(--color-primary)', marginTop: 4 }}>{formatIDR(r.amountPaid)}</div>
-        </div>
-        {r.notes && <div style={{ marginTop: 12, fontSize: 10, color: 'var(--color-text-muted)' }}>{r.notes}</div>}
-      </div>
-    );
-  };
+  const invoicePreview = isReceipt ? null : renderInvoicePreview(buildInvoice(), biz);
+  const receiptPreview = isReceipt ? renderReceiptPreview(buildReceipt()) : null;
 
   let saveLabel = 'Save';
   if (saving) saveLabel = 'Saving…';
@@ -451,7 +473,7 @@ export function DocumentEditor() {
       {/* Mobile preview toggle */}
       {preview && (
         <div className="hide-desktop">
-          {isReceipt ? renderReceiptPreview() : renderInvoicePreview()}
+          {receiptPreview ?? invoicePreview}
           <div className="action-bar">
             <button type="button" className="btn btn-primary btn-block" onClick={handleDownloadPDF}>Download PDF</button>
             <button type="button" className="btn btn-secondary btn-block" onClick={handleCopyText}>Copy as plain text</button>
@@ -522,7 +544,7 @@ export function DocumentEditor() {
                     {validationError?.fieldId === 'document-client-name' && <div id="document-client-name-error" className="field-error" role="alert">{validationError.message}</div>}
                   </div>
                   {/* Client suggestions */}
-                  {renderClientSuggestions()}
+                  {renderClientSuggestions(isReceipt, rec, inv, clients, selectClient)}
                 </div>
               )}
 
@@ -538,7 +560,7 @@ export function DocumentEditor() {
 	                        <div key={item.id} style={{ marginBottom: 16 }}>
 	                          <div style={{ position: 'relative' }}>
 	                            <input id={`item-${item.id}-name`} className="input" name={`item-${idx + 1}-name`} aria-label={`Item ${idx + 1} name`} placeholder="Type item name or search catalog…" value={item.name} onChange={e => { setValidationError(err => err?.fieldId === `item-${item.id}-name` ? null : err); updateLineItem(idx, 'name', e.target.value); }} onFocus={e => e.target.select()} style={{ fontWeight: 600, marginBottom: 6 }} aria-invalid={validationError?.fieldId === `item-${item.id}-name`} aria-describedby={validationError?.fieldId === `item-${item.id}-name` ? `item-${item.id}-name-error` : undefined} role="combobox" aria-expanded={false} aria-autocomplete="list" aria-controls={`item-${item.id}-suggestions`} />
-	                            {renderItemSuggestions(item, idx)}
+	                            {renderItemSuggestions(item, idx, items, pickItem)}
 	                          </div>
 	                          {validationError?.fieldId === `item-${item.id}-name` && <div id={`item-${item.id}-name-error`} className="field-error" role="alert">{validationError.message}</div>}
 	                          <div className="field-row-3" style={{ marginBottom: 4 }}>
@@ -677,7 +699,7 @@ export function DocumentEditor() {
 
           {/* Desktop preview pane */}
           <div className="preview-pane hide-mobile">
-            {isReceipt ? renderReceiptPreview() : renderInvoicePreview()}
+            {receiptPreview ?? invoicePreview}
             <div className="form-actions mt-16">
               <button type="button" className="btn btn-secondary" onClick={handleDownloadPDF}>Download PDF</button>
               <button type="button" className="btn btn-secondary" onClick={handleCopyText}>Copy as plain text</button>

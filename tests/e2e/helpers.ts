@@ -59,16 +59,17 @@ export async function openDocument(page: Page, number: string) {
 }
 
 /** Wait for the Seeder to finish populating the DB. */
-export async function waitForSeed(page: Page) {
-  const hasSeedData = () => new Promise<boolean>((resolve) => {
+function checkSeed(): Promise<boolean> {
+  return new Promise((resolve, reject) => {
     const req = indexedDB.open('invois');
     req.onsuccess = () => {
       const db = req.result;
-      const tx = db.transaction('business', 'readonly');
-      const cnt = tx.objectStore('business').count();
-      cnt.onsuccess = () => resolve(cnt.result > 0);
-      db.close();
+      const cnt = db.transaction('business', 'readonly').objectStore('business').count();
+      cnt.onsuccess = () => { resolve(cnt.result > 0); db.close(); };
     };
+    req.onerror = () => reject(req.error);
   });
-  await page.waitForFunction(hasSeedData);
+}
+export async function waitForSeed(page: Page) {
+  await page.waitForFunction(checkSeed);
 }

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { getDashboardStats, getBusiness } from '../lib/db';
 import { formatIDR } from '../lib/format';
@@ -43,6 +43,13 @@ export function Dashboard() {
   const [infoOpen, setInfoOpen] = useState(false);
   const nav = useNavigate();
 
+  const infoDialogRef = useRef<HTMLDialogElement>(null);
+  useEffect(() => {
+    const dlg = infoDialogRef.current;
+    if (!dlg) return;
+    if (infoOpen && !dlg.open) dlg.showModal();
+    if (!infoOpen && dlg.open) dlg.close();
+  }, [infoOpen]);
   useEffect(() => {
     if (!infoOpen) return;
     const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') setInfoOpen(false); };
@@ -179,7 +186,7 @@ export function Dashboard() {
         </button>
       </div>
       {infoOpen && (
-        <div className="scrim" role="dialog" aria-modal="true" aria-labelledby="app-info-title" onClick={() => setInfoOpen(false)} onKeyDown={e => { if (e.key === 'Escape') { e.stopPropagation(); setInfoOpen(false); } }} tabIndex={-1}>
+        <dialog ref={infoDialogRef} className="scrim" aria-labelledby="app-info-title" onClick={e => { if (e.target === e.currentTarget) setInfoOpen(false); }} onClose={() => setInfoOpen(false)}>
           <div className="sheet" onClick={e => e.stopPropagation()}>
             <div className="sheet-handle" />
             <h2 id="app-info-title">App Info</h2>
@@ -205,7 +212,7 @@ export function Dashboard() {
               <button type="button" className="btn btn-primary" onClick={() => setInfoOpen(false)}>Close</button>
             </div>
           </div>
-        </div>
+        </dialog>
       )}
     </div>
   );

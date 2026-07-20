@@ -12,7 +12,7 @@ export function Documents() {
   const [showSheet, setShowSheet] = useState(false);
   const [downloading, setDownloading] = useState(false);
   const firstSheetButtonRef = useRef<HTMLButtonElement>(null);
-  const sheetRef = useRef<HTMLDivElement>(null);
+  const sheetRef = useRef<HTMLDialogElement>(null);
   const sheetOpenerRef = useRef<HTMLElement | null>(null);
   const [searchParams, setSearchParams] = useSearchParams();
   const nav = useNavigate();
@@ -52,26 +52,17 @@ export function Documents() {
   };
 
   useEffect(() => {
+    const dlg = sheetRef.current;
+    if (!dlg) return;
+    if (showSheet && !dlg.open) dlg.showModal();
+    if (!showSheet && dlg.open) dlg.close();
+  }, [showSheet]);
+
+  useEffect(() => {
     if (!showSheet) return;
     firstSheetButtonRef.current?.focus();
     const onKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') setShowSheet(false);
-      if (e.key !== 'Tab') return;
-
-      const focusable = Array.from(sheetRef.current?.querySelectorAll<HTMLElement>(
-        'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
-      ) || []).filter(el => !el.hasAttribute('disabled') && el.tabIndex !== -1);
-      const first = focusable[0];
-      const last = focusable.at(-1);
-      if (!first || !last) return;
-
-      if (e.shiftKey && document.activeElement === first) {
-        e.preventDefault();
-        last.focus();
-      } else if (!e.shiftKey && document.activeElement === last) {
-        e.preventDefault();
-        first.focus();
-      }
     };
     document.addEventListener('keydown', onKeyDown);
     return () => document.removeEventListener('keydown', onKeyDown);
@@ -195,8 +186,8 @@ export function Documents() {
       )}
 
       {showSheet && (
-        <div className="scrim" role="dialog" aria-modal="true" aria-label="Close sheet" onClick={closeSheet} onKeyDown={e => { if (e.key === 'Escape') { e.stopPropagation(); closeSheet(); } }} tabIndex={-1}>
-          <div ref={sheetRef} className="sheet" aria-labelledby="create-document-title" onClick={e => e.stopPropagation()}>
+        <dialog ref={sheetRef} className="scrim" aria-label="Close sheet" onClick={e => { if (e.target === e.currentTarget) closeSheet(); }} onClose={() => setShowSheet(false)}>
+          <div className="sheet" aria-labelledby="create-document-title" onClick={e => e.stopPropagation()}>
             <div className="sheet-handle" aria-hidden="true" />
             <h2 id="create-document-title">Create New</h2>
             <button type="button" ref={firstSheetButtonRef} className="btn btn-secondary btn-block mb-12" onClick={() => { setShowSheet(false); nav('/documents/new/invoice'); }}>
@@ -209,7 +200,7 @@ export function Documents() {
               <button type="button" className="btn btn-ghost btn-block" onClick={closeSheet}>Cancel</button>
             </div>
           </div>
-        </div>
+        </dialog>
       )}
     </div>
   );

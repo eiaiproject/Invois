@@ -710,6 +710,19 @@ button.section-title {
 }
 
 /* ---------- Modal / Sheet ---------- */
+dialog.scrim {
+  position: fixed; inset: 0;
+  width: 100%; height: 100%;
+  max-width: none; max-height: none;
+  margin: 0; padding: 0;
+  border: 0; background: transparent;
+  color: inherit;
+  z-index: var(--z-modal);
+  overscroll-behavior: contain;
+  animation: scrim-in var(--dur) var(--ease-out);
+}
+dialog.scrim[open] { display: grid; place-items: end center; }
+dialog.scrim::backdrop { background: rgba(40, 37, 31, 0.45); }
 .scrim {
   position: fixed; inset: 0;
   background: rgba(40, 37, 31, 0.45);
@@ -736,7 +749,7 @@ button.section-title {
 .sheet .actions .btn { flex: 1; }
 
 @media (min-width: 720px) {
-  .scrim { place-items: center; }
+  dialog.scrim, .scrim { place-items: center; }
   .sheet { border-radius: var(--radius-xl); }
 }
 
