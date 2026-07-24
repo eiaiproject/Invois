@@ -6,6 +6,7 @@ import { formatIDR } from '../lib/format';
 import { useUnsavedChanges } from '../lib/useUnsavedChanges';
 import { Plus } from 'reicon';
 import { Reicon } from '../components/Reicon';
+import { SEO } from '../components/SEO';
 import { newId, nowISO } from '../types';
 import type { Item } from '../types';
 
@@ -37,6 +38,7 @@ export function Items() {
 
   return (
     <div>
+      <SEO title="Items & Services" description="Manage your items and services." />
       <div className="page-head">
         <div>
           <h1>Items</h1>
@@ -170,6 +172,7 @@ export function ItemEditor() {
 
   return (
     <div>
+      <SEO title={isEdit ? 'Edit Item' : 'New Item'} description="Item details." />
       <div className="page-head">
         <h1>{isEdit ? 'Edit' : 'New'} Item</h1>
       </div>

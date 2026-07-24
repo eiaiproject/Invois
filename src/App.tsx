@@ -1,5 +1,6 @@
 import { lazy, Suspense, useEffect } from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { HelmetProvider } from 'react-helmet-async';
 import { Layout } from './components/Layout';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { ToastProvider } from './context/toast';
@@ -33,6 +34,7 @@ const routeFallback = (
 export default function App() {
   return (
     <ErrorBoundary>
+      <HelmetProvider>
       <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
         <ToastProvider>
           <Seeder />
@@ -57,6 +59,7 @@ export default function App() {
           </Suspense>
         </ToastProvider>
       </BrowserRouter>
+      </HelmetProvider>
     </ErrorBoundary>
   );
 }

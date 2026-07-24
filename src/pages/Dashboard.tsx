@@ -4,6 +4,7 @@ import { getDashboardStats, getBusiness } from '../lib/db';
 import { formatIDR } from '../lib/format';
 import { InfoCircle, Plus } from 'reicon';
 import { Reicon } from '../components/Reicon';
+import { SEO } from '../components/SEO';
 import type { BusinessProfile } from '../types';
 
 interface Stats {
@@ -106,6 +107,7 @@ export function Dashboard() {
 
   return (
     <div>
+      <SEO title="Dashboard" description="Overview of your invoices and receipts." />
       <div className="flex between center">
         <div>
           <h1 className="greet">{greet}</h1>

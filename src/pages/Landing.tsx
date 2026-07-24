@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Menu, X, Check, DocumentText, Share } from 'reicon';
 import { Reicon } from '../components/Reicon';
+import { SEO } from '../components/SEO';
 
 const navLinks = [
   { label: 'How it works', href: '#workflow' },
@@ -90,6 +91,7 @@ export function Landing() {
 
   return (
     <div className="landing" ref={rootRef}>
+      <SEO title="Invoice & Receipt Maker" description="Offline-first invoice and receipt maker for freelancers and small businesses. Create invoices, generate receipts, and export PDFs from any device." />
       <a href="#main-content" className="skip-link">Skip to content</a>
 
       {/* ── Header ── */}

@@ -26,7 +26,14 @@ jobs:
         run: node_modules/.bin/eslint src/
 
       - name: Unit tests
-        run: npm run test
+        run: npm run test -- --coverage
+
+      - name: SonarCloud Scan
+        if: env.SONAR_TOKEN != ''
+        uses: SonarSource/sonarcloud-github-action@master
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
 
       - name: Build
         run: npm run build

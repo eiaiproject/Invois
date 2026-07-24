@@ -4,6 +4,7 @@ import { useToast } from '../context/toast';
 import { useUnsavedChanges } from '../lib/useUnsavedChanges';
 import { Download, Upload } from 'reicon';
 import { Reicon } from '../components/Reicon';
+import { SEO } from '../components/SEO';
 import type { BusinessProfile } from '../types';
 
 const DEFAULT: BusinessProfile = {
@@ -115,6 +116,7 @@ export function Settings() {
 
   return (
     <div>
+      <SEO title="Settings" description="Business profile, export, and import settings." />
       <div className="page-head">
         <h1>Settings</h1>
       </div>
