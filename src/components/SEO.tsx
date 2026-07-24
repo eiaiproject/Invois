@@ -1,13 +1,13 @@
 import { Helmet } from 'react-helmet-async';
 
 interface SEOProps {
-  title: string;
-  description: string;
-  image?: string;
-  url?: string;
+  readonly title: string;
+  readonly description: string;
+  readonly image?: string;
+  readonly url?: string;
 }
 
-export function SEO({ title, description, image, url }: SEOProps) {
+export function Seo({ title, description, image, url }: Readonly<SEOProps>) {
   const site = 'Invois';
   const fullTitle = `${title} — ${site}`;
   const img = image ?? 'https://invois.pages.dev/og-image.svg';
