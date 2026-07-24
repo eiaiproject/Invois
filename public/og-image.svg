@@ -1,0 +1,65 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#F7F6F0"/>
+      <stop offset="100%" stop-color="#EDEBE0"/>
+    </linearGradient>
+    <linearGradient id="card" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#FFFFFF"/>
+      <stop offset="100%" stop-color="#F7F6F0"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1200" height="630" fill="url(#bg)"/>
+
+  <!-- Subtle grid pattern -->
+  <g opacity="0.04">
+    <line x1="0" y1="0" x2="1200" y2="0" stroke="#28251F" stroke-width="1"/>
+    <line x1="0" y1="158" x2="1200" y2="158" stroke="#28251F" stroke-width="1"/>
+    <line x1="0" y1="315" x2="1200" y2="315" stroke="#28251F" stroke-width="1"/>
+    <line x1="0" y1="473" x2="1200" y2="473" stroke="#28251F" stroke-width="1"/>
+    <line x1="400" y1="0" x2="400" y2="630" stroke="#28251F" stroke-width="1"/>
+    <line x1="800" y1="0" x2="800" y2="630" stroke="#28251F" stroke-width="1"/>
+  </g>
+
+  <!-- Decorative ellipse -->
+  <ellipse cx="200" cy="315" rx="280" ry="220" fill="#596949" opacity="0.04"/>
+  <ellipse cx="1000" cy="315" rx="240" ry="200" fill="#7A5F3A" opacity="0.03"/>
+
+  <!-- Brand icon + text section -->
+  <rect x="60" y="60" width="60" height="60" rx="14" fill="#596949"/>
+  <g transform="translate(66, 66) scale(2)">
+    <path fill-rule="evenodd" clip-rule="evenodd" d="M7.24502 2H16.755C17.9139 2 18.4933 2 18.9606 2.16261C19.8468 2.47096 20.5425 3.18719 20.842 4.09946C21 4.58055 21 5.17705 21 6.37006V20.3742C21 21.2324 20.015 21.6878 19.3919 21.1176C19.0258 20.7826 18.4742 20.7826 18.1081 21.1176L17.625 21.5597C16.9834 22.1468 16.0166 22.1468 15.375 21.5597C14.7334 20.9726 13.7666 20.9726 13.125 21.5597C12.4834 22.1468 11.5166 22.1468 10.875 21.5597C10.2334 20.9726 9.26659 20.9726 8.625 21.5597C7.98341 22.1468 7.01659 22.1468 6.375 21.5597L5.8919 21.1176C5.52583 20.7826 4.97417 20.7826 4.6081 21.1176C3.985 21.6878 3 21.2324 3 20.3742V6.37006C3 5.17705 3 4.58055 3.15795 4.09946C3.45748 3.18719 4.15322 2.47096 5.03939 2.16261C5.50671 2 6.08614 2 7.24502 2ZM15.0595 8.49952C15.3353 8.19054 15.3085 7.71643 14.9995 7.44055C14.6905 7.16468 14.2164 7.19152 13.9405 7.5005L10.9286 10.8739L10.0595 9.9005C9.78358 9.59152 9.30947 9.56468 9.00049 9.84055C8.69151 10.1164 8.66467 10.5905 8.94055 10.8995L10.3691 12.4995C10.5114 12.6589 10.7149 12.75 10.9286 12.75C11.1422 12.75 11.3457 12.6589 11.488 12.4995L15.0595 8.49952ZM7.5 14.75C7.08579 14.75 6.75 15.0858 6.75 15.5C6.75 15.9142 7.08579 16.25 7.5 16.25H16.5C16.9142 16.25 17.25 15.9142 17.25 15.5C17.25 15.0858 16.9142 14.75 16.5 14.75H7.5Z" fill="#F7F6F0"/>
+  </g>
+
+  <!-- Title -->
+  <text x="136" y="104" font-family="'Plus Jakarta Sans', system-ui, -apple-system, sans-serif" font-size="42" font-weight="800" fill="#28251F" letter-spacing="-0.03">Invois</text>
+
+  <!-- Tagline -->
+  <text x="60" y="160" font-family="'Plus Jakarta Sans', system-ui, -apple-system, sans-serif" font-size="24" font-weight="500" fill="#595449" letter-spacing="-0.01">Invoice &amp; Receipt Maker</text>
+  <text x="60" y="190" font-family="'Plus Jakarta Sans', system-ui, -apple-system, sans-serif" font-size="16" font-weight="400" fill="#736D5A">Offline-first PWA for freelancers &amp; small businesses</text>
+
+  <!-- Feature cards -->
+  <rect x="60" y="240" width="340" height="130" rx="18" fill="url(#card)" stroke="#DDD8C9" stroke-width="1"/>
+  <text x="80" y="272" font-family="'Plus Jakarta Sans', system-ui, -apple-system, sans-serif" font-size="16" font-weight="800" fill="#596949">Create Invoices</text>
+  <text x="80" y="296" font-family="'Plus Jakarta Sans', system-ui, -apple-system, sans-serif" font-size="14" font-weight="400" fill="#595449">Professional invoices with</text>
+  <text x="80" y="316" font-family="'Plus Jakarta Sans', system-ui, -apple-system, sans-serif" font-size="14" font-weight="400" fill="#595449">custom branding in seconds.</text>
+
+  <rect x="420" y="240" width="340" height="130" rx="18" fill="url(#card)" stroke="#DDD8C9" stroke-width="1"/>
+  <text x="440" y="272" font-family="'Plus Jakarta Sans', system-ui, -apple-system, sans-serif" font-size="16" font-weight="800" fill="#596949">Generate Receipts</text>
+  <text x="440" y="296" font-family="'Plus Jakarta Sans', system-ui, -apple-system, sans-serif" font-size="14" font-weight="400" fill="#595449">Automatic receipts for every</text>
+  <text x="440" y="316" font-family="'Plus Jakarta Sans', system-ui, -apple-system, sans-serif" font-size="14" font-weight="400" fill="#595449">transaction your clients make.</text>
+
+  <rect x="780" y="240" width="360" height="130" rx="18" fill="url(#card)" stroke="#DDD8C9" stroke-width="1"/>
+  <text x="800" y="272" font-family="'Plus Jakarta Sans', system-ui, -apple-system, sans-serif" font-size="16" font-weight="800" fill="#596949">Export PDF &amp; Share</text>
+  <text x="800" y="296" font-family="'Plus Jakarta Sans', system-ui, -apple-system, sans-serif" font-size="14" font-weight="400" fill="#595449">Download as PDF or share via</text>
+  <text x="800" y="316" font-family="'Plus Jakarta Sans', system-ui, -apple-system, sans-serif" font-size="14" font-weight="400" fill="#595449">link. Works offline on any device.</text>
+
+  <!-- Bottom bar -->
+  <rect x="60" y="410" width="1080" height="60" rx="14" fill="#596949" opacity="0.08"/>
+  <text x="80" y="446" font-family="'Plus Jakarta Sans', system-ui, -apple-system, sans-serif" font-size="15" font-weight="700" fill="#596949">✦  Offline-first  ✦  Free &amp; Open Source  ✦  PWA  ✦  IndexedDB  ✦  No account required</text>
+
+  <!-- URL -->
+  <text x="1080" y="590" font-family="'Plus Jakarta Sans', system-ui, -apple-system, sans-serif" font-size="18" font-weight="700" fill="#7A5F3A" text-anchor="end">invois.pages.dev</text>
+</svg>

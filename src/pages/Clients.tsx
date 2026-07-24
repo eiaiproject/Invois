@@ -5,6 +5,7 @@ import { useToast } from '../context/toast';
 import { useUnsavedChanges } from '../lib/useUnsavedChanges';
 import { Plus } from 'reicon';
 import { Reicon } from '../components/Reicon';
+import { Seo } from '../components/SEO';
 import { newId, nowISO } from '../types';
 import type { Client } from '../types';
 
@@ -36,6 +37,7 @@ export function Clients() {
 
   return (
     <div>
+      <Seo title="Clients" description="Manage your clients." />
       <div className="page-head">
         <div>
           <h1>Clients</h1>
@@ -165,6 +167,7 @@ export function ClientEditor() {
 
   return (
     <div>
+      <Seo title={isEdit ? 'Edit Client' : 'New Client'} description="Client details." />
       <div className="page-head">
         <h1>{isEdit ? 'Edit' : 'New'} Client</h1>
       </div>

@@ -4,6 +4,7 @@ import { getInvoices, getReceipts, getBusiness } from '../lib/db';
 import { formatIDR, formatDateISO } from '../lib/format';
 import { Plus, Download } from 'reicon';
 import { Reicon } from '../components/Reicon';
+import { Seo } from '../components/SEO';
 
 type Doc = { kind: 'invoice' | 'receipt'; data: any };
 
@@ -106,6 +107,7 @@ export function Documents() {
 
   return (
     <div>
+      <Seo title="Documents" description="Manage your invoices and receipts." />
       <div className="page-head">
         <div>
           <h1>Documents</h1>

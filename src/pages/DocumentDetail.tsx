@@ -5,6 +5,7 @@ import { useToast } from '../context/toast';
 import { formatIDR, formatDateISO, copyInvoiceText, copyReceiptText } from '../lib/format';
 import { Download, Copy, Send, Check, ReceiptText, Edit, Plus, Trash } from 'reicon';
 import { Reicon } from '../components/Reicon';
+import { Seo } from '../components/SEO';
 import type { Invoice, Receipt, BusinessProfile } from '../types';
 import { nowISO } from '../types';
 
@@ -125,8 +126,13 @@ export function DocumentDetail() {
     }
   };
 
+  const docType = isReceipt ? 'Receipt' : 'Invoice';
+  const docTitle = doc ? `${doc.number} — ${docType}` : 'Document';
+  const docDesc = doc ? `${docType} ${doc.number}` : 'Document details';
+
   return (
     <div>
+      <Seo title={docTitle} description={docDesc} />
       <div className="page-head">
         <div>
           <h1 className="num">{doc.number}</h1>
