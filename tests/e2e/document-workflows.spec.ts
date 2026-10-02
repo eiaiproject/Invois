@@ -1,6 +1,6 @@
 import { statSync } from 'node:fs';
 import { expect, test } from '@playwright/test';
-import { createInvoice, resetAppData, saveBusinessProfile, waitForSeed } from './helpers';
+import { createInvoice, resetAppData, saveBusinessProfile, startAt, startWithProfile, waitForSeed } from './helpers';
 
 test('new invoice uses Jakarta dates and validates required fields', async ({ page }) => {
   await resetAppData(page);
@@ -21,10 +21,8 @@ test('new invoice uses Jakarta dates and validates required fields', async ({ pa
 });
 
 test('first-run editor downloads a non-empty PDF after profile setup', async ({ page }) => {
-  await resetAppData(page);
-
   // Navigate to the app root so the first-run seeder can run, then wait for it
-  await page.goto('/');
+  await startAt(page, '/');
   await waitForSeed(page);
   // PDF export needs a business profile; sample data no longer includes one.
   await saveBusinessProfile(page);
@@ -53,8 +51,7 @@ test('first-run editor downloads a non-empty PDF after profile setup', async ({ 
 });
 
 test('documents list sorts invoices and receipts by one global recency order', async ({ page }) => {
-  await resetAppData(page);
-  await saveBusinessProfile(page);
+  await startWithProfile(page, '/');
 
   const invoiceNumber = await createInvoice(page, '500000');
 
@@ -163,8 +160,7 @@ test('upgrade from v2 schema (missing status and createdAt indexes) succeeds', a
 });
 
 test('import and export data round-trips correctly', async ({ page }) => {
-  await resetAppData(page);
-  await saveBusinessProfile(page);
+  await startWithProfile(page, '/');
 
   // Create an invoice to have some data
   const invoiceNumber = await createInvoice(page, '750000');

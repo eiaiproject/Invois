@@ -37,6 +37,33 @@ export async function saveBusinessProfile(page: Page) {
   await expect(page.getByText('Settings saved.')).toBeVisible();
 }
 
+/** Reset stored data and land on a route in one step. */
+export async function startAt(page: Page, path: string) {
+  await resetAppData(page);
+  await page.goto(path);
+}
+
+/** Reset stored data, save the business profile, then land on a route. */
+export async function startWithProfile(page: Page, path: string) {
+  await resetAppData(page);
+  await saveBusinessProfile(page);
+  await page.goto(path);
+}
+
+/** Landing hero plus the dashboard call to action. */
+export async function openDashboardFromLanding(page: Page) {
+  await startAt(page, '/');
+  await expect(page.getByRole('heading', { name: /Create professional invoices and receipts/i })).toBeVisible();
+  await page.getByRole('link', { name: 'Open dashboard' }).first().click();
+  await expect(page).toHaveURL('/dashboard');
+}
+
+/** Delete asks for confirmation in a dialog before it removes anything. */
+export async function confirmDelete(page: Page) {
+  await page.getByRole('button', { name: 'Delete' }).click();
+  await page.getByRole('dialog').getByRole('button', { name: 'Delete' }).click();
+}
+
 export async function createInvoice(page: Page, total = '1000000') {
   await page.goto('/documents/new/invoice');
   await expect(page.getByRole('heading', { name: 'New Invoice' })).toBeVisible();

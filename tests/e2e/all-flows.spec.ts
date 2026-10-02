@@ -1,21 +1,16 @@
 import { expect, test } from '@playwright/test';
-import { createInvoice, openDocument, resetAppData, saveBusinessProfile } from './helpers';
+import { confirmDelete, createInvoice, openDashboardFromLanding, openDocument, startAt, startWithProfile } from './helpers';
 
 /* Landing page */
 
 test.describe('Landing page', () => {
   test('loads and navigates to dashboard', async ({ page }) => {
-    await resetAppData(page);
-    await page.goto('/');
-    await expect(page.getByRole('heading', { name: /Create professional invoices and receipts/i })).toBeVisible();
-    await page.getByRole('link', { name: 'Open dashboard' }).first().click();
-    await expect(page).toHaveURL('/dashboard');
+    await openDashboardFromLanding(page);
   });
 
   test('mobile nav opens and closes', async ({ page }) => {
     await page.setViewportSize({ width: 375, height: 812 });
-    await resetAppData(page);
-    await page.goto('/');
+    await startAt(page, '/');
     await page.getByLabel('Open menu').click();
     await expect(page.getByLabel('Mobile navigation')).toBeVisible();
     await page.getByLabel('Close menu').click();
@@ -27,8 +22,7 @@ test.describe('Landing page', () => {
 
 test.describe('Dashboard', () => {
   test('shows greeting and info modal', async ({ page }) => {
-    await resetAppData(page);
-    await page.goto('/dashboard');
+    await startAt(page, '/dashboard');
     await expect(page.getByRole('heading', { name: /Good (morning|afternoon|evening)/i })).toBeVisible();
     await page.getByLabel('App info').click();
     await expect(page.getByRole('dialog')).toBeVisible();
@@ -37,8 +31,7 @@ test.describe('Dashboard', () => {
   });
 
   test('create buttons navigate correctly', async ({ page }) => {
-    await resetAppData(page);
-    await page.goto('/dashboard');
+    await startAt(page, '/dashboard');
     await page.getByRole('button', { name: 'Create Invoice' }).click();
     await expect(page).toHaveURL('/documents/new/invoice');
     await page.goBack();
@@ -52,8 +45,7 @@ test.describe('Dashboard', () => {
 test.describe('Navigation', () => {
   test('bottom nav navigates on mobile', async ({ page }) => {
     await page.setViewportSize({ width: 375, height: 812 });
-    await resetAppData(page);
-    await page.goto('/dashboard');
+    await startAt(page, '/dashboard');
     await page.getByRole('link', { name: 'Documents' }).click();
     await expect(page).toHaveURL('/documents');
     await page.getByRole('link', { name: 'Clients' }).click();
@@ -66,8 +58,7 @@ test.describe('Navigation', () => {
 
   test('sidebar navigates on desktop', async ({ page }) => {
     await page.setViewportSize({ width: 1280, height: 800 });
-    await resetAppData(page);
-    await page.goto('/dashboard');
+    await startAt(page, '/dashboard');
     await page.getByRole('link', { name: 'Home' }).click();
     await expect(page).toHaveURL('/dashboard');
     await page.getByRole('link', { name: 'Documents' }).click();
@@ -83,8 +74,7 @@ test.describe('Navigation', () => {
 
 test.describe('Clients CRUD', () => {
   test('create, edit, and delete client', async ({ page }) => {
-    await resetAppData(page);
-    await page.goto('/clients');
+    await startAt(page, '/clients');
     // Wait for page to load, create a new client
     await page.goto('/clients/new');
     await expect(page.getByRole('heading', { name: 'New Client' })).toBeVisible();
@@ -113,8 +103,7 @@ test.describe('Clients CRUD', () => {
   });
 
   test('validation blocks empty name', async ({ page }) => {
-    await resetAppData(page);
-    await page.goto('/clients/new');
+    await startAt(page, '/clients/new');
     await page.getByRole('button', { name: 'Add Client' }).click();
     await expect(page.getByText('Enter a client name.')).toBeVisible();
   });
@@ -124,8 +113,7 @@ test.describe('Clients CRUD', () => {
 
 test.describe('Items CRUD', () => {
   test('create, edit, and delete item', async ({ page }) => {
-    await resetAppData(page);
-    await page.goto('/items');
+    await startAt(page, '/items');
     await page.goto('/items/new');
     await expect(page.getByRole('heading', { name: 'New Item' })).toBeVisible();
 
@@ -153,8 +141,7 @@ test.describe('Items CRUD', () => {
   });
 
   test('validation blocks empty name', async ({ page }) => {
-    await resetAppData(page);
-    await page.goto('/items/new');
+    await startAt(page, '/items/new');
     await page.getByRole('button', { name: 'Add Item' }).click();
     await expect(page.getByText('Enter an item name.')).toBeVisible();
   });
@@ -164,9 +151,7 @@ test.describe('Items CRUD', () => {
 
 test.describe('Document Editor', () => {
   test('receipt creation with payment method', async ({ page }) => {
-    await resetAppData(page);
-    await saveBusinessProfile(page);
-    await page.goto('/documents/new/receipt');
+    await startWithProfile(page, '/documents/new/receipt');
     await expect(page.getByRole('heading', { name: 'New Receipt' })).toBeVisible();
     await page.getByLabel('Client Name').fill('Receipt Client');
     await page.getByRole('button', { name: /Payment/ }).click();
@@ -179,9 +164,7 @@ test.describe('Document Editor', () => {
 
   test('preview toggle on mobile', async ({ page }) => {
     await page.setViewportSize({ width: 375, height: 812 });
-    await resetAppData(page);
-    await saveBusinessProfile(page);
-    await page.goto('/documents/new/invoice');
+    await startWithProfile(page, '/documents/new/invoice');
     await page.getByLabel('Client Name').fill('Preview Client');
     await page.getByLabel('Item 1 name').fill('Preview Service');
     await page.locator('input[name="item-1-price"]').fill('500000');
@@ -192,8 +175,7 @@ test.describe('Document Editor', () => {
   });
 
   test('invoice validation blocks empty fields', async ({ page }) => {
-    await resetAppData(page);
-    await page.goto('/documents/new/invoice');
+    await startAt(page, '/documents/new/invoice');
     await page.getByRole('button', { name: 'Save' }).click();
     await expect(page.locator('#document-client-name-error')).toBeVisible();
   });
@@ -204,8 +186,7 @@ test.describe('Document Editor', () => {
 test.describe('Document Detail', () => {
   test('mark sent, marked paid, edit, delete', async ({ page }) => {
     await page.context().grantPermissions(['clipboard-read', 'clipboard-write']);
-    await resetAppData(page);
-    await saveBusinessProfile(page);
+    await startWithProfile(page, '/');
     const invoiceNumber = await createInvoice(page, '1000000');
 
     await openDocument(page, invoiceNumber);
@@ -244,16 +225,13 @@ test.describe('Document Detail', () => {
 
     // Delete
     await openDocument(page, invoiceNumber);
-    await page.getByRole('button', { name: 'Delete' }).click();
-    await page.getByRole('dialog').getByRole('button', { name: 'Delete' }).click();
+    await confirmDelete(page);
     await expect(page).toHaveURL(/\/documents$/);
     await expect(page.getByText(invoiceNumber)).toHaveCount(0);
   });
 
   test('receipt download and new', async ({ page }) => {
-    await resetAppData(page);
-    await saveBusinessProfile(page);
-    await page.goto('/documents/new/receipt');
+    await startWithProfile(page, '/documents/new/receipt');
     await page.getByLabel('Client Name').fill('Receipt Test');
     await page.getByRole('button', { name: /Payment/ }).click();
     await page.getByLabel('Amount Paid (Rp)').fill('500000');
@@ -277,8 +255,7 @@ test.describe('Document Detail', () => {
 
 test.describe('Settings', () => {
   test('profile save and persistence', async ({ page }) => {
-    await resetAppData(page);
-    await page.goto('/settings');
+    await startAt(page, '/settings');
     await expect(page.getByRole('heading', { name: 'Settings' })).toBeVisible();
 
     await page.getByLabel('Business Name *').fill('Test Business');
@@ -301,8 +278,7 @@ test.describe('Settings', () => {
 
 test.describe('Download All', () => {
   test('downloads all documents as ZIP', async ({ page }) => {
-    await resetAppData(page);
-    await saveBusinessProfile(page);
+    await startWithProfile(page, '/');
 
     await createInvoice(page, '500000');
 
@@ -320,8 +296,7 @@ test.describe('Download All', () => {
 
 test.describe('Search & Filter', () => {
   test('documents filter by type and search', async ({ page }) => {
-    await resetAppData(page);
-    await saveBusinessProfile(page);
+    await startWithProfile(page, '/');
 
     await createInvoice(page, '500000');
 

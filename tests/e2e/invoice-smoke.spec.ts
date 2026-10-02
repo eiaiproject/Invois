@@ -1,9 +1,8 @@
 import { expect, test } from '@playwright/test';
-import { createInvoice, openDocument, resetAppData, saveBusinessProfile, waitForSeed } from './helpers';
+import { createInvoice, openDocument, startWithProfile, waitForSeed } from './helpers';
 
 test('invoice survives reload and can become a receipt', async ({ page }) => {
-  await resetAppData(page);
-  await saveBusinessProfile(page);
+  await startWithProfile(page, '/');
 
   const invoiceNumber = await createInvoice(page);
   await expect(page.getByText('CI Client')).toBeVisible();
