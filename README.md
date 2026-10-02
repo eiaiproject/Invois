@@ -146,7 +146,7 @@ The preview server runs at [http://localhost:4173](http://localhost:4173).
 
 ### E2E Tests (`npm run e2e`)
 
-50 tests across **Desktop Chromium** and **Mobile Chrome** (Pixel 5) covering:
+38 tests per browser profile, across **Desktop Chromium** and **Mobile Chrome** (Pixel 5), covering:
 
 | Suite | Tests | Scope |
 |-------|:-----:|-------|
@@ -162,6 +162,7 @@ The preview server runs at [http://localhost:4173](http://localhost:4173).
 | Search & Filter | 1 | Type filter + text search |
 | Document workflows | 6 | Invoice lifecycle, PDF, DB upgrades, import/export |
 | Invoice smoke | 1 | Invoice survives reload and becomes a receipt |
+| Landing rendering & a11y | 13 | Computed contrast per state, keyboard focus ring, mobile drawer, overflow 320 to 1440, reduced motion, forced colors, symmetric hero highlights |
 
 ---
 
@@ -216,7 +217,8 @@ The preview server runs at [http://localhost:4173](http://localhost:4173).
 │   │   ├── all-flows.spec.ts    # Comprehensive E2E test suite
 │   │   ├── document-workflows.spec.ts # Document lifecycle tests
 │   │   ├── helpers.ts            # E2E test utilities
-│   │   └── invoice-smoke.spec.ts # Invoice smoke tests
+│   │   ├── invoice-smoke.spec.ts # Invoice smoke tests
+│   │   └── landing-ui.spec.ts    # Landing contrast, keyboard, responsive checks
 │   └── unit/
 │       ├── db-import.test.ts     # Import validation and atomic writes
 │       ├── format.test.ts        # Currency, date, and email helpers
