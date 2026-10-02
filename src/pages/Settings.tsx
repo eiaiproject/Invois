@@ -2,9 +2,14 @@ import { useEffect, useRef, useState } from 'react';
 import { getBusiness, saveBusiness, exportAllData, importAllData, type ExportData } from '../lib/db';
 import { useToast } from '../context/toast';
 import { useUnsavedChanges } from '../lib/useUnsavedChanges';
+import { isValidEmail } from '../lib/format';
+import { downloadBlob } from '../lib/download';
+import { getThemePreference, setThemePreference, type ThemePreference } from '../lib/theme';
+import { LoadingScreen } from '../components/LoadingScreen';
 import { Download, Upload } from 'reicon';
 import { Reicon } from '../components/Reicon';
 import { Seo } from '../components/SEO';
+import { ConfirmDialog } from '../components/ConfirmDialog';
 import type { BusinessProfile } from '../types';
 
 const DEFAULT: BusinessProfile = {
@@ -22,12 +27,21 @@ const DEFAULT: BusinessProfile = {
   defaultTaxRate: 11,
 };
 
+const THEME_OPTIONS: ReadonlyArray<{ value: ThemePreference; label: string }> = [
+  { value: 'system', label: 'System' },
+  { value: 'light', label: 'Light' },
+  { value: 'dark', label: 'Dark' },
+];
+
 export function Settings() {
   const [form, setForm] = useState<BusinessProfile>(DEFAULT);
   const [initialForm, setInitialForm] = useState<BusinessProfile>(DEFAULT);
   const [loading, setLoading] = useState(true);
   const [nameError, setNameError] = useState('');
+  const [emailError, setEmailError] = useState('');
   const [importing, setImporting] = useState(false);
+  const [pendingImport, setPendingImport] = useState<File | null>(null);
+  const [theme, setTheme] = useState<ThemePreference>(getThemePreference);
   const importRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
   const dirty = !loading && JSON.stringify(form) !== JSON.stringify(initialForm);
@@ -53,6 +67,12 @@ export function Settings() {
       toast('Business name is required.', 'danger');
       return;
     }
+    if (form.email && !isValidEmail(form.email)) {
+      setEmailError('Enter a valid email address.');
+      document.getElementById('business-email')?.focus();
+      toast('Enter a valid email address.', 'danger');
+      return;
+    }
     const next = { ...form, id: form.id || 'biz-1' };
     try {
       await saveBusiness(next);
@@ -68,13 +88,8 @@ export function Settings() {
     try {
       const data = await exportAllData();
       const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
       const date = new Date().toISOString().slice(0, 10);
-      a.download = `invois-backup-${date}.json`;
-      a.click();
-      URL.revokeObjectURL(url);
+      downloadBlob(blob, `invois-backup-${date}.json`);
       toast('Data exported successfully.', 'success');
     } catch (err) {
       console.error(err);
@@ -82,14 +97,17 @@ export function Settings() {
     }
   };
 
-  const handleImport = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImportFile = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
+    setPendingImport(file);
+    if (importRef.current) importRef.current.value = '';
+  };
 
-    if (!confirm('Importing will merge data with your existing records. Continue?')) {
-      if (importRef.current) importRef.current.value = '';
-      return;
-    }
+  const confirmImport = async () => {
+    const file = pendingImport;
+    setPendingImport(null);
+    if (!file) return;
 
     setImporting(true);
     try {
@@ -106,13 +124,12 @@ export function Settings() {
       toast(msg, 'danger');
     } finally {
       setImporting(false);
-      if (importRef.current) importRef.current.value = '';
     }
   };
 
   const update = (key: keyof BusinessProfile, value: string | number | undefined) => setForm(f => ({ ...f, [key]: value }));
 
-  if (loading) return <div style={{ padding: 40, textAlign: 'center' }}><div className="spinner" /></div>;
+  if (loading) return <LoadingScreen />;
 
   return (
     <div>
@@ -131,7 +148,8 @@ export function Settings() {
         <div className="field-row">
           <div className="field">
             <label className="field-label" htmlFor="business-email">Email</label>
-            <input id="business-email" name="email" type="email" autoComplete="email" spellCheck={false} className="input" value={form.email || ''} onChange={e => update('email', e.target.value)} placeholder="hello@business.com…" />
+            <input id="business-email" name="email" type="email" autoComplete="email" spellCheck={false} className="input" value={form.email || ''} onChange={e => { setEmailError(''); update('email', e.target.value); }} placeholder="hello@business.com…" aria-invalid={!!emailError} aria-describedby={emailError ? 'business-email-error' : undefined} />
+            {emailError && <div id="business-email-error" className="field-error" role="alert">{emailError}</div>}
           </div>
           <div className="field">
             <label className="field-label" htmlFor="business-phone">Phone / WhatsApp</label>
@@ -178,7 +196,7 @@ export function Settings() {
         </div>
         <div className="field">
           <label className="field-label" htmlFor="default-tax-rate">Default Tax Rate (%)</label>
-          <input id="default-tax-rate" name="defaultTaxRate" type="number" className="input num" min="0" max="100" value={form.defaultTaxRate ?? 11} onChange={e => update('defaultTaxRate', Number.parseFloat(e.target.value) || 0)} />
+          <input id="default-tax-rate" name="defaultTaxRate" type="number" className="input num" min="0" max="100" value={form.defaultTaxRate ?? 11} onChange={e => update('defaultTaxRate', Math.min(100, Math.max(0, Number.parseFloat(e.target.value) || 0)))} />
         </div>
       </div>
 
@@ -186,7 +204,26 @@ export function Settings() {
         Save Settings
       </button>
 
-      {/* ── Data Backup ── */}
+      {/* Appearance */}
+      <div className="card card-pad-lg detail-card">
+        <div className="section-title">Appearance</div>
+        <div className="theme-options" role="group" aria-label="Theme">
+          {THEME_OPTIONS.map(opt => (
+            <button
+              key={opt.value}
+              type="button"
+              className={`chip${theme === opt.value ? ' active' : ''}`}
+              aria-pressed={theme === opt.value}
+              onClick={() => { setThemePreference(opt.value); setTheme(opt.value); }}
+            >
+              {opt.label}
+            </button>
+          ))}
+        </div>
+        <p className="field-hint">System follows your device's light or dark setting.</p>
+      </div>
+
+      {/* Data Backup */}
       <div className="card card-pad-lg detail-card">
         <div className="section-title">Data Backup</div>
         <p style={{ fontSize: 13, color: 'var(--color-text-muted)', marginBottom: 14 }}>
@@ -206,7 +243,7 @@ export function Settings() {
             type="file"
             accept=".json"
             style={{ display: 'none' }}
-            onChange={handleImport}
+            onChange={handleImportFile}
           />
         </div>
       </div>
@@ -218,6 +255,15 @@ export function Settings() {
           <span style={{ fontStyle: 'italic' }}>Invoice ini adalah dokumen tagihan komersial dan bukan Faktur Pajak resmi kecuali dinyatakan lain.</span>
         </p>
       </div>
+
+      <ConfirmDialog
+        open={!!pendingImport}
+        title="Import backup data?"
+        message="Importing merges the backup with your existing records. Records with the same id are overwritten by the file's versions."
+        confirmLabel="Import data"
+        onConfirm={confirmImport}
+        onCancel={() => setPendingImport(null)}
+      />
     </div>
   );
 }
