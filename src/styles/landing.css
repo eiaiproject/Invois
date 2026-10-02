@@ -47,7 +47,13 @@
   color: var(--color-text-muted);
   transition: color var(--dur) var(--ease-out), background var(--dur) var(--ease-out);
 }
-.l-nav a:hover { color: var(--color-text); background: var(--color-surface-warm); }
+.l-nav a:visited { color: var(--color-text-muted); }
+.l-nav a:hover,
+.l-nav a:focus-visible,
+.l-nav a:active {
+  color: var(--color-text);
+  background: var(--color-surface-warm);
+}
 .l-header-actions {
   margin-left: auto;
   display: flex;
@@ -93,7 +99,9 @@
   color: var(--color-text-muted);
   transition: color var(--dur) var(--ease-out), background var(--dur) var(--ease-out);
 }
+.l-mobile-nav a:visited { color: var(--color-text-muted); }
 .l-mobile-nav a:hover,
+.l-mobile-nav a:focus-visible,
 .l-mobile-nav a:active {
   color: var(--color-text);
   background: var(--color-surface-warm);
@@ -110,7 +118,7 @@
 
 /* Sections shared (layout rhythm) */
 .l-section {
-  padding: 64px 20px;
+  padding: 48px 20px;
 }
 .l-section-inner {
   max-width: var(--shell-max);
@@ -128,7 +136,7 @@
   scroll-margin-top: 76px;
 }
 @media (min-width: 720px) {
-  .l-section { padding: 96px 32px; }
+  .l-section { padding: 64px 32px; }
 }
 
 /* Hero */
@@ -170,25 +178,25 @@
   justify-content: center;
   animation: l-hero-in 0.5s var(--ease-out) 0.12s both;
 }
+/* Four highlights in an even grid: two by two on phones, four across from 720px.
+   Equal tracks keep every pill the same width, so no row ends with an orphan. */
 .l-hero-assurance {
   display: grid;
-  grid-template-columns: repeat(2, auto);
-  justify-content: center;
-  gap: 6px;
-  margin-top: 12px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  width: 100%;
+  max-width: 380px;
+  margin: 12px auto 0;
   list-style: none;
   padding: 0;
-}
-.l-hero-assurance li:last-child:nth-child(odd) {
-  grid-column: 1 / -1;
-  justify-self: center;
 }
 .l-hero-assurance li {
   --note-bg: var(--color-primary-soft);
   --note-border: transparent;
   --note-mark: var(--color-primary);
-  display: inline-flex;
+  display: flex;
   align-items: center;
+  justify-content: center;
   gap: 6px;
   min-height: 32px;
   min-width: 0;
@@ -200,6 +208,7 @@
   font-weight: 800;
   letter-spacing: 0;
   line-height: 1.2;
+  text-align: center;
   box-shadow: 0 1px 0 rgba(40, 37, 31, 0.04);
 }
 .l-hero-assurance li::before {
@@ -215,13 +224,13 @@
     justify-content: center;
   }
   .l-hero-assurance {
-    grid-template-columns: repeat(3, auto);
-    justify-content: center;
-    gap: 8px;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    max-width: 660px;
   }
-  .l-hero-assurance li:last-child:nth-child(odd) {
-    grid-column: auto;
-    justify-self: auto;
+}
+@media (min-width: 820px) {
+  .l-hero-assurance {
+    max-width: 720px;
   }
   .l-hero-assurance li {
     font-size: 12px;
@@ -258,6 +267,7 @@
 }
 
 .l-preview {
+  display: block;
   margin-top: 20px;
   padding-bottom: 20px;
   position: relative;
@@ -287,12 +297,6 @@
   overflow: hidden;
   flex-shrink: 0;
   line-height: 1.25;
-  transition: transform 0.3s var(--ease-out), box-shadow 0.3s var(--ease-out);
-}
-.l-invoice-card:hover {
-  transform: translateY(-3px) rotate(-0.5deg);
-  box-shadow: var(--shadow-float);
-  will-change: transform;
 }
 .l-invoice-header {
   padding: 14px 16px 12px;
@@ -318,6 +322,7 @@
   font-family: var(--font-mono);
   font-size: 12px;
   font-weight: 700;
+  overflow-wrap: anywhere;
 }
 .l-invoice-title {
   font-size: 18px;
@@ -472,6 +477,8 @@
   border: 1px solid var(--color-success-soft);
 }
 .l-controls-spacer { flex: 1; }
+/* Static chips inside the mock preview: they look like buttons but do nothing,
+   so they must not react to hover or show a pointer cursor. */
 .l-control-btn {
   display: inline-flex;
   align-items: center;
@@ -483,11 +490,7 @@
   color: var(--color-text-muted);
   background: var(--color-surface-warm);
   border: 1px solid var(--color-border);
-  transition: color var(--dur) var(--ease-out), border-color var(--dur) var(--ease-out);
-}
-.l-control-btn:hover {
-  color: var(--color-text);
-  border-color: var(--color-border-strong);
+  cursor: default;
 }
 .l-control-btn svg {
   width: 12px;
@@ -622,12 +625,12 @@
   display: flex;
   flex-direction: column;
   gap: 0;
-  margin-top: 40px;
+  margin-top: 20px;
   position: relative;
 }
 .l-wf-step {
   display: flex;
-  gap: 20px;
+  gap: 14px;
   position: relative;
 }
 .l-wf-line-col {
@@ -635,17 +638,17 @@
   flex-direction: column;
   align-items: center;
   flex-shrink: 0;
-  width: 40px;
+  width: 32px;
 }
 .l-wf-num {
-  width: 40px;
-  height: 40px;
+  width: 32px;
+  height: 32px;
   border-radius: 50%;
   background: var(--color-primary);
   color: var(--color-on-primary);
   display: grid;
   place-items: center;
-  font-size: 15px;
+  font-size: 13px;
   font-weight: 800;
   flex-shrink: 0;
   position: relative;
@@ -655,11 +658,11 @@
 .l-wf-connector {
   width: 2px;
   flex: 1;
-  min-height: 24px;
+  min-height: 10px;
   background: var(--color-border);
 }
 .l-wf-body {
-  padding-bottom: 32px;
+  padding-bottom: 14px;
   flex: 1;
 }
 .l-wf-body h3 {
@@ -671,14 +674,14 @@
 .l-wf-body p {
   font-size: 14px;
   color: var(--color-text-muted);
-  line-height: 1.55;
+  line-height: 1.5;
   max-width: 440px;
 }
 @media (min-width: 720px) {
   .l-workflow-steps {
     flex-direction: row;
     gap: 0;
-    margin-top: 44px;
+    margin-top: 20px;
   }
   .l-wf-step {
     flex: 1;
@@ -689,8 +692,7 @@
   .l-wf-line-col {
     flex-direction: row;
     width: auto;
-    height: 40px;
-    margin-bottom: 16px;
+    height: 32px;
   }
   .l-wf-connector {
     width: auto;
@@ -877,9 +879,9 @@
   line-height: 1.5;
   margin: 0;
 }
-@media (min-width: 720px) {
+@media (min-width: 900px) {
   .l-faq-list {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 }
 @media (min-width: 720px) {
@@ -950,23 +952,18 @@
   color: var(--color-text-subtle);
 }
 
-/* Scroll reveal system */
+/* Scroll reveal system.
+   Hiding is scoped to .reveal-ready, which JavaScript adds only after it can
+   observe the elements, so content stays visible without JS and can never be
+   left hidden if the observer misses an entry. */
 .landing.reveal-ready [data-reveal] {
+  opacity: 0;
+  transform: translateY(10px);
+}
+.landing.reveal-ready [data-reveal].revealed {
   opacity: 1;
   transform: none;
-}
-[data-reveal].revealed {
-  opacity: 1;
-  transform: translateY(0);
-  transition: opacity 0.5s var(--ease-out), transform 0.5s var(--ease-out);
-}
-
-/* Performance: content-visibility for below-fold sections */
-.l-section,
-.l-trust,
-.l-cta {
-  content-visibility: auto;
-  contain-intrinsic-size: auto 400px;
+  transition: opacity 0.45s var(--ease-out), transform 0.45s var(--ease-out);
 }
 /* Stagger delays, only during reveal */
 [data-reveal].revealed[data-reveal-delay="1"] { transition-delay: 60ms; }
@@ -976,6 +973,16 @@
 [data-reveal].revealed[data-reveal-delay="5"] { transition-delay: 300ms; }
 
 /* Responsive helpers */
+@media (max-width: 479px) {
+  .l-hero-actions,
+  .l-cta-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .l-hero-actions .btn,
+  .l-cta-actions .btn { width: 100%; }
+}
+
 @media (max-width: 719px) {
   .l-preview-stage {
     flex-direction: column;
@@ -990,6 +997,7 @@
   .landing.reveal-ready [data-reveal] {
     opacity: 1;
     transform: none;
+    transition: none;
   }
   .l-hero-heading,
   .l-hero-text h1,
