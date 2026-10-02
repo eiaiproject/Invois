@@ -6,7 +6,7 @@ export default defineConfig({
   expect: { timeout: 5_000 },
   reporter: 'list',
   use: {
-    baseURL: 'http://127.0.0.1:5175',
+    baseURL: `http://127.0.0.1:${process.env.PREVIEW_PORT ?? '5173'}`,
     timezoneId: 'Asia/Jakarta',
     trace: 'retain-on-failure',
   },

@@ -7,8 +7,8 @@ test.describe('Landing page', () => {
   test('loads and navigates to dashboard', async ({ page }) => {
     await resetAppData(page);
     await page.goto('/');
-    await expect(page.getByRole('heading', { name: /Invoice.*maker.*offline/i })).toBeVisible();
-    await page.getByRole('link', { name: 'Dashboard' }).first().click();
+    await expect(page.getByRole('heading', { name: /Create professional invoices and receipts/i })).toBeVisible();
+    await page.getByRole('link', { name: 'Open dashboard' }).first().click();
     await expect(page).toHaveURL('/dashboard');
   });
 
