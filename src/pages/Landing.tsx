@@ -17,7 +17,7 @@ const scrollBehavior = (): ScrollBehavior => (prefersReducedMotion() ? 'auto' : 
 
 const isTypingTarget = (node: EventTarget | null) => {
   const el = node as HTMLElement | null;
-  if (!el || !el.tagName) return false;
+  if (!el?.tagName) return false;
   return el.isContentEditable || ['INPUT', 'TEXTAREA', 'SELECT'].includes(el.tagName);
 };
 
