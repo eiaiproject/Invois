@@ -1,7 +1,7 @@
 import { expect, type Page } from '@playwright/test';
 
 export function escaped(text: string) {
-  return new RegExp(text.replace(/[.*+?^${}()|[\]\\]/g, '$&'));
+  return new RegExp(text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
 }
 
 export async function resetAppData(page: Page) {
@@ -58,13 +58,13 @@ export async function openDocument(page: Page, number: string) {
   await expect(page.getByRole('heading', { name: number })).toBeVisible();
 }
 
-/** Wait for the Seeder to finish populating the DB. */
+/** Wait for the first-run seeder to finish populating sample records. */
 function checkSeed(): Promise<boolean> {
   return new Promise((resolve, reject) => {
     const req = indexedDB.open('invois');
     req.onsuccess = () => {
       const db = req.result;
-      const cnt = db.transaction('business', 'readonly').objectStore('business').count();
+      const cnt = db.transaction('clients', 'readonly').objectStore('clients').count();
       cnt.onsuccess = () => { resolve(cnt.result > 0); db.close(); };
     };
     req.onerror = () => reject(new Error(req.error?.message ?? 'IDB open failed'));

@@ -20,12 +20,14 @@ test('new invoice uses Jakarta dates and validates required fields', async ({ pa
   await expect(page.getByRole('alert')).toHaveText('Add at least one item.');
 });
 
-test('empty first-run editor seeds profile and downloads a non-empty PDF', async ({ page }) => {
+test('first-run editor downloads a non-empty PDF after profile setup', async ({ page }) => {
   await resetAppData(page);
 
-  // Navigate to app root so the Seeder can populate the DB, then wait for it
+  // Navigate to the app root so the first-run seeder can run, then wait for it
   await page.goto('/');
   await waitForSeed(page);
+  // PDF export needs a business profile; sample data no longer includes one.
+  await saveBusinessProfile(page);
 
   await page.goto('/documents/new/invoice');
   await expect(page.getByRole('heading', { name: 'New Invoice' })).toBeVisible();
@@ -101,7 +103,7 @@ test('old IndexedDB stores are upgraded with required document indexes', async (
   const pageErrors: string[] = [];
   page.on('pageerror', error => pageErrors.push(error.message));
 
-  // App will upgrade DB to v3 and seed sample data since DB is empty
+  // App upgrades the DB to v3 and seeds sample records since it is empty
   await page.goto('/documents');
   await waitForSeed(page);
   await expect(page.getByRole('heading', { name: 'Documents', exact: true })).toBeVisible();

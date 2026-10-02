@@ -70,13 +70,28 @@ export class ErrorBoundary extends Component<Props, State> {
                 height: 56,
                 borderRadius: 18,
                 background: '#F1DFDA',
+                color: '#7A3F33',
                 display: 'grid',
                 placeItems: 'center',
                 margin: '0 auto 20px',
-                fontSize: 28,
               }}
             >
-              ⚠️
+              {/* Inline triangle icon: the crash fallback must not depend on an icon import. */}
+              <svg
+                width="26"
+                height="26"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                aria-hidden="true"
+              >
+                <path d="M12 4 2.5 20h19L12 4Z" />
+                <path d="M12 10v4" />
+                <path d="M12 17.5h.01" />
+              </svg>
             </div>
             <h1 style={{ fontSize: 20, fontWeight: 700, marginBottom: 8 }}>Something went wrong</h1>
             <p style={{ color: '#6F6A5F', fontSize: 14, lineHeight: 1.6, marginBottom: 24 }}>

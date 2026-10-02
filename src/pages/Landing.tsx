@@ -94,7 +94,7 @@ export function Landing() {
       <Seo title="Invoice & Receipt Maker" description="Offline-first invoice and receipt maker for freelancers and small businesses. Create invoices, generate receipts, and export PDFs from any device." />
       <a href="#main-content" className="skip-link">Skip to content</a>
 
-      {/* ── Header ── */}
+      {/* Header */}
       <header className={`l-header${scrolled ? ' scrolled' : ''}`}>
         <div className="l-header-inner">
           <Link to="/" className="brand" aria-label="Invois home">
@@ -142,14 +142,14 @@ export function Landing() {
       </header>
 
       <main id="main-content">
-        {/* ── Hero ── */}
+        {/* Hero */}
         <section className="l-hero">
           <div className="l-hero-inner">
             <div className="l-hero-text">
               <h1 className="l-hero-heading">Invoice and receipt maker that works offline.</h1>
               <p>
                 Create invoices, convert paid work to receipts,
-                and share PDFs — from any device, with no internet needed.
+                and share PDFs from any device, with no internet needed.
               </p>
               <div className="l-hero-actions">
                 <Link to="/documents/new/invoice" className="btn btn-primary btn-lg l-cta-primary">
@@ -164,11 +164,11 @@ export function Landing() {
               </ul>
             </div>
 
-            {/* ── Product preview ── */}
+            {/* Product preview */}
             <div
               className="l-preview"
               role="img"
-              aria-label="Example invoice for Acme Corp with line items, a $4,180 total, paid status, PDF export, share action, and a matching receipt preview."
+              aria-label="Example invoice for Acme Corp with line items, a Rp 48.840.000 total, paid status, PDF export, share action, and a matching receipt preview."
             >
               <div className="l-preview-stage" aria-hidden="true">
                 {/* Invoice card */}
@@ -215,17 +215,17 @@ export function Landing() {
                         <tr>
                           <td className="name-col">Website Redesign</td>
                           <td className="qty-col">1</td>
-                          <td className="amount-col">$2,400.00</td>
+                          <td className="amount-col">Rp 24.000.000</td>
                         </tr>
                         <tr>
                           <td className="name-col">Logo &amp; Brand Kit</td>
                           <td className="qty-col">1</td>
-                          <td className="amount-col">$800.00</td>
+                          <td className="amount-col">Rp 8.000.000</td>
                         </tr>
                         <tr>
                           <td className="name-col">Content Writing</td>
                           <td className="qty-col">12</td>
-                          <td className="amount-col">$600.00</td>
+                          <td className="amount-col">Rp 12.000.000</td>
                         </tr>
                       </tbody>
                     </table>
@@ -233,13 +233,13 @@ export function Landing() {
 
                   <div className="l-totals">
                     <div className="l-totals-row">
-                      <span>Subtotal</span><span>$3,800.00</span>
+                      <span>Subtotal</span><span>Rp 44.000.000</span>
                     </div>
                     <div className="l-totals-row">
-                      <span>Tax (10%)</span><span>$380.00</span>
+                      <span>Tax (11%)</span><span>Rp 4.840.000</span>
                     </div>
                     <div className="l-totals-grand">
-                      <span>Total</span><span className="l-total-value">$4,180.00</span>
+                      <span>Total</span><span className="l-total-value">Rp 48.840.000</span>
                     </div>
                   </div>
 
@@ -269,22 +269,22 @@ export function Landing() {
                       Receipt
                     </div>
                     <div className="l-phone-title">RCPT-2026-07-0001</div>
-                    <div className="l-phone-client">Acme Corp — Paid</div>
+                    <div className="l-phone-client">Acme Corp · Paid</div>
                     <div className="l-phone-line">
                       <span className="l-phone-line-name">Website Redesign</span>
-                      <span className="l-phone-line-amt">$2,400</span>
+                      <span className="l-phone-line-amt">Rp 24.000.000</span>
                     </div>
                     <div className="l-phone-line">
                       <span className="l-phone-line-name">Logo &amp; Brand Kit</span>
-                      <span className="l-phone-line-amt">$800</span>
+                      <span className="l-phone-line-amt">Rp 8.000.000</span>
                     </div>
                     <div className="l-phone-line">
                       <span className="l-phone-line-name">Content Writing</span>
-                      <span className="l-phone-line-amt">$600</span>
+                      <span className="l-phone-line-amt">Rp 12.000.000</span>
                     </div>
                     <div className="l-phone-total">
                       <span>Total</span>
-                      <span>$4,180</span>
+                      <span>Rp 48.840.000</span>
                     </div>
                     <div className="l-phone-share">Share PDF</div>
                   </div>
@@ -294,13 +294,13 @@ export function Landing() {
           </div>
         </section>
 
-        {/* ── Workflow ── */}
+        {/* Workflow */}
         <section className="l-section" id="workflow">
           <div className="l-section-inner">
             <div data-reveal>
               <h2>Three steps. That's it.</h2>
               <p className="l-section-sub">
-                From first draft to paid receipt — a short, clear path.
+                From first draft to paid receipt: a short, clear path.
               </p>
             </div>
 
@@ -338,7 +338,7 @@ export function Landing() {
           </div>
         </section>
 
-        {/* ── Features ── */}
+        {/* Features */}
         <section className="l-section l-proof" id="features">
           <div className="l-section-inner">
             <div className="l-proof-head" data-reveal>
@@ -396,11 +396,11 @@ export function Landing() {
           </div>
         </section>
 
-        {/* ── Trust / Fit ── */}
+        {/* Trust / Fit */}
         <section className="l-trust" id="trust">
           <div className="l-trust-inner">
             <div data-reveal>
-              <h2>What Invois does — and doesn't do.</h2>
+              <h2>What Invois does, and doesn't do.</h2>
             </div>
             <p data-reveal data-reveal-delay="1">
               Invois creates commercial invoices and receipts. It tracks what's
@@ -421,7 +421,7 @@ export function Landing() {
           </div>
         </section>
 
-        {/* ── Final CTA ── */}
+        {/* Final CTA */}
         <section className="l-cta">
           <div className="l-cta-inner" data-reveal>
             <h2>Create your first invoice</h2>
@@ -438,7 +438,7 @@ export function Landing() {
         </section>
       </main>
 
-      {/* ── Footer ── */}
+      {/* Footer */}
       <footer className="l-footer">
         <div className="l-footer-inner">
           <div className="l-footer-brand">

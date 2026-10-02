@@ -1,17 +1,26 @@
 import { lazy, Suspense, useEffect } from 'react';
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Link } from 'react-router-dom';
 import { HelmetProvider } from 'react-helmet-async';
 import { Layout } from './components/Layout';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { ToastProvider } from './context/toast';
 import { Landing } from './pages/Landing';
-import { isDBEmpty } from './lib/db';
-import { seedDB } from './lib/seed';
+import { seedOnce } from './lib/seed';
 import './styles/landing.css';
 
 function Seeder() {
-  useEffect(() => { isDBEmpty().then(empty => { if (empty) seedDB(); }); }, []);
+  useEffect(() => { seedOnce().catch(err => console.error('Seeding failed:', err)); }, []);
   return null;
+}
+
+function NotFound() {
+  return (
+    <div className="empty">
+      <h3>Page not found</h3>
+      <p>The page you are looking for doesn&apos;t exist or has moved.</p>
+      <Link to="/dashboard" className="btn btn-primary">Go to Dashboard</Link>
+    </div>
+  );
 }
 
 const Dashboard = lazy(() => import('./pages/Dashboard').then(({ Dashboard }) => ({ default: Dashboard })));
@@ -54,6 +63,7 @@ export default function App() {
                 <Route path="/items/new" element={<ItemEditor />} />
                 <Route path="/items/:id" element={<ItemEditor />} />
                 <Route path="/settings" element={<Settings />} />
+                <Route path="*" element={<NotFound />} />
               </Route>
             </Routes>
           </Suspense>

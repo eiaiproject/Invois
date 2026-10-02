@@ -1,7 +1,7 @@
 import { expect, test } from '@playwright/test';
 import { createInvoice, openDocument, resetAppData, saveBusinessProfile } from './helpers';
 
-/* ─── Landing Page ─── */
+/* Landing page */
 
 test.describe('Landing page', () => {
   test('loads and navigates to dashboard', async ({ page }) => {
@@ -23,7 +23,7 @@ test.describe('Landing page', () => {
   });
 });
 
-/* ─── Dashboard ─── */
+/* Dashboard */
 
 test.describe('Dashboard', () => {
   test('shows greeting and info modal', async ({ page }) => {
@@ -47,7 +47,7 @@ test.describe('Dashboard', () => {
   });
 });
 
-/* ─── Navigation ─── */
+/* Navigation */
 
 test.describe('Navigation', () => {
   test('bottom nav navigates on mobile', async ({ page }) => {
@@ -79,7 +79,7 @@ test.describe('Navigation', () => {
   });
 });
 
-/* ─── Clients CRUD ─── */
+/* Clients CRUD */
 
 test.describe('Clients CRUD', () => {
   test('create, edit, and delete client', async ({ page }) => {
@@ -120,7 +120,7 @@ test.describe('Clients CRUD', () => {
   });
 });
 
-/* ─── Items CRUD ─── */
+/* Items CRUD */
 
 test.describe('Items CRUD', () => {
   test('create, edit, and delete item', async ({ page }) => {
@@ -160,7 +160,7 @@ test.describe('Items CRUD', () => {
   });
 });
 
-/* ─── Document Editor ─── */
+/* Document editor */
 
 test.describe('Document Editor', () => {
   test('receipt creation with payment method', async ({ page }) => {
@@ -199,7 +199,7 @@ test.describe('Document Editor', () => {
   });
 });
 
-/* ─── Document Detail ─── */
+/* Document detail */
 
 test.describe('Document Detail', () => {
   test('mark sent, marked paid, edit, delete', async ({ page }) => {
@@ -244,8 +244,8 @@ test.describe('Document Detail', () => {
 
     // Delete
     await openDocument(page, invoiceNumber);
-    page.once('dialog', dialog => dialog.accept());
     await page.getByRole('button', { name: 'Delete' }).click();
+    await page.getByRole('dialog').getByRole('button', { name: 'Delete' }).click();
     await expect(page).toHaveURL(/\/documents$/);
     await expect(page.getByText(invoiceNumber)).toHaveCount(0);
   });
@@ -273,7 +273,7 @@ test.describe('Document Detail', () => {
   });
 });
 
-/* ─── Settings ─── */
+/* Settings */
 
 test.describe('Settings', () => {
   test('profile save and persistence', async ({ page }) => {
@@ -297,7 +297,7 @@ test.describe('Settings', () => {
   });
 });
 
-/* ─── Download All ─── */
+/* Download all */
 
 test.describe('Download All', () => {
   test('downloads all documents as ZIP', async ({ page }) => {
@@ -316,7 +316,7 @@ test.describe('Download All', () => {
   });
 });
 
-/* ─── Search & Filter ─── */
+/* Search & filter */
 
 test.describe('Search & Filter', () => {
   test('documents filter by type and search', async ({ page }) => {
@@ -336,15 +336,14 @@ test.describe('Search & Filter', () => {
     // Wait for receipt to appear
     await page.waitForSelector('text=Search Receipt', { timeout: 10000 });
 
-    // Filter by type — 1 invoice (ours, since seeded doesn't exist after resetAppData)
-    // Wait — actually after resetAppData, the seeder runs and creates a seeded invoice
-    // So we have 1 seeded + 1 created = 2 invoices, and 1 receipt
-    // Let's count badge types after filtering
+    // After resetAppData the first-run seeder loads sample records, so we have
+    // 1 sample invoice + 1 created invoice, and 1 created receipt.
+    // Count badge types after filtering.
     const countDocs = async () => page.locator('.document-card').count();
 
     // Filter: Invoices
     await page.getByRole('button', { name: 'Invoices' }).click();
-    // Should show 2: seeded invoice + created invoice
+    // Should show 2: sample invoice + created invoice
     expect(await countDocs()).toBeGreaterThanOrEqual(1);
 
     // Filter: Receipts
@@ -357,7 +356,7 @@ test.describe('Search & Filter', () => {
     await page.getByRole('button', { name: 'All', exact: true }).click();
     expect(await countDocs()).toBeGreaterThanOrEqual(2);
 
-    // Search — client name from createInvoice helper
+    // Search: client name from the createInvoice helper
     // Need to be on All filter first, then search
     await page.getByRole('button', { name: 'All', exact: true }).click();
     await page.getByPlaceholder('Search documents…').fill('CI Client');

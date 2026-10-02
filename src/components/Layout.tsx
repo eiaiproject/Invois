@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 import type { ReactNode } from 'react';
 import { Home, DocumentText, Users, Box, Settings } from 'reicon';
 import { Reicon } from './Reicon';
+import { SampleDataNotice } from './SampleDataNotice';
 
 const mobileNav = [
   { to: '/dashboard', label: 'Home', icon: Home },
@@ -29,7 +30,7 @@ export function Layout({ children }: { readonly children?: ReactNode }) {
     <div className="app">
       <a href="#main-content" className="skip-link">Skip to content</a>
 
-      {/* ── Sidebar (desktop) ── */}
+      {/* Sidebar (desktop) */}
       <aside className="sidebar">
         <div className="brand">
           <img className="brand-mark" src="/favicon.svg" alt="" aria-hidden="true" />
@@ -42,11 +43,11 @@ export function Layout({ children }: { readonly children?: ReactNode }) {
           </NavLink>
         ))}
         <div className="sidebar-bottom">
-          <p className="legal">Invois — Commercial invoices &amp; receipts. Not a tax document unless stated otherwise.</p>
+          <p className="legal">Commercial invoices &amp; receipts. Not a tax document unless stated otherwise.</p>
         </div>
       </aside>
 
-      {/* ── Top bar (mobile) ── */}
+      {/* Top bar (mobile) */}
       <header className={`top-bar${scrolled ? ' scrolled' : ''}`}>
         <div className="top-bar-inner">
           <div className="brand">
@@ -56,14 +57,15 @@ export function Layout({ children }: { readonly children?: ReactNode }) {
         </div>
       </header>
 
-      {/* ── Main ── */}
+      {/* Main */}
       <main className="main" id="main-content" tabIndex={-1}>
         <div className="main-inner fade-in">
+          <SampleDataNotice />
           {children ?? <Outlet />}
         </div>
       </main>
 
-      {/* ── Bottom nav (mobile) ── */}
+      {/* Bottom nav (mobile) */}
       <nav className="bottom-nav">
         {mobileNav.map(n => (
           <NavLink key={n.to} to={n.to} end={n.to === '/dashboard'} className={({ isActive }) => isActive ? 'active' : ''}>

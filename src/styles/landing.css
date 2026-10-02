@@ -1,16 +1,14 @@
-/* ========================================================================
-   Landing page — Olive Minimal
-   Extends design-system tokens. Scoped to .landing namespace.
-======================================================================== */
+/* Landing page styles.
+   Extends the design-system tokens in app.css; scoped to the .landing namespace. */
 
-/* ── Landing shell ── */
+/* Landing shell */
 .landing {
   min-height: 100dvh;
   background: var(--color-bg);
   color: var(--color-text);
 }
 
-/* ── Header ── */
+/* Header */
 .l-header {
   position: sticky;
   top: 0;
@@ -110,7 +108,7 @@
   .l-nav { display: flex; }
 }
 
-/* ── Sections shared (layout rhythm) ── */
+/* Sections shared (layout rhythm) */
 .l-section {
   padding: 64px 20px;
 }
@@ -133,7 +131,7 @@
   .l-section { padding: 96px 32px; }
 }
 
-/* ── Hero ── */
+/* Hero */
 .l-hero {
   padding: 28px 20px 0;
   overflow: hidden;
@@ -143,7 +141,7 @@
   margin: 0 auto;
 }
 .l-hero-text {
-  /* ponytail: max-width removed — hero fills available space on web */
+  /* ponytail: max-width removed so the hero fills available space on web */
 }
 .l-hero-heading,
 .l-hero-text h1 {
@@ -233,7 +231,7 @@
   .l-hero { padding: 56px 32px 0; }
 }
 
-/* ── Button micro-interactions (animate + delight) ── */
+/* Button micro-interactions (animate + delight) */
 .btn {
   transition: background var(--dur) var(--ease-out),
               border-color var(--dur) var(--ease-out),
@@ -253,7 +251,7 @@
   box-shadow: var(--shadow-glow-primary);
 }
 
-/* ── Hero entrance animation (animate: gentler distances) ── */
+/* Hero entrance animation (animate: gentler distances) */
 @keyframes l-hero-in {
   from { opacity: 0; transform: translateY(12px); }
   to   { opacity: 1; transform: translateY(0); }
@@ -278,7 +276,7 @@
   align-items: flex-start;
 }
 
-/* ── Invoice card ── */
+/* Invoice card */
 .l-invoice-card {
   width: 100%;
   max-width: 420px;
@@ -499,7 +497,7 @@
   stroke-width: 2;
 }
 
-/* ── Phone preview ── */
+/* Phone preview */
 .l-phone {
   display: none;
   width: 180px;
@@ -510,12 +508,6 @@
   box-shadow: var(--shadow-card);
   overflow: hidden;
   line-height: 1.25;
-  animation: l-float 6s ease-in-out infinite;
-  will-change: transform;
-}
-@keyframes l-float {
-  0%, 100% { transform: translateY(0); }
-  50%      { transform: translateY(-6px); }
 }
 .l-phone-notch {
   height: 24px;
@@ -583,7 +575,7 @@
   padding: 7px 8px;
   border-radius: var(--radius-sm);
   background: var(--color-primary);
-  color: var(--color-surface);
+  color: var(--color-on-primary);
   font-size: 10px;
   font-weight: 700;
   text-align: center;
@@ -625,7 +617,7 @@
 
 
 
-/* ── Workflow ── */
+/* Workflow */
 .l-workflow-steps {
   display: flex;
   flex-direction: column;
@@ -650,7 +642,7 @@
   height: 40px;
   border-radius: 50%;
   background: var(--color-primary);
-  color: var(--color-surface);
+  color: var(--color-on-primary);
   display: grid;
   place-items: center;
   font-size: 15px;
@@ -711,7 +703,7 @@
   .l-wf-body p { margin: 0 auto; }
 }
 
-/* ── Proof ledger ── */
+/* Proof ledger */
 .l-proof {
   background: var(--color-surface);
   border-top: 1px solid var(--color-border);
@@ -834,7 +826,7 @@
   }
 }
 
-/* ── Trust ── */
+/* Trust */
 .l-trust {
   background: var(--color-surface);
   border-top: 1px solid var(--color-border);
@@ -894,7 +886,7 @@
   .l-trust-inner { padding: 68px 32px; }
 }
 
-/* ── Final CTA (layout: breathing room) ── */
+/* Final CTA (layout: breathing room) */
 .l-cta {
   padding: 80px 20px;
   text-align: center;
@@ -926,7 +918,7 @@
   .l-cta { padding: 96px 32px; }
 }
 
-/* ── Footer (quieter: simplified) ── */
+/* Footer (quieter: simplified) */
 .l-footer {
   border-top: 1px solid var(--color-border);
   padding: 24px 20px;
@@ -958,7 +950,7 @@
   color: var(--color-text-subtle);
 }
 
-/* ── Scroll reveal system ── */
+/* Scroll reveal system */
 .landing.reveal-ready [data-reveal] {
   opacity: 1;
   transform: none;
@@ -969,21 +961,21 @@
   transition: opacity 0.5s var(--ease-out), transform 0.5s var(--ease-out);
 }
 
-/* ── Performance: content-visibility for below-fold sections ── */
+/* Performance: content-visibility for below-fold sections */
 .l-section,
 .l-trust,
 .l-cta {
   content-visibility: auto;
   contain-intrinsic-size: auto 400px;
 }
-/* Stagger delays — only during reveal */
+/* Stagger delays, only during reveal */
 [data-reveal].revealed[data-reveal-delay="1"] { transition-delay: 60ms; }
 [data-reveal].revealed[data-reveal-delay="2"] { transition-delay: 120ms; }
 [data-reveal].revealed[data-reveal-delay="3"] { transition-delay: 180ms; }
 [data-reveal].revealed[data-reveal-delay="4"] { transition-delay: 240ms; }
 [data-reveal].revealed[data-reveal-delay="5"] { transition-delay: 300ms; }
 
-/* ── Responsive helpers ── */
+/* Responsive helpers */
 @media (max-width: 719px) {
   .l-preview-stage {
     flex-direction: column;
@@ -1003,15 +995,11 @@
   .l-hero-text h1,
   .l-hero-text p,
   .l-hero-actions,
-  .l-preview,
-  .l-phone {
+  .l-preview {
     animation: none;
   }
   .l-invoice-card:hover {
     transform: none;
-  }
-  .l-phone {
-    animation: none;
   }
   .btn:hover {
     transform: none;
