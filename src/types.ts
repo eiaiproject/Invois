@@ -1,4 +1,4 @@
-/* ─── Data Model ─── */
+/* Data Model */
 
 export interface BusinessProfile {
   id: string;
@@ -123,4 +123,15 @@ export function addDaysISO(days: number, from = new Date()): string {
 
 export function nowISO(): string {
   return new Date().toISOString();
+}
+
+/* Derived status */
+
+/**
+ * Status shown to users. A sent invoice whose due date has passed reads as
+ * "overdue" without mutating the stored record.
+ */
+export function effectiveInvoiceStatus(invoice: Pick<Invoice, 'status' | 'dueDate'>): Invoice['status'] {
+  if (invoice.status === 'sent' && invoice.dueDate && invoice.dueDate < todayISO()) return 'overdue';
+  return invoice.status;
 }

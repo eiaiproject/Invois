@@ -7,6 +7,7 @@ import {
   calcTotals,
   copyInvoiceText,
   copyReceiptText,
+  isValidEmail,
 } from '../../src/lib/format';
 import type { Invoice, Receipt } from '../../src/types';
 
@@ -74,7 +75,7 @@ describe('formatDateISO', () => {
   });
 
   it('handles undefined', () => {
-    expect(formatDateISO(undefined)).toBe('—');
+    expect(formatDateISO(undefined)).toBe('-');
   });
 
   it('handles datetime ISO string', () => {
@@ -233,5 +234,19 @@ describe('copyReceiptText', () => {
     expect(text).toContain('Beta Inc');
     expect(text).not.toContain('Invoice Ref:');
     expect(text).not.toContain('Payment Method:');
+  });
+});
+
+describe('isValidEmail', () => {
+  it('accepts common addresses', () => {
+    expect(isValidEmail('hello@example.com')).toBe(true);
+    expect(isValidEmail(' billing@acme.co.id ')).toBe(true);
+  });
+
+  it('rejects malformed addresses', () => {
+    expect(isValidEmail('')).toBe(false);
+    expect(isValidEmail('hello')).toBe(false);
+    expect(isValidEmail('hello@acme')).toBe(false);
+    expect(isValidEmail('hello @acme.com')).toBe(false);
   });
 });

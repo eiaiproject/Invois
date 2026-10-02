@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { getItems, saveItem, getItem } from '../lib/db';
+import { seedOnce } from '../lib/seed';
 import { useToast } from '../context/toast';
 import { formatIDR } from '../lib/format';
 import { useUnsavedChanges } from '../lib/useUnsavedChanges';
@@ -18,20 +19,23 @@ export function Items() {
   const [items, setItems] = useState<Item[] | null>(null);
   const [searchParams, setSearchParams] = useSearchParams();
   const search = searchParams.get('q') || '';
+  const hasQuery = !!search.trim();
 
-  const load = async () => setItems(await getItems());
+  const load = async () => {
+    try { await seedOnce(); setItems(await getItems()); }
+    catch (err) { console.error(err); setItems([]); }
+  };
   useEffect(() => { load(); }, []);
 
   const filtered = (items || []).filter(i => {
-    if (!search) return true;
-    const q = search.toLowerCase();
+    const q = search.trim().toLowerCase();
+    if (!q) return true;
     return i.name.toLowerCase().includes(q) || i.description?.toLowerCase().includes(q);
   });
 
   const updateSearch = (value: string) => {
     const params = new URLSearchParams(searchParams);
-    const q = value.trim();
-    if (q) params.set('q', q);
+    if (value.trim()) params.set('q', value);
     else params.delete('q');
     setSearchParams(params, { replace: true });
   };
@@ -91,9 +95,9 @@ export function Items() {
         <>
       {filtered.length === 0 ? (
         <div className="empty">
-          <h3>{search ? 'No matches' : 'No items yet'}</h3>
-          <p>{search ? 'Try a different search.' : 'Add your services or products to quickly add them to invoices.'}</p>
-          {!search && <Link to="/items/new" className="btn btn-primary">Add Item</Link>}
+          <h3>{hasQuery ? 'No matches' : 'No items yet'}</h3>
+          <p>{hasQuery ? 'Try a different search.' : 'Add your services or products to quickly add them to invoices.'}</p>
+          {!hasQuery && <Link to="/items/new" className="btn btn-primary">Add Item</Link>}
         </div>
       ) : (
         <div className="doc-list">
@@ -103,7 +107,7 @@ export function Items() {
                 <div className="row1">
                   <span className="card-title">{item.name}</span>
                 </div>
-                <div className="client">{item.description || item.unit || '—'}</div>
+                <div className="client">{item.description || item.unit || '-'}</div>
               </div>
               <span className="total num">{formatIDR(item.price)}</span>
             </Link>

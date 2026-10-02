@@ -192,7 +192,7 @@ function AdjustmentsSection(props: Readonly<Pick<DocumentEditorFormProps, 'inv' 
             </div>
             <div className="field">
               <label className="field-label" htmlFor="invoice-tax-rate">Tax (%)</label>
-              <input id="invoice-tax-rate" name="taxRate" type="number" className="input num" min="0" max="100" value={inv.taxRate ?? 11} onChange={e => setInv(i => ({ ...i, taxRate: Number.parseFloat(e.target.value) || 0 }))} />
+              <input id="invoice-tax-rate" name="taxRate" type="number" className="input num" min="0" max="100" value={inv.taxRate ?? 11} onChange={e => setInv(i => ({ ...i, taxRate: Math.min(100, Math.max(0, Number.parseFloat(e.target.value) || 0)) }))} />
             </div>
           </div>
           <div className="totals">

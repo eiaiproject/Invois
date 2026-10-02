@@ -3,8 +3,9 @@ import autoTable from 'jspdf-autotable';
 import JSZip from 'jszip';
 import type { Invoice, Receipt, BusinessProfile } from '../types';
 import { formatIDR, formatDateISO } from './format';
+import { downloadBlob } from './download';
 
-/* ─── Colors (RGB) ─── */
+/* Colors (RGB) */
 const C = {
   primary: [54, 64, 45] as [number, number, number],
   accent: [166, 138, 100] as [number, number, number],
@@ -57,7 +58,7 @@ function drawTextBlock(doc: jsPDF, title: string, text: string, x: number, y: nu
   return y;
 }
 
-/* ─── Invoice PDF helpers ─── */
+/* Invoice PDF helpers */
 
 function drawInvoiceMeta(doc: jsPDF, invoice: Invoice, w: number, margin: number, startY: number): number {
   let y = startY;
@@ -198,7 +199,7 @@ function drawFooter(doc: jsPDF): void {
   doc.text('Generated with Invois', 20, footerY);
 }
 
-/* ─── Invoice PDF ─── */
+/* Invoice PDF */
 
 export function generateInvoicePDF(invoice: Invoice, biz: BusinessProfile): jsPDF {
   const doc = new jsPDF({ unit: 'mm', format: 'a4' });
@@ -207,7 +208,7 @@ export function generateInvoicePDF(invoice: Invoice, biz: BusinessProfile): jsPD
   const contentW = w - margin * 2;
   let y = 22;
 
-  // ── Header
+  // Header
   if (biz.logoUrl) {
     try { doc.addImage(biz.logoUrl, margin, y, 14, 14); } catch { /* skip */ }
     y += 18;
@@ -216,31 +217,31 @@ export function generateInvoicePDF(invoice: Invoice, biz: BusinessProfile): jsPD
   y = drawInvoiceMeta(doc, invoice, w, margin, y);
   drawBizInfo(doc, biz, margin);
 
-  // ── Bill To
+  // Bill To
   y = biz.logoUrl ? 48 : 42;
   y = drawBillTo(doc, invoice, margin, y);
 
-  // ── Items table
+  // Items table
   y = drawInvoiceItems(doc, invoice, margin, y);
 
-  // ── Totals
+  // Totals
   y = drawTotals(doc, invoice, margin, y);
 
-  // ── Payment
+  // Payment
   y = drawPaymentInfo(doc, invoice, margin, y, contentW);
 
-  // ── Notes
+  // Notes
   if (invoice.notes) y = drawTextBlock(doc, 'NOTES', invoice.notes, margin, y, contentW, margin);
 
-  // ── Terms
+  // Terms
   if (invoice.terms) { y += 4; drawTextBlock(doc, 'TERMS', invoice.terms, margin, y, contentW, margin); }
 
-  // ── Footer
+  // Footer
   drawFooter(doc);
   return doc;
 }
 
-/* ─── Receipt PDF ─── */
+/* Receipt PDF */
 
 export function generateReceiptPDF(receipt: Receipt, biz: BusinessProfile): jsPDF {
   const doc = new jsPDF({ unit: 'mm', format: 'a4' });
@@ -248,7 +249,7 @@ export function generateReceiptPDF(receipt: Receipt, biz: BusinessProfile): jsPD
   const margin = 20;
   let y = 22;
 
-  // ── Business info (left)
+  // Business info (left)
   if (biz.name) {
     doc.setFontSize(11);
     doc.setFont('helvetica', 'bold');
@@ -267,7 +268,7 @@ export function generateReceiptPDF(receipt: Receipt, biz: BusinessProfile): jsPD
     }
   }
 
-  // ── Title
+  // Title
   doc.setFontSize(28);
   doc.setFont('helvetica', 'bold');
   setRGB(doc, C.primary);
@@ -275,14 +276,14 @@ export function generateReceiptPDF(receipt: Receipt, biz: BusinessProfile): jsPD
 
   y += 16;
 
-  // ── Payment received
+  // Payment received
   doc.setFontSize(16);
   doc.setFont('helvetica', 'normal');
   setRGB(doc, C.text);
   doc.text('Payment received', margin, y);
   y += 10;
 
-  // ── PAID badge
+  // PAID badge
   fillRGB(doc, C.successBg);
   const badgeText = 'PAID';
   doc.setFontSize(12);
@@ -293,7 +294,7 @@ export function generateReceiptPDF(receipt: Receipt, biz: BusinessProfile): jsPD
   doc.text(badgeText, margin + 6, y + 2.5);
   y += 16;
 
-  // ── Receipt info
+  // Receipt info
   const leftX = margin;
   const rightX = w - margin;
   const lineH = 6;
@@ -321,11 +322,11 @@ export function generateReceiptPDF(receipt: Receipt, biz: BusinessProfile): jsPD
   doc.line(margin, y, w - margin, y);
   y += 8;
 
-  // ── Received from
+  // Received from
   drawField('Received From', receipt.clientSnapshot.name, 0);
   y += lineH + 10;
 
-  // ── Amount paid (hero)
+  // Amount paid (hero)
   setRGB(doc, C.muted);
   doc.setFontSize(9);
   doc.setFont('helvetica', 'bold');
@@ -338,12 +339,12 @@ export function generateReceiptPDF(receipt: Receipt, biz: BusinessProfile): jsPD
 
   y += 16;
 
-  // ── Notes
+  // Notes
   if (receipt.notes) {
     drawTextBlock(doc, 'NOTES', receipt.notes, margin, y, w - margin * 2, margin);
   }
 
-  // ── Footer
+  // Footer
   const footerY = doc.internal.pageSize.getHeight() - 12;
   setRGB(doc, C.muted);
   doc.setFontSize(9);
@@ -356,7 +357,7 @@ export function generateReceiptPDF(receipt: Receipt, biz: BusinessProfile): jsPD
   return doc;
 }
 
-/* ─── Download helpers ─── */
+/* Download helpers */
 
 export function downloadPDF(doc: jsPDF, filename: string) {
   doc.save(filename);
@@ -377,7 +378,7 @@ export async function sharePDF(doc: jsPDF, filename: string, shareText?: string)
   return false;
 }
 
-/* ─── Download all as ZIP ─── */
+/* Download all as ZIP */
 
 export async function downloadAllAsZip(
   invoices: Invoice[],
@@ -402,10 +403,5 @@ export async function downloadAllAsZip(
 
   const zipBlob = await folder.generateAsync({ type: 'blob' });
   const date = new Date().toISOString().slice(0, 10);
-  const url = URL.createObjectURL(zipBlob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = `invois-documents-${date}.zip`;
-  a.click();
-  URL.revokeObjectURL(url);
+  downloadBlob(zipBlob, `invois-documents-${date}.zip`);
 }

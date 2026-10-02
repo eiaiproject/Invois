@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, afterEach } from 'vitest';
-import { newId, dateISO, todayISO, addDaysISO, nowISO } from '../../src/types';
+import { newId, dateISO, todayISO, addDaysISO, nowISO, effectiveInvoiceStatus } from '../../src/types';
 
 describe('newId', () => {
   it('returns a string', () => {
@@ -96,5 +96,25 @@ describe('nowISO', () => {
     const after = new Date().toISOString();
     expect(result >= before).toBe(true);
     expect(result <= after).toBe(true);
+  });
+});
+
+describe('effectiveInvoiceStatus', () => {
+  it('marks a sent invoice past its due date as overdue', () => {
+    expect(effectiveInvoiceStatus({ status: 'sent', dueDate: addDaysISO(-1) })).toBe('overdue');
+  });
+
+  it('keeps a sent invoice before its due date as sent', () => {
+    expect(effectiveInvoiceStatus({ status: 'sent', dueDate: addDaysISO(1) })).toBe('sent');
+  });
+
+  it('keeps a sent invoice without a due date as sent', () => {
+    expect(effectiveInvoiceStatus({ status: 'sent', dueDate: undefined })).toBe('sent');
+  });
+
+  it('never derives overdue for other statuses', () => {
+    expect(effectiveInvoiceStatus({ status: 'draft', dueDate: addDaysISO(-1) })).toBe('draft');
+    expect(effectiveInvoiceStatus({ status: 'paid', dueDate: addDaysISO(-1) })).toBe('paid');
+    expect(effectiveInvoiceStatus({ status: 'cancelled', dueDate: addDaysISO(-1) })).toBe('cancelled');
   });
 });

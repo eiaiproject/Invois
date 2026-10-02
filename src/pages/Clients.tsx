@@ -1,8 +1,10 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { getClients, getClient, saveClient } from '../lib/db';
+import { seedOnce } from '../lib/seed';
 import { useToast } from '../context/toast';
 import { useUnsavedChanges } from '../lib/useUnsavedChanges';
+import { isValidEmail } from '../lib/format';
 import { Plus } from 'reicon';
 import { Reicon } from '../components/Reicon';
 import { Seo } from '../components/SEO';
@@ -17,20 +19,23 @@ export function Clients() {
   const [clients, setClients] = useState<Client[] | null>(null);
   const [searchParams, setSearchParams] = useSearchParams();
   const search = searchParams.get('q') || '';
+  const hasQuery = !!search.trim();
 
-  const load = async () => setClients(await getClients());
+  const load = async () => {
+    try { await seedOnce(); setClients(await getClients()); }
+    catch (err) { console.error(err); setClients([]); }
+  };
   useEffect(() => { load(); }, []);
 
   const filtered = (clients || []).filter(c => {
-    if (!search) return true;
-    const q = search.toLowerCase();
+    const q = search.trim().toLowerCase();
+    if (!q) return true;
     return c.name.toLowerCase().includes(q) || c.email?.toLowerCase().includes(q) || c.phone?.includes(q);
   });
 
   const updateSearch = (value: string) => {
     const params = new URLSearchParams(searchParams);
-    const q = value.trim();
-    if (q) params.set('q', q);
+    if (value.trim()) params.set('q', value);
     else params.delete('q');
     setSearchParams(params, { replace: true });
   };
@@ -90,9 +95,9 @@ export function Clients() {
         <>
       {filtered.length === 0 ? (
         <div className="empty">
-          <h3>{search ? 'No matches' : 'No clients yet'}</h3>
-          <p>{search ? 'Try a different search.' : 'Add your first client to save their details for future invoices.'}</p>
-          {!search && <Link to="/clients/new" className="btn btn-primary">Add Client</Link>}
+          <h3>{hasQuery ? 'No matches' : 'No clients yet'}</h3>
+          <p>{hasQuery ? 'Try a different search.' : 'Add your first client to save their details for future invoices.'}</p>
+          {!hasQuery && <Link to="/clients/new" className="btn btn-primary">Add Client</Link>}
         </div>
       ) : (
         <div className="doc-list">
@@ -125,6 +130,7 @@ export function ClientEditor() {
   const [form, setForm] = useState(EMPTY_CLIENT_FORM);
   const [initialForm, setInitialForm] = useState(EMPTY_CLIENT_FORM);
   const [nameError, setNameError] = useState('');
+  const [emailError, setEmailError] = useState('');
   const dirty = JSON.stringify(form) !== JSON.stringify(initialForm);
   useUnsavedChanges(dirty);
 
@@ -144,6 +150,12 @@ export function ClientEditor() {
       setNameError('Enter a client name.');
       document.getElementById('client-name')?.focus();
       toast('Client name is required.', 'danger');
+      return;
+    }
+    if (form.email && !isValidEmail(form.email)) {
+      setEmailError('Enter a valid email address.');
+      document.getElementById('client-email')?.focus();
+      toast('Enter a valid email address.', 'danger');
       return;
     }
     const now = nowISO();
@@ -180,7 +192,8 @@ export function ClientEditor() {
         <div className="field-row">
           <div className="field">
             <label className="field-label" htmlFor="client-email">Email</label>
-            <input id="client-email" name="email" type="email" autoComplete="email" spellCheck={false} className="input" value={form.email} onChange={e => setForm(f => ({ ...f, email: e.target.value }))} placeholder="hello@example.com…" />
+            <input id="client-email" name="email" type="email" autoComplete="email" spellCheck={false} className="input" value={form.email} onChange={e => { setEmailError(''); setForm(f => ({ ...f, email: e.target.value })); }} placeholder="hello@example.com…" aria-invalid={!!emailError} aria-describedby={emailError ? 'client-email-error' : undefined} />
+            {emailError && <div id="client-email-error" className="field-error" role="alert">{emailError}</div>}
           </div>
           <div className="field">
             <label className="field-label" htmlFor="client-phone">Phone / WhatsApp</label>
