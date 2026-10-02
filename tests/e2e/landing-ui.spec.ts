@@ -153,6 +153,9 @@ test('keyboard focus ring is visible on every focusable landing element', async 
 });
 
 test('mobile menu is operable with the keyboard only', async ({ page, viewport }) => {
+  // The drawer has no desktop counterpart: above 1024px the header shows the
+  // inline nav instead, so there is no hamburger to drive on that project.
+  // NOSONAR - deliberate viewport specific skip, the same test runs on mobile-chrome
   test.skip((viewport?.width ?? 1280) >= 1024, 'hamburger only exists below 1024px');
   test.setTimeout(60_000);
   await page.setViewportSize({ width: 390, height: 844 });
@@ -404,6 +407,7 @@ test('landing renders desktop and mobile screenshots', async ({ page }, testInfo
   for (const [name, width, height] of shots) {
     await page.setViewportSize({ width, height });
     await page.goto('/');
+    await expect(page.locator('h1')).toBeVisible();
     // Walk the page so scroll reveals fire before the capture.
     await page.evaluate(async () => {
       const step = window.innerHeight * 0.8;
@@ -413,9 +417,15 @@ test('landing renders desktop and mobile screenshots', async ({ page }, testInfo
       }
       window.scrollTo(0, 0);
     });
-    await page.waitForTimeout(250);
+    // Every block has to be fully visible before the shot, otherwise the
+    // attachment captures half-faded sections.
+    await expect
+      .poll(() => page.locator('[data-reveal]:not(.revealed)').count(), { timeout: 5_000 })
+      .toBe(0);
+    const shot = await page.screenshot({ fullPage: true });
+    expect(shot.byteLength, `${name} capture looks empty`).toBeGreaterThan(10_000);
     await testInfo.attach(`${name}-landing`, {
-      body: await page.screenshot({ fullPage: true }),
+      body: shot,
       contentType: 'image/png',
     });
   }
