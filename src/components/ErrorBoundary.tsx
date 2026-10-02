@@ -28,7 +28,7 @@ export class ErrorBoundary extends Component<Props, State> {
     this.setState({ hasError: false, error: null });
   };
 
-  handleClearData = async () => {
+  handleClearData = () => {
     try {
       indexedDB.deleteDatabase('invois');
       window.location.reload();
