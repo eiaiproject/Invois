@@ -19,7 +19,7 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/version-1.3.0-596949" alt="Version" />
+  <img src="https://img.shields.io/badge/version-1.4.0-596949" alt="Version" />
   <img src="https://img.shields.io/badge/status-stable-3F6B49" alt="Status: Stable" />
   <img src="https://img.shields.io/badge/license-MIT-7A5F3A" alt="License: MIT" />
   <img src="https://img.shields.io/badge/PWA-offline%20ready-596949" alt="PWA: Offline Ready" />
@@ -296,6 +296,7 @@ git push origin --tags
 
 ### Version History
 
+- **1.4.0**: Landing page rewrite (hero, workflow, privacy, CTA), readable hover and active colours on links and buttons, symmetric hero highlights, landing UI and accessibility E2E suite
 - **1.3.0**: Invoice, receipt, and import data integrity fixes; system/light/dark theme control; labeled and removable sample data; WCAG AA contrast in both themes; announced loading states; design direction in `DESIGN.md`
 - **1.2.0**: SEO layer (per-page meta, structured data, sitemap, OG images), SonarCloud quality gate with coverage reporting, refreshed PWA/branding assets
 - **1.1.0**: UI/UX overhaul, dark mode, reicon icons, skeleton loading, batch ZIP export, comprehensive E2E tests
