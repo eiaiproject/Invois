@@ -13,7 +13,7 @@ export default defineConfig({
       registerType: 'autoUpdate',
       includeAssets: ['favicon.svg', 'apple-touch-icon.png'],
       manifest: {
-        name: 'Invois — Invoice & Receipt Maker',
+        name: 'Invois: Invoice & Receipt Maker',
         short_name: 'Invois',
         description: 'Create clean professional invoices and receipts from your phone.',
         theme_color: '#596949',
