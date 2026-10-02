@@ -63,7 +63,7 @@ export function Dashboard() {
 
   useEffect(() => {
     let mounted = true;
-    (async () => {
+    void (async () => {
       try {
         const data = await loadDashboard();
         if (!mounted) return;

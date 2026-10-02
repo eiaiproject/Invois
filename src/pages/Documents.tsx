@@ -41,7 +41,7 @@ export function Documents() {
     }
   };
 
-  useEffect(() => { load(); }, []);
+  useEffect(() => { void load(); }, []);
 
   const handleDownloadAll = async () => {
     setDownloading(true);

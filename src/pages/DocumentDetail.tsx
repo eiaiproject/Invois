@@ -32,7 +32,7 @@ export function DocumentDetail() {
   useEffect(() => {
     if (!id) return;
     setLoaded(false);
-    (async () => {
+    void (async () => {
       try {
         setBiz(await getBusiness());
         setLinkedReceipt(undefined);
@@ -68,9 +68,10 @@ export function DocumentDetail() {
         toast(result?.revertedInvoice ? `${doc.number} deleted. Linked invoice is now unpaid.` : `${doc.number} deleted`, 'success');
       } else {
         const linked = await deleteInvoice(doc.id);
+        const plural = linked.length > 1 ? 's' : '';
         toast(
           linked.length
-            ? `${doc.number} and ${linked.length} linked receipt${linked.length > 1 ? 's' : ''} deleted`
+            ? `${doc.number} and ${linked.length} linked receipt${plural} deleted`
             : `${doc.number} deleted`,
           'success'
         );

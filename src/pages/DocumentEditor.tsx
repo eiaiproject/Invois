@@ -190,7 +190,7 @@ export function DocumentEditor() {
     setLoading(true);
     setInitialSnapshot('');
     setValidationError(null);
-    (async () => {
+    void (async () => {
       await seedOnce();
       const [bizData, clientData] = await Promise.all([getBusiness(), getClients()]);
       setBiz(bizData);

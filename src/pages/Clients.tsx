@@ -25,7 +25,7 @@ export function Clients() {
     try { await seedOnce(); setClients(await getClients()); }
     catch (err) { console.error(err); setClients([]); }
   };
-  useEffect(() => { load(); }, []);
+  useEffect(() => { void load(); }, []);
 
   const filtered = (clients || []).filter(c => {
     const q = search.trim().toLowerCase();
@@ -136,7 +136,7 @@ export function ClientEditor() {
 
   useEffect(() => {
     if (!id) return;
-    getClient(id).then(c => {
+    void getClient(id).then(c => {
       if (c) {
         const next = { name: c.name, email: c.email || '', phone: c.phone || '', address: c.address || '', taxId: c.taxId || '', notes: c.notes || '' };
         setForm(next);

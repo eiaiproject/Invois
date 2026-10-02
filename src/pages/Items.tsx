@@ -25,7 +25,7 @@ export function Items() {
     try { await seedOnce(); setItems(await getItems()); }
     catch (err) { console.error(err); setItems([]); }
   };
-  useEffect(() => { load(); }, []);
+  useEffect(() => { void load(); }, []);
 
   const filtered = (items || []).filter(i => {
     const q = search.trim().toLowerCase();
@@ -135,7 +135,7 @@ export function ItemEditor() {
 
   useEffect(() => {
     if (!id) return;
-    getItem(id).then(i => {
+    void getItem(id).then(i => {
       if (i) {
         const next = { name: i.name, description: i.description || '', unit: i.unit || 'project', price: i.price };
         setForm(next);
