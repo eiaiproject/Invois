@@ -82,7 +82,8 @@ export async function deleteInvoice(id: string): Promise<Receipt[]> {
   const linked = receipts.filter(r => r.invoiceId === id);
   const tx = db.transaction(['invoices', 'receipts'], 'readwrite');
   await tx.objectStore('invoices').delete(id);
-  for (const receipt of linked) await tx.objectStore('receipts').delete(receipt.id);
+  const receiptStore = tx.objectStore('receipts');
+  await Promise.all(linked.map((receipt) => receiptStore.delete(receipt.id)));
   await tx.done;
   return linked;
 }
@@ -130,7 +131,7 @@ export async function deleteReceipt(id: string): Promise<ReceiptChangeResult | u
   let revertedInvoice: Invoice | undefined;
   if (receipt.invoiceId && remainingActive.length === 0) {
     const invoice = await tx.objectStore('invoices').get(receipt.invoiceId);
-    if (invoice && invoice.status === 'paid') {
+    if (invoice?.status === 'paid') {
       revertedInvoice = { ...invoice, status: 'sent', updatedAt: now };
       await tx.objectStore('invoices').put(revertedInvoice);
     }
@@ -168,7 +169,7 @@ export async function cancelReceipt(id: string): Promise<ReceiptChangeResult | u
   let revertedInvoice: Invoice | undefined;
   if (receipt.invoiceId && remainingActive.length === 0) {
     const invoice = await tx.objectStore('invoices').get(receipt.invoiceId);
-    if (invoice && invoice.status === 'paid') {
+    if (invoice?.status === 'paid') {
       revertedInvoice = { ...invoice, status: 'sent', updatedAt: now };
       await tx.objectStore('invoices').put(revertedInvoice);
     }
@@ -268,7 +269,7 @@ export async function isDBEmpty() {
 export const SAMPLE_ID_PREFIX = 'sample-';
 
 function sampleKeyRange() {
-  return IDBKeyRange.bound(SAMPLE_ID_PREFIX, SAMPLE_ID_PREFIX + String.fromCharCode(0xffff));
+  return IDBKeyRange.bound(SAMPLE_ID_PREFIX, SAMPLE_ID_PREFIX + String.fromCodePoint(0xffff));
 }
 
 const SAMPLE_REMOVED_KEY = 'sample-data-removed';
@@ -293,12 +294,18 @@ export async function getSampleRecordCount(): Promise<number> {
 export async function removeSampleData(): Promise<number> {
   const db = await getDB();
   const tx = db.transaction(['clients', 'items', 'invoices', 'receipts', 'counters'], 'readwrite');
-  let removed = 0;
-  for (const name of ['clients', 'items', 'invoices', 'receipts'] as const) {
-    const store = tx.objectStore(name);
-    removed += await store.count(sampleKeyRange());
-    await store.delete(sampleKeyRange());
-  }
+  // Each store is counted before it is cleared, so count and delete stay paired
+  // while the four stores run concurrently inside the one transaction.
+  const stores = ['clients', 'items', 'invoices', 'receipts'] as const;
+  const perStore = await Promise.all(
+    stores.map(async (name) => {
+      const store = tx.objectStore(name);
+      const count = await store.count(sampleKeyRange());
+      await store.delete(sampleKeyRange());
+      return count;
+    }),
+  );
+  const removed = perStore.reduce((total, count) => total + count, 0);
   await tx.objectStore('counters').put(1, SAMPLE_REMOVED_KEY);
   await tx.done;
   return removed;
@@ -438,11 +445,13 @@ export async function importAllData(data: ExportData): Promise<{ imported: boole
   const db = await getDB();
   // One transaction across every store: a failure rolls the whole import back.
   const tx = db.transaction(['business', 'clients', 'items', 'invoices', 'receipts'], 'readwrite');
-  for (const b of valid.business) await tx.objectStore('business').put(b);
-  for (const c of valid.clients) await tx.objectStore('clients').put(c);
-  for (const i of valid.items) await tx.objectStore('items').put(i);
-  for (const inv of valid.invoices) await tx.objectStore('invoices').put(inv);
-  for (const r of valid.receipts) await tx.objectStore('receipts').put(r);
+  await Promise.all([
+    ...valid.business.map((b) => tx.objectStore('business').put(b)),
+    ...valid.clients.map((c) => tx.objectStore('clients').put(c)),
+    ...valid.items.map((i) => tx.objectStore('items').put(i)),
+    ...valid.invoices.map((inv) => tx.objectStore('invoices').put(inv)),
+    ...valid.receipts.map((r) => tx.objectStore('receipts').put(r)),
+  ]);
   await tx.done;
 
   return { imported: true, counts };

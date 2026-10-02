@@ -20,8 +20,8 @@ const items: Item[] = [
 ];
 
 export async function seedDB() {
-  for (const c of clients) await saveClient(c);
-  for (const i of items) await saveItem(i);
+  await Promise.all(clients.map((client) => saveClient(client)));
+  await Promise.all(items.map((item) => saveItem(item)));
 
   const inv1Id = sampleId('invoice-1');
   const inv1Number = await nextNumber('invoice');
