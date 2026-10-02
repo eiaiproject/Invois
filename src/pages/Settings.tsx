@@ -207,7 +207,8 @@ export function Settings() {
       {/* Appearance */}
       <div className="card card-pad-lg detail-card">
         <div className="section-title">Appearance</div>
-        <div className="theme-options" role="group" aria-label="Theme">
+        <fieldset className="theme-options">
+          <legend className="sr-only">Theme</legend>
           {THEME_OPTIONS.map(opt => (
             <button
               key={opt.value}
@@ -219,7 +220,7 @@ export function Settings() {
               {opt.label}
             </button>
           ))}
-        </div>
+        </fieldset>
         <p className="field-hint">System follows your device's light or dark setting.</p>
       </div>
 
