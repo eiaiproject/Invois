@@ -16,6 +16,9 @@
           var dark = pref === 'dark' || ((pref === null || pref === 'system') && window.matchMedia('(prefers-color-scheme: dark)').matches);
           document.documentElement.dataset.theme = dark ? 'dark' : 'light';
         } catch (err) {
+          // localStorage throws in some private modes and when storage is blocked;
+          // report it and fall back to the operating system preference.
+          console.warn('Saved theme unavailable, using the system theme:', err);
           document.documentElement.dataset.theme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
         }
       })();

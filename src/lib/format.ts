@@ -18,7 +18,9 @@ export function formatIDRInput(amount: number): string {
 
 /* Validation */
 
-const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+// Domain labels exclude dots so each label has one possible parse; the old
+// pattern could backtrack across overlapping negated classes on bad input.
+const EMAIL_PATTERN = /^[^\s@]+@[^\s@.]+(?:\.[^\s@.]+)+$/;
 
 export function isValidEmail(value: string): boolean {
   return EMAIL_PATTERN.test(value.trim());
