@@ -78,6 +78,26 @@
   .l-hamburger { display: none; }
 }
 
+/* Phones: the brand, the dashboard CTA and the hamburger share one 60px row, and
+   at 320px the three fit only with this tighter spacing. Tap targets keep their
+   44px, only the type step and the inline spacing drop. */
+@media (max-width: 479px) {
+  .l-header-inner { padding: 0 12px; gap: 8px; }
+  .l-header-actions { gap: 6px; }
+  .l-header-actions .btn { padding-inline: 10px; font-size: 12px; }
+}
+/* The wordmark gives way first: it shrinks and ellipsizes rather than pushing
+   the CTA past the viewport edge, which is what the wider fallback font used
+   before Plus Jakarta Sans arrives (or forever, when the app runs offline) does
+   at 320px. */
+.l-header .brand { min-width: 0; }
+.l-header .brand > span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 /* Mobile nav drawer */
 .l-mobile-nav {
   display: none;
