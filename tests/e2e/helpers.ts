@@ -60,10 +60,12 @@ export async function openDashboardFromLanding(page: Page) {
 
 /** Click through navigation destinations in order, asserting each landing path. */
 export async function followLinks(page: Page, destinations: ReadonlyArray<readonly [string, string]>) {
-  for (const [name, path] of destinations) {
-    await page.getByRole('link', { name }).click();
-    await expect(page).toHaveURL(path);
-  }
+  const [destination, ...remaining] = destinations;
+  if (!destination) return;
+  const [name, path] = destination;
+  await page.getByRole('link', { name }).click();
+  await expect(page).toHaveURL(path);
+  await followLinks(page, remaining);
 }
 
 /** Delete asks for confirmation in a dialog before it removes anything. */
