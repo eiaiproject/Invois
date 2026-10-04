@@ -6,7 +6,6 @@ test-results
 .DS_Store
 *.log
 .impeccable
-DESIGN.md
 PRODUCT.md
 tsconfig.tsbuildinfo
 coverage

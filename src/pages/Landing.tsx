@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Menu, X, Check, DocumentText, Share } from 'reicon';
 import { Reicon } from '../components/Reicon';
@@ -7,28 +7,40 @@ import { Seo } from '../components/SEO';
 const navLinks = [
   { label: 'How it works', href: '#workflow' },
   { label: 'What you get', href: '#features' },
-  { label: 'Limits', href: '#trust' },
+  { label: 'Privacy & limits', href: '#trust' },
 ];
+
+const prefersReducedMotion = () =>
+  typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+const scrollBehavior = (): ScrollBehavior => (prefersReducedMotion() ? 'auto' : 'smooth');
+
+const isTypingTarget = (node: EventTarget | null) => {
+  const el = node as HTMLElement | null;
+  if (!el?.tagName) return false;
+  return el.isContentEditable || ['INPUT', 'TEXTAREA', 'SELECT'].includes(el.tagName);
+};
 
 export function Landing() {
   const [scrolled, setScrolled] = useState(false);
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const rootRef = useRef<HTMLDivElement>(null);
+  const hamburgerRef = useRef<HTMLButtonElement>(null);
 
-  // Sticky header shadow
+  // Sticky header border appears once the page scrolls
   useEffect(() => {
-    const h = () => setScrolled(window.scrollY > 12);
-    window.addEventListener('scroll', h, { passive: true });
-    return () => window.removeEventListener('scroll', h);
+    const onScroll = () => setScrolled(window.scrollY > 12);
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
   }, []);
 
-  // Scroll-triggered reveals
+  // Scroll reveals. The hiding class is added here, after the observer exists,
+  // and removed on cleanup so content can never stay invisible.
   useEffect(() => {
     const container = rootRef.current;
     if (!container) return;
-    const els = container.querySelectorAll<HTMLElement>('[data-reveal]');
-    if (!els.length) return;
-    if (!('IntersectionObserver' in window)) return;
+    const targets = Array.from(container.querySelectorAll<HTMLElement>('[data-reveal]'));
+    if (!targets.length || !('IntersectionObserver' in window)) return;
     container.classList.add('reveal-ready');
 
     const io = new IntersectionObserver(
@@ -40,61 +52,84 @@ export function Landing() {
           }
         }
       },
-      { threshold: 0.12, rootMargin: '0px 0px -50px 0px' }
+      { threshold: 0.12, rootMargin: '0px 0px -50px 0px' },
     );
-    els.forEach((el) => io.observe(el));
-    return () => io.disconnect();
+    targets.forEach((el) => io.observe(el));
+    return () => {
+      io.disconnect();
+      container.classList.remove('reveal-ready');
+    };
   }, []);
 
-  // Close mobile nav on escape or anchor click
+  // Mobile drawer: Escape closes it and hands focus back to the toggle, and the
+  // drawer closes on its own once the desktop breakpoint hides it.
   useEffect(() => {
     if (!mobileNavOpen) return;
-    const handleKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') setMobileNavOpen(false);
+    const handleKey = (event: KeyboardEvent) => {
+      if (event.key !== 'Escape') return;
+      setMobileNavOpen(false);
+      hamburgerRef.current?.focus();
+    };
+    const desktop = window.matchMedia('(min-width: 1024px)');
+    const handleDesktop = (event: MediaQueryListEvent | MediaQueryList) => {
+      if (event.matches) setMobileNavOpen(false);
     };
     document.addEventListener('keydown', handleKey);
-    return () => document.removeEventListener('keydown', handleKey);
+    desktop.addEventListener('change', handleDesktop);
+    return () => {
+      document.removeEventListener('keydown', handleKey);
+      desktop.removeEventListener('change', handleDesktop);
+    };
   }, [mobileNavOpen]);
 
-  // Smooth scroll for anchor links
+  const scrollToId = useCallback((id: string) => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.scrollIntoView({ behavior: scrollBehavior(), block: 'start' });
+    history.replaceState(null, '', `#${id}`);
+    // The click handler below prevents the default fragment navigation, which
+    // is what normally moves focus to a skip-link target. Restore it here.
+    if (el instanceof HTMLElement && (el.id === 'main-content' || el.hasAttribute('tabindex'))) {
+      el.focus({ preventScroll: true });
+    }
+  }, []);
+
+  // Anchor navigation, including the drawer links
   useEffect(() => {
-    const handleClick = (e: MouseEvent) => {
-      const target = e.target as HTMLElement;
-      const anchor = target.closest('a[href^="#"]');
+    const handleClick = (event: MouseEvent) => {
+      const anchor = (event.target as HTMLElement | null)?.closest?.('a[href^="#"]');
       if (!anchor) return;
       const id = anchor.getAttribute('href')?.slice(1);
       if (!id) return;
-      const el = document.getElementById(id);
-      if (!el) return;
-      e.preventDefault();
-      el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      history.replaceState(null, '', `#${id}`);
+      if (!document.getElementById(id)) return;
+      event.preventDefault();
+      scrollToId(id);
     };
     document.addEventListener('click', handleClick);
     return () => document.removeEventListener('click', handleClick);
-  }, []);
+  }, [scrollToId]);
 
-  // Keyboard section navigation (1-3 keys jump to sections)
+  // Number keys jump to sections; skipped while typing or with modifiers held
   useEffect(() => {
     const sectionIds = ['workflow', 'features', 'trust'];
-    const handleKey = (e: KeyboardEvent) => {
-      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
-      const num = Number.parseInt(e.key);
-      if (num >= 1 && num <= 3) {
-        const el = document.getElementById(sectionIds[num - 1]);
-        if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      }
+    const handleKey = (event: KeyboardEvent) => {
+      if (event.metaKey || event.ctrlKey || event.altKey || isTypingTarget(event.target)) return;
+      const index = Number.parseInt(event.key, 10);
+      if (index >= 1 && index <= 3) scrollToId(sectionIds[index - 1]!);
     };
     document.addEventListener('keydown', handleKey);
     return () => document.removeEventListener('keydown', handleKey);
-  }, []);
+  }, [scrollToId]);
 
   return (
     <div className="landing" ref={rootRef}>
-      <Seo title="Invoice & Receipt Maker" description="Offline-first invoice and receipt maker for freelancers and small businesses. Create invoices, generate receipts, and export PDFs from any device." />
+      <Seo
+        title="Offline Invoice & Receipt Maker"
+        description="Create professional invoices and receipts offline, save business data on your device, and export clean PDFs from desktop or mobile."
+      />
       <a href="#main-content" className="skip-link">Skip to content</a>
 
-      {/* ── Header ── */}
+      {/* Header */}
       <header className={`l-header${scrolled ? ' scrolled' : ''}`}>
         <div className="l-header-inner">
           <Link to="/" className="brand" aria-label="Invois home">
@@ -102,20 +137,19 @@ export function Landing() {
             <span>Invois</span>
           </Link>
 
-          {/* Desktop nav */}
           <nav className="l-nav" aria-label="Main navigation">
-            {navLinks.map(l => (
-              <a key={l.href} href={l.href}>{l.label}</a>
+            {navLinks.map(link => (
+              <a key={link.href} href={link.href}>{link.label}</a>
             ))}
           </nav>
 
           <div className="l-header-actions">
-            <Link to="/dashboard" className="btn btn-secondary btn-sm">Dashboard</Link>
-            {/* Mobile hamburger */}
+            <Link to="/dashboard" className="btn btn-secondary btn-sm">Open dashboard</Link>
             <button
+              ref={hamburgerRef}
               type="button"
               className="l-hamburger"
-              onClick={() => setMobileNavOpen(!mobileNavOpen)}
+              onClick={() => setMobileNavOpen(open => !open)}
               aria-expanded={mobileNavOpen}
               aria-controls="mobile-nav"
               aria-label={mobileNavOpen ? 'Close menu' : 'Open menu'}
@@ -125,53 +159,49 @@ export function Landing() {
           </div>
         </div>
 
-        {/* Mobile nav drawer */}
+        {/* Drawer is display:none while closed, so its links are not focusable */}
         <nav
           id="mobile-nav"
           className={`l-mobile-nav${mobileNavOpen ? ' open' : ''}`}
           aria-label="Mobile navigation"
         >
-          {navLinks.map(l => (
+          {navLinks.map(link => (
             <a
-              key={l.href}
-              href={l.href}
+              key={link.href}
+              href={link.href}
               onClick={() => setMobileNavOpen(false)}
-            >{l.label}</a>
+            >{link.label}</a>
           ))}
         </nav>
       </header>
 
-      <main id="main-content">
-        {/* ── Hero ── */}
+      <main id="main-content" tabIndex={-1}>
+        {/* Hero */}
         <section className="l-hero">
           <div className="l-hero-inner">
             <div className="l-hero-text">
-              <h1 className="l-hero-heading">Invoice and receipt maker that works offline.</h1>
+              <h1 className="l-hero-heading">Create professional invoices and receipts, even offline.</h1>
               <p>
-                Create invoices, convert paid work to receipts,
-                and share PDFs — from any device, with no internet needed.
+                Save clients and items, export clean PDFs, and turn paid invoices into
+                receipts without entering the same details twice.
               </p>
               <div className="l-hero-actions">
                 <Link to="/documents/new/invoice" className="btn btn-primary btn-lg l-cta-primary">
-                  Create Invoice
+                  Create your first invoice
                 </Link>
-                <Link to="/dashboard" className="btn btn-secondary btn-lg">Go to Dashboard</Link>
+                <Link to="/dashboard" className="btn btn-secondary btn-lg">Open dashboard</Link>
               </div>
-              <ul className="l-hero-assurance" aria-label="Trust notes">
+              <ul className="l-hero-assurance" aria-label="Product highlights">
                 <li>Works offline</li>
-                <li>Data stays on this device</li>
-                <li>PDF export, phone &amp; desktop</li>
+                <li>Stored on this device</li>
+                <li>Shareable PDF exports</li>
+                <li>No account required</li>
               </ul>
             </div>
 
-            {/* ── Product preview ── */}
-            <div
-              className="l-preview"
-              role="img"
-              aria-label="Example invoice for Acme Corp with line items, a $4,180 total, paid status, PDF export, share action, and a matching receipt preview."
-            >
+            {/* Decorative mock document, described once for assistive tech */}
+            <figure className="l-preview">
               <div className="l-preview-stage" aria-hidden="true">
-                {/* Invoice card */}
                 <div className="l-invoice-card">
                   <div className="l-invoice-header">
                     <div className="l-invoice-row">
@@ -215,17 +245,17 @@ export function Landing() {
                         <tr>
                           <td className="name-col">Website Redesign</td>
                           <td className="qty-col">1</td>
-                          <td className="amount-col">$2,400.00</td>
+                          <td className="amount-col">Rp 24.000.000</td>
                         </tr>
                         <tr>
                           <td className="name-col">Logo &amp; Brand Kit</td>
                           <td className="qty-col">1</td>
-                          <td className="amount-col">$800.00</td>
+                          <td className="amount-col">Rp 8.000.000</td>
                         </tr>
                         <tr>
                           <td className="name-col">Content Writing</td>
                           <td className="qty-col">12</td>
-                          <td className="amount-col">$600.00</td>
+                          <td className="amount-col">Rp 12.000.000</td>
                         </tr>
                       </tbody>
                     </table>
@@ -233,13 +263,13 @@ export function Landing() {
 
                   <div className="l-totals">
                     <div className="l-totals-row">
-                      <span>Subtotal</span><span>$3,800.00</span>
+                      <span>Subtotal</span><span>Rp 44.000.000</span>
                     </div>
                     <div className="l-totals-row">
-                      <span>Tax (10%)</span><span>$380.00</span>
+                      <span>Tax (11%)</span><span>Rp 4.840.000</span>
                     </div>
                     <div className="l-totals-grand">
-                      <span>Total</span><span className="l-total-value">$4,180.00</span>
+                      <span>Total</span><span className="l-total-value">Rp 48.840.000</span>
                     </div>
                   </div>
 
@@ -260,7 +290,6 @@ export function Landing() {
                   </div>
                 </div>
 
-                {/* Mobile phone preview */}
                 <div className="l-phone">
                   <div className="l-phone-notch"><div className="l-phone-notch-bar" /></div>
                   <div className="l-phone-content">
@@ -269,39 +298,39 @@ export function Landing() {
                       Receipt
                     </div>
                     <div className="l-phone-title">RCPT-2026-07-0001</div>
-                    <div className="l-phone-client">Acme Corp — Paid</div>
+                    <div className="l-phone-client">Acme Corp &middot; Paid</div>
                     <div className="l-phone-line">
                       <span className="l-phone-line-name">Website Redesign</span>
-                      <span className="l-phone-line-amt">$2,400</span>
+                      <span className="l-phone-line-amt">Rp 24.000.000</span>
                     </div>
                     <div className="l-phone-line">
                       <span className="l-phone-line-name">Logo &amp; Brand Kit</span>
-                      <span className="l-phone-line-amt">$800</span>
+                      <span className="l-phone-line-amt">Rp 8.000.000</span>
                     </div>
                     <div className="l-phone-line">
                       <span className="l-phone-line-name">Content Writing</span>
-                      <span className="l-phone-line-amt">$600</span>
+                      <span className="l-phone-line-amt">Rp 12.000.000</span>
                     </div>
                     <div className="l-phone-total">
                       <span>Total</span>
-                      <span>$4,180</span>
+                      <span>Rp 48.840.000</span>
                     </div>
                     <div className="l-phone-share">Share PDF</div>
                   </div>
                 </div>
               </div>
-            </div>
+              <figcaption className="sr-only">
+                Example of a paid invoice and its matching receipt, shown on desktop and on a phone.
+              </figcaption>
+            </figure>
           </div>
         </section>
 
-        {/* ── Workflow ── */}
-        <section className="l-section" id="workflow">
+        {/* Workflow: how to use the app */}
+        <section className="l-section" id="workflow" aria-labelledby="workflow-title">
           <div className="l-section-inner">
             <div data-reveal>
-              <h2>Three steps. That's it.</h2>
-              <p className="l-section-sub">
-                From first draft to paid receipt — a short, clear path.
-              </p>
+              <h2 id="workflow-title">Three steps. That's it.</h2>
             </div>
 
             <div className="l-workflow-steps">
@@ -312,7 +341,7 @@ export function Landing() {
                 </div>
                 <div className="l-wf-body">
                   <h3>Add client &amp; items</h3>
-                  <p>Pick a client from your catalog or add a new one. Add line items with prices, quantities, and tax.</p>
+                  <p>Pick a saved client, then add items with prices, quantities, and tax.</p>
                 </div>
               </div>
               <div className="l-wf-step" data-reveal data-reveal-delay="1">
@@ -322,7 +351,7 @@ export function Landing() {
                 </div>
                 <div className="l-wf-body">
                   <h3>Send invoice</h3>
-                  <p>Download a PDF or share it directly. Auto-numbering keeps your records in order.</p>
+                  <p>Download the PDF or share it. Numbers stay in order.</p>
                 </div>
               </div>
               <div className="l-wf-step" data-reveal data-reveal-delay="2">
@@ -331,47 +360,47 @@ export function Landing() {
                 </div>
                 <div className="l-wf-body">
                   <h3>Mark paid &amp; create receipt</h3>
-                  <p>Mark the invoice as paid, then create a matching receipt for your client.</p>
+                  <p>Record the payment, then generate the receipt.</p>
                 </div>
               </div>
             </div>
           </div>
         </section>
 
-        {/* ── Features ── */}
-        <section className="l-section l-proof" id="features">
+        {/* Benefits: why the data stays connected */}
+        <section className="l-section l-proof" id="features" aria-labelledby="features-title">
           <div className="l-section-inner">
             <div className="l-proof-head" data-reveal>
-              <h2>One invoice can carry the whole trail.</h2>
+              <h2 id="features-title">Enter the details once.</h2>
               <p className="l-section-sub">
-                Client, item, PDF, payment, and receipt details stay connected without turning into an accounting suite.
+                Client, item, payment, and receipt data stay connected across the entire document lifecycle.
               </p>
             </div>
 
             <div className="l-proof-ledger" data-reveal data-reveal-delay="1">
               <div className="l-proof-row">
-                <span className="l-proof-step">Draft</span>
+                <span className="l-proof-step">Reuse</span>
                 <div>
-                  <h3>Start from reusable business data</h3>
-                  <p>Choose saved clients and items, then adjust quantities, tax, discounts, notes, and payment details in one editor.</p>
+                  <h3>Reusable business data</h3>
+                  <p>Choose saved clients and catalog items, then adjust quantities, tax, discounts, notes, and payment details.</p>
                 </div>
                 <span className="l-proof-code">INV-2026-07-0001</span>
               </div>
               <div className="l-proof-row">
-                <span className="l-proof-step">Send</span>
+                <span className="l-proof-step">Export</span>
                 <div>
-                  <h3>Export the document your client needs</h3>
-                  <p>Download a clean PDF or share it directly from desktop or phone, even after working offline.</p>
+                  <h3>Consistent documents</h3>
+                  <p>Use the same details to create a clean invoice PDF without entering the information again.</p>
                 </div>
-                <span className="l-proof-code">PDF / Share</span>
+                <span className="l-proof-code">PDF</span>
               </div>
               <div className="l-proof-row">
-                <span className="l-proof-step">Paid</span>
+                <span className="l-proof-step">Receipt</span>
                 <div>
-                  <h3>Close the loop with a receipt</h3>
-                  <p>Mark an invoice as paid and create the matching receipt without rebuilding the same details.</p>
+                  <h3>Connected receipts</h3>
+                  <p>Turn a paid invoice into a matching receipt while keeping the original details connected.</p>
                 </div>
-                <span className="l-proof-code">Receipt</span>
+                <span className="l-proof-code">RCPT-2026-07-0001</span>
               </div>
             </div>
 
@@ -396,49 +425,60 @@ export function Landing() {
           </div>
         </section>
 
-        {/* ── Trust / Fit ── */}
-        <section className="l-trust" id="trust">
+        {/* Privacy and product limits */}
+        <section className="l-trust" id="trust" aria-labelledby="trust-title">
           <div className="l-trust-inner">
             <div data-reveal>
-              <h2>What Invois does — and doesn't do.</h2>
+              <h2 id="trust-title">Know where your data lives.</h2>
             </div>
             <p data-reveal data-reveal-delay="1">
-              Invois creates commercial invoices and receipts. It tracks what's
-              due and produces shareable PDFs. It does not file taxes, connect
-              to accounting software, or sync to a cloud service. Your records
-              stay on this device.
+              Invois creates commercial invoices and receipts, records due dates and payment
+              status, and produces shareable PDFs. It does not file taxes, connect to accounting
+              software, or sync your records to a cloud service. Records are stored in this
+              browser's IndexedDB on this device.
             </p>
             <dl className="l-faq-list" data-reveal data-reveal-delay="2">
               <div className="l-faq-item">
                 <dt>Does it sync?</dt>
-                <dd>No. Data lives on your device. Export PDFs to share.</dd>
+                <dd>No. There is no server and no account. Records stay in this browser on this device, and nothing is uploaded.</dd>
               </div>
               <div className="l-faq-item">
                 <dt>Can I use it for taxes?</dt>
-                <dd>No. Use your accountant or tax software for filing.</dd>
+                <dd>No. It produces commercial documents and tracks due dates and payment status. Filing stays with your accountant or tax software.</dd>
+              </div>
+              <div className="l-faq-item">
+                <dt>Can I lose my records?</dt>
+                <dd>
+                  Records live in this browser. Clearing site data, using a private window, or
+                  changing devices may remove or separate them. In Settings, Export Data saves
+                  one JSON file with your invoices, receipts, clients, items, and business
+                  profile, and Import Data restores it on this or another device. A PDF export
+                  is a document to share, not a backup.
+                </dd>
               </div>
             </dl>
           </div>
         </section>
 
-        {/* ── Final CTA ── */}
-        <section className="l-cta">
+        {/* Final CTA */}
+        <section className="l-cta" aria-labelledby="cta-title">
           <div className="l-cta-inner" data-reveal>
-            <h2>Create your first invoice</h2>
+            <h2 id="cta-title">Create your first invoice</h2>
             <p>
               Fill in the details, preview the PDF, and share it when ready.
               Your draft stays on this device.
             </p>
             <div className="l-cta-actions">
               <Link to="/documents/new/invoice" className="btn btn-primary btn-lg">
-                Create Invoice
+                Create your first invoice
               </Link>
+              <Link to="/dashboard" className="btn btn-secondary btn-lg">Open dashboard</Link>
             </div>
           </div>
         </section>
       </main>
 
-      {/* ── Footer ── */}
+      {/* Footer */}
       <footer className="l-footer">
         <div className="l-footer-inner">
           <div className="l-footer-brand">

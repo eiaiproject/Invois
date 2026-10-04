@@ -1,6 +1,6 @@
 // Generate PNG og-image from SVG via Playwright.
 // Usage: node scripts/generate-og-image.mjs
-import { chromium } from 'playwright';
+import { chromium } from '@playwright/test';
 import { readFileSync } from 'node:fs';
 import { resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -18,4 +18,4 @@ await page.goto(dataUri);
 await page.screenshot({ path: pngPath });
 await browser.close();
 
-console.log(`✓ OG image saved: ${pngPath}`);
+console.log(`OG image saved: ${pngPath}`);

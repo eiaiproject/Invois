@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { getDashboardStats, getBusiness } from '../lib/db';
+import { seedOnce } from '../lib/seed';
 import { formatIDR } from '../lib/format';
 import { InfoCircle, Plus } from 'reicon';
 import { Reicon } from '../components/Reicon';
@@ -26,6 +27,8 @@ let dashboardLoadPromise: Promise<{ biz: BusinessProfile | undefined; stats: Sta
 
 async function fetchDashboardData() {
   try {
+    // Wait for the first-run seeder so a fresh install shows its sample data.
+    await seedOnce();
     return { biz: await getBusiness(), stats: await getDashboardStats() };
   } finally {
     dashboardLoadPromise = null;
@@ -60,7 +63,7 @@ export function Dashboard() {
 
   useEffect(() => {
     let mounted = true;
-    (async () => {
+    void (async () => {
       try {
         const data = await loadDashboard();
         if (!mounted) return;

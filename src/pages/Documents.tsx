@@ -1,7 +1,10 @@
 import { useEffect, useRef, useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { getInvoices, getReceipts, getBusiness } from '../lib/db';
+import { seedOnce } from '../lib/seed';
 import { formatIDR, formatDateISO } from '../lib/format';
+import { effectiveInvoiceStatus } from '../types';
+import { useToast } from '../context/toast';
 import { Plus, Download } from 'reicon';
 import { Reicon } from '../components/Reicon';
 import { Seo } from '../components/SEO';
@@ -9,7 +12,7 @@ import { Seo } from '../components/SEO';
 type Doc = { kind: 'invoice' | 'receipt'; data: any };
 
 export function Documents() {
-  const [docs, setDocs] = useState<Doc[]>([]);
+  const [docs, setDocs] = useState<Doc[] | null>(null);
   const [showSheet, setShowSheet] = useState(false);
   const [downloading, setDownloading] = useState(false);
   const firstSheetButtonRef = useRef<HTMLButtonElement>(null);
@@ -17,13 +20,16 @@ export function Documents() {
   const sheetOpenerRef = useRef<HTMLElement | null>(null);
   const [searchParams, setSearchParams] = useSearchParams();
   const nav = useNavigate();
+  const { toast } = useToast();
   const typeParam = searchParams.get('type');
   const filter: 'all' | 'invoice' | 'receipt' = typeParam === 'invoice' || typeParam === 'receipt' ? typeParam : 'all';
   const search = searchParams.get('q') || '';
+  const hasQuery = !!search.trim();
   const filterLabels: Record<string, string> = { all: 'All', invoice: 'Invoices', receipt: 'Receipts' };
 
   const load = async () => {
     try {
+      await seedOnce();
       const [invoices, receipts] = await Promise.all([getInvoices(), getReceipts()]);
       const all: Doc[] = [
         ...invoices.map(d => ({ kind: 'invoice' as const, data: d })),
@@ -35,18 +41,18 @@ export function Documents() {
     }
   };
 
-  useEffect(() => { load(); }, []);
+  useEffect(() => { void load(); }, []);
 
   const handleDownloadAll = async () => {
     setDownloading(true);
     try {
       const [invoices, receipts, biz] = await Promise.all([getInvoices(), getReceipts(), getBusiness()]);
-      if (!biz) { alert('Please set up your business profile in Settings first.'); return; }
+      if (!biz) { toast('Set up your business profile in Settings first.', 'danger'); return; }
       const { downloadAllAsZip } = await import('../lib/pdf');
       await downloadAllAsZip(invoices, receipts, biz);
     } catch (err) {
       console.error(err);
-      alert('Failed to download documents.');
+      toast('Failed to download documents.', 'danger');
     } finally {
       setDownloading(false);
     }
@@ -84,8 +90,8 @@ export function Documents() {
   const updateListState = (next: { q?: string; type?: 'all' | 'invoice' | 'receipt' }) => {
     const params = new URLSearchParams(searchParams);
     if ('q' in next) {
-      const q = next.q?.trim() || '';
-      if (q) params.set('q', q);
+      const q = next.q ?? '';
+      if (q.trim()) params.set('q', q);
       else params.delete('q');
     }
     if ('type' in next) {
@@ -97,8 +103,8 @@ export function Documents() {
 
   const filtered = (docs || []).filter(d => {
     if (filter !== 'all' && d.kind !== filter) return false;
-    if (search) {
-      const q = search.toLowerCase();
+    const q = search.trim().toLowerCase();
+    if (q) {
       return d.data.number?.toLowerCase().includes(q) ||
              d.data.clientSnapshot?.name?.toLowerCase().includes(q);
     }
@@ -161,18 +167,20 @@ export function Documents() {
 
         {filtered.length === 0 ? (
         <div className="empty">
-          <h3>{search ? 'No matches' : 'No documents yet'}</h3>
-          <p>{search ? 'Try a different search.' : 'Create your first invoice to get started.'}</p>
-          {!search && <button type="button" className="btn btn-primary" onClick={() => nav('/documents/new/invoice')}>Create Invoice</button>}
+          <h3>{hasQuery ? 'No matches' : 'No documents yet'}</h3>
+          <p>{hasQuery ? 'Try a different search.' : 'Create your first invoice to get started.'}</p>
+          {!hasQuery && <button type="button" className="btn btn-primary" onClick={() => nav('/documents/new/invoice')}>Create Invoice</button>}
         </div>
       ) : (
         <div className="doc-list">
-          {filtered.map(d => (
+          {filtered.map(d => {
+            const status = d.kind === 'invoice' ? effectiveInvoiceStatus(d.data) : d.data.status;
+            return (
             <Link key={d.data.id} to={`/documents/${d.kind}/${d.data.id}`} className="doc-card document-card">
               <div className="meta">
                 <div className="row1">
                   <span className="num-doc">{d.data.number}</span>
-                  <span className={`badge badge-${d.data.status}`}>{d.data.status}</span>
+                  <span className={`badge badge-${status}`}>{status}</span>
                   <span className="badge badge-type">{d.kind}</span>
                 </div>
                 <div className="client">
@@ -181,7 +189,8 @@ export function Documents() {
               </div>
               <span className="total num">{formatIDR(d.kind === 'invoice' ? d.data.total : d.data.amountPaid)}</span>
             </Link>
-          ))}
+            );
+          })}
         </div>
       )}
         </>

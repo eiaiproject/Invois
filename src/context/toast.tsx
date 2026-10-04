@@ -1,6 +1,6 @@
 import { createContext, useContext, useState, useCallback, useMemo, type ReactNode } from 'react';
 
-/* ─── Toast ─── */
+/* Toast */
 
 interface ToastItem { id: string; msg: string; type?: 'default' | 'success' | 'danger' }
 

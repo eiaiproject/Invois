@@ -1,12 +1,14 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { getInvoice, getReceipt, getReceipts, saveInvoice, saveReceipt, getBusiness, getClients, getItems, nextNumber, peekNextNumber } from '../lib/db';
+import { seedOnce } from '../lib/seed';
 import { useToast } from '../context/toast';
 import { formatIDR, parseIDRInput, calcTotals, formatDateISO, copyInvoiceText, copyReceiptText } from '../lib/format';
 import { useUnsavedChanges } from '../lib/useUnsavedChanges';
 import type { Invoice, Receipt, InvoiceItem, BusinessProfile, Client, Item } from '../types';
 import { addDaysISO, newId, nowISO, todayISO } from '../types';
 import { DocumentEditorForm } from '../components/DocumentEditorForm';
+import { LoadingScreen } from '../components/LoadingScreen';
 import type { EditorValidationError } from '../components/editorTypes';
 
 function renderInvoicePreview(i: Invoice, biz: BusinessProfile | undefined) {
@@ -27,14 +29,14 @@ function renderInvoicePreview(i: Invoice, biz: BusinessProfile | undefined) {
         </div>
       </div>
       <div style={{ fontSize: 10, color: 'var(--color-text-muted)', textTransform: 'uppercase', fontWeight: 700, marginBottom: 4 }}>Bill To</div>
-      <div style={{ fontWeight: 600, fontSize: 12 }}>{i.clientSnapshot.name || '—'}</div>
+      <div style={{ fontWeight: 600, fontSize: 12 }}>{i.clientSnapshot.name || '-'}</div>
       {i.clientSnapshot.address && <div style={{ fontSize: 10 }}>{i.clientSnapshot.address}</div>}
       <table>
         <thead><tr><th>Description</th><th className="num">Qty</th><th className="num">Price</th><th className="num">Amount</th></tr></thead>
         <tbody>
           {i.items.map(item => (
             <tr key={item.id}>
-              <td>{item.name || '—'}</td>
+              <td>{item.name || '-'}</td>
               <td className="num">{item.quantity}</td>
               <td className="num">{formatIDR(item.price)}</td>
               <td className="num">{formatIDR(item.amount)}</td>
@@ -66,7 +68,7 @@ function renderReceiptPreview(r: Receipt) {
       </div>
       <div style={{ marginTop: 16 }}>
         <div style={{ fontSize: 10, color: 'var(--color-text-muted)', textTransform: 'uppercase', fontWeight: 700 }}>Received From</div>
-        <div style={{ fontWeight: 600, fontSize: 12 }}>{r.clientSnapshot.name || '—'}</div>
+        <div style={{ fontWeight: 600, fontSize: 12 }}>{r.clientSnapshot.name || '-'}</div>
       </div>
       <div style={{ marginTop: 16 }}>
         <div style={{ fontSize: 10, color: 'var(--color-text-muted)', textTransform: 'uppercase', fontWeight: 700 }}>Amount Paid</div>
@@ -138,12 +140,13 @@ export function DocumentEditor() {
   const dirty = !loading && !!initialSnapshot && stateSnapshot !== initialSnapshot && !saving;
   useUnsavedChanges(dirty);
 
-  // ─── Data loading ───
-  const loadNewReceipt = async () => {
+  // Data loading
+  const loadNewReceipt = async (clientData: Client[]) => {
     const params = new URLSearchParams(query);
     const clientId = params.get('clientId') || undefined;
     const amount = parseIDRInput(params.get('amount') || '');
     const number = await peekNextNumber('receipt');
+    const client = clientId ? clientData.find(c => c.id === clientId) : undefined;
     setSuggestedNumber(number);
     setRec({
       ...blankReceipt(number),
@@ -151,10 +154,10 @@ export function DocumentEditor() {
       invoiceNumber: params.get('invoiceNumber') || undefined,
       clientId,
       clientSnapshot: {
-        name: params.get('clientName') || '',
-        email: undefined,
-        phone: undefined,
-        address: undefined,
+        name: client?.name || params.get('clientName') || '',
+        email: client?.email,
+        phone: client?.phone,
+        address: client?.address,
       },
       amountPaid: amount,
     });
@@ -187,12 +190,13 @@ export function DocumentEditor() {
     setLoading(true);
     setInitialSnapshot('');
     setValidationError(null);
-    (async () => {
+    void (async () => {
+      await seedOnce();
       const [bizData, clientData] = await Promise.all([getBusiness(), getClients()]);
       setBiz(bizData);
       setClients(clientData);
       setItems(await getItems());
-      if (isReceipt && id === undefined) await loadNewReceipt();
+      if (isReceipt && id === undefined) await loadNewReceipt(clientData);
       else if (!isReceipt && id === undefined) await loadNewInvoice(bizData);
       else await loadExistingDoc();
       setLoading(false);
@@ -204,12 +208,12 @@ export function DocumentEditor() {
     if (!loading && !initialSnapshot) setInitialSnapshot(stateSnapshot);
   }, [initialSnapshot, loading, stateSnapshot]);
 
-  // ─── Invoice calculations ───
+  // Invoice calculations
   const updateLineItem = (idx: number, field: 'name' | 'description' | 'quantity' | 'price' | 'unit', value: string | number) => {
     setLineItems(prev => prev.map((item, i) => {
       if (i !== idx) return item;
       const next = { ...item, [field]: value };
-      if (field === 'quantity' || field === 'price') next.amount = Number(item.quantity) * Number(item.price);
+      if (field === 'quantity' || field === 'price') next.amount = Number(next.quantity) * Number(next.price);
       return next;
     }));
   };
@@ -275,7 +279,7 @@ export function DocumentEditor() {
     updatedAt: nowISO(),
   });
 
-  // ─── Validation ───
+  // Validation
   const validate = (): EditorValidationError | null => {
     const clientName = isReceipt ? rec.clientSnapshot?.name : inv.clientSnapshot?.name;
     if (!clientName?.trim()) return { fieldId: 'document-client-name', message: 'Enter a client name.', section: 'client' };
@@ -283,6 +287,9 @@ export function DocumentEditor() {
       const hasItem = lineItems.some(i => i.name.trim());
       const firstItemId = lineItems[0] ? `item-${lineItems[0].id}-name` : 'catalog-item';
       if (!hasItem) return { fieldId: firstItemId, message: 'Add at least one item.', section: 'items' };
+      if (inv.issueDate && inv.dueDate && inv.dueDate < inv.issueDate) {
+        return { fieldId: 'due-date', message: 'Due date cannot be before the issue date.', section: 'basic' };
+      }
     }
     if (isReceipt && !rec.amountPaid) return { fieldId: 'amount-paid', message: 'Enter the amount paid.', section: 'payment' };
     return null;
@@ -301,7 +308,7 @@ export function DocumentEditor() {
     return current;
   };
 
-  // ─── Save helpers ───
+  // Save helpers
   const runGuarded = async (action: () => Promise<void>) => {
     setSaving(true);
     try {
@@ -316,10 +323,11 @@ export function DocumentEditor() {
   };
 
   const saveReceiptFlow = async (status?: string) => {
-    const r = { ...buildReceipt(status as Receipt['status']), number: await saveNumber('receipt', rec.number) };
-    if (r.invoiceId && !isEdit) {
+    // Check for an existing receipt *before* allocating a number, so a rejected
+    // duplicate does not burn a counter slot.
+    if (rec.invoiceId && !isEdit) {
       const existingReceipt = (await getReceipts()).find(existing =>
-        existing.invoiceId === r.invoiceId &&
+        existing.invoiceId === rec.invoiceId &&
         existing.status !== 'cancelled'
       );
       if (existingReceipt) {
@@ -328,6 +336,7 @@ export function DocumentEditor() {
         return;
       }
     }
+    const r = { ...buildReceipt(status as Receipt['status']), number: await saveNumber('receipt', rec.number) };
     await saveReceipt(r);
     if (r.invoiceId && r.status === 'paid') {
       const linkedInvoice = await getInvoice(r.invoiceId);
@@ -346,14 +355,14 @@ export function DocumentEditor() {
     toast('Invoice saved.', 'success');
   };
 
-  // ─── Save ───
+  // Save
   const handleSave = async (status?: string) => {
     const err = validate();
     if (err) { showValidationError(err); return; }
     await runGuarded(() => isReceipt ? saveReceiptFlow(status) : saveInvoiceFlow(status));
   };
 
-  // ─── PDF ───
+  // PDF
   const handleDownloadPDF = async () => {
     if (!biz) { toast('Set up your business profile first.', 'danger'); return; }
     const { generateInvoicePDF, generateReceiptPDF, downloadPDF } = await import('../lib/pdf');
@@ -400,9 +409,9 @@ export function DocumentEditor() {
     updateLineItem(idx, 'price', price);
   };
 
-  if (loading) return <div style={{ padding: 40, textAlign: 'center' }}><div className="spinner" />;</div>;
+  if (loading) return <LoadingScreen />;
 
-  // ─── Live preview (inline) ───
+  // Live preview (inline)
   const invoicePreview = isReceipt ? null : renderInvoicePreview(buildInvoice(), biz);
   const receiptPreview = isReceipt ? renderReceiptPreview(buildReceipt()) : null;
 

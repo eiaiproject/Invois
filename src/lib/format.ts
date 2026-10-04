@@ -1,6 +1,6 @@
 import type { Invoice, Receipt } from '../types';
 
-/* ─── Currency ─── */
+/* Currency */
 
 export function formatIDR(amount: number): string {
   // ID locale, no decimals
@@ -16,19 +16,29 @@ export function formatIDRInput(amount: number): string {
   return amount === 0 ? '' : new Intl.NumberFormat('id-ID').format(amount);
 }
 
-/* ─── Dates ─── */
+/* Validation */
+
+// Domain labels exclude dots so each label has one possible parse; the old
+// pattern could backtrack across overlapping negated classes on bad input.
+const EMAIL_PATTERN = /^[^\s@]+@[^\s@.]+(?:\.[^\s@.]+)+$/;
+
+export function isValidEmail(value: string): boolean {
+  return EMAIL_PATTERN.test(value.trim());
+}
+
+/* Dates */
 
 const shortDate = new Intl.DateTimeFormat('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
 
 export function formatDateISO(value: string | undefined): string {
-  if (!value) return '—';
+  if (!value) return '-';
   const [date] = value.split('T');
   const [year, month, day] = date.split('-').map(Number);
   if (!year || !month || !day) return value;
   return shortDate.format(new Date(year, month - 1, day));
 }
 
-/* ─── Copy as plain text ─── */
+/* Copy as plain text */
 
 export function calcTotals(items: { quantity: number; price: number }[], discount: number, taxRate: number) {
   const subtotal = items.reduce((s, i) => s + i.quantity * i.price, 0);
@@ -56,7 +66,7 @@ export function copyInvoiceText(invoice: Invoice): string {
   parts.push(...clientParts, '');
   for (const item of invoice.items) {
     const desc = item.description ? ` (${item.description})` : '';
-    parts.push(`• ${item.name}${desc} — ${item.quantity} × ${formatIDR(item.price)} = ${formatIDR(item.amount)}`);
+    parts.push(`• ${item.name}${desc}: ${item.quantity} × ${formatIDR(item.price)} = ${formatIDR(item.amount)}`);
   }
   parts.push('');
   const totalsParts: string[] = [
