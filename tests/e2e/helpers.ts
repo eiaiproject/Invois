@@ -58,6 +58,14 @@ export async function openDashboardFromLanding(page: Page) {
   await expect(page).toHaveURL('/dashboard');
 }
 
+/** Click through navigation destinations in order, asserting each landing path. */
+export async function followLinks(page: Page, destinations: ReadonlyArray<readonly [string, string]>) {
+  for (const [name, path] of destinations) {
+    await page.getByRole('link', { name }).click();
+    await expect(page).toHaveURL(path);
+  }
+}
+
 /** Delete asks for confirmation in a dialog before it removes anything. */
 export async function confirmDelete(page: Page) {
   await page.getByRole('button', { name: 'Delete' }).click();
@@ -83,6 +91,63 @@ export async function createInvoice(page: Page, total = '1000000') {
 export async function openDocument(page: Page, number: string) {
   await page.getByRole('link', { name: escaped(number) }).click();
   await expect(page.getByRole('heading', { name: number })).toBeVisible();
+}
+
+/** The labels that differ between the client and item catalog screens. */
+export interface CatalogFlow {
+  path: string;
+  newHeading: string;
+  addButton: string;
+  searchPlaceholder: string;
+  editHeading: string;
+  created: string;
+  updated: string;
+}
+
+/** The catalog screens the CRUD flow drives. */
+export const CATALOGS: Record<'client' | 'item', CatalogFlow> = {
+  client: {
+    path: '/clients',
+    newHeading: 'New Client',
+    addButton: 'Add Client',
+    searchPlaceholder: 'Search clients…',
+    editHeading: 'Edit Client',
+    created: 'Test Client',
+    updated: 'Updated Client',
+  },
+  item: {
+    path: '/items',
+    newHeading: 'New Item',
+    addButton: 'Add Item',
+    searchPlaceholder: 'Search items…',
+    editHeading: 'Edit Item',
+    created: 'Test Service',
+    updated: 'Updated Service',
+  },
+};
+
+/** Create, search, and rename a catalog entry, asserting each catalog screen on the way. */
+export async function runCatalogCrud(page: Page, flow: CatalogFlow, fillExtra?: (page: Page) => Promise<void>) {
+  await startAt(page, `${flow.path}/new`);
+  await expect(page.getByRole('heading', { name: flow.newHeading })).toBeVisible();
+  await page.getByLabel('Name *').fill(flow.created);
+  if (fillExtra) await fillExtra(page);
+  await page.getByRole('button', { name: flow.addButton }).click();
+  await expect(page).toHaveURL(flow.path);
+  await expect(page.getByText(flow.created)).toBeVisible();
+
+  await page.getByPlaceholder(flow.searchPlaceholder).fill(flow.created);
+  await expect(page.getByText(flow.created)).toBeVisible();
+  await page.getByPlaceholder(flow.searchPlaceholder).fill('NoMatch');
+  await expect(page.getByText('No matches')).toBeVisible();
+
+  await page.getByPlaceholder(flow.searchPlaceholder).fill('');
+  await page.getByText(flow.created).click();
+  await expect(page.getByRole('heading', { name: flow.editHeading })).toBeVisible();
+  await page.getByLabel('Name *').fill(flow.updated);
+  await page.getByRole('button', { name: 'Save Changes' }).click();
+  await expect(page).toHaveURL(flow.path);
+  await expect(page.getByText(flow.updated)).toBeVisible();
 }
 
 /** Wait for the first-run seeder to finish populating sample records. */

@@ -1,5 +1,15 @@
 import { expect, test } from '@playwright/test';
-import { confirmDelete, createInvoice, openDashboardFromLanding, openDocument, startAt, startWithProfile } from './helpers';
+import {
+  CATALOGS,
+  confirmDelete,
+  createInvoice,
+  followLinks,
+  openDashboardFromLanding,
+  openDocument,
+  runCatalogCrud,
+  startAt,
+  startWithProfile,
+} from './helpers';
 
 /* Landing page */
 
@@ -46,27 +56,23 @@ test.describe('Navigation', () => {
   test('bottom nav navigates on mobile', async ({ page }) => {
     await page.setViewportSize({ width: 375, height: 812 });
     await startAt(page, '/dashboard');
-    await page.getByRole('link', { name: 'Documents' }).click();
-    await expect(page).toHaveURL('/documents');
-    await page.getByRole('link', { name: 'Clients' }).click();
-    await expect(page).toHaveURL('/clients');
-    await page.getByRole('link', { name: 'Items' }).click();
-    await expect(page).toHaveURL('/items');
-    await page.getByRole('link', { name: 'Settings' }).click();
-    await expect(page).toHaveURL('/settings');
+    await followLinks(page, [
+      ['Documents', '/documents'],
+      ['Clients', '/clients'],
+      ['Items', '/items'],
+      ['Settings', '/settings'],
+    ]);
   });
 
   test('sidebar navigates on desktop', async ({ page }) => {
     await page.setViewportSize({ width: 1280, height: 800 });
     await startAt(page, '/dashboard');
-    await page.getByRole('link', { name: 'Home' }).click();
-    await expect(page).toHaveURL('/dashboard');
-    await page.getByRole('link', { name: 'Documents' }).click();
-    await expect(page).toHaveURL('/documents');
-    await page.getByRole('link', { name: 'Items' }).click();
-    await expect(page).toHaveURL('/items');
-    await page.getByRole('link', { name: 'Settings' }).click();
-    await expect(page).toHaveURL('/settings');
+    await followLinks(page, [
+      ['Home', '/dashboard'],
+      ['Documents', '/documents'],
+      ['Items', '/items'],
+      ['Settings', '/settings'],
+    ]);
   });
 });
 
@@ -74,32 +80,7 @@ test.describe('Navigation', () => {
 
 test.describe('Clients CRUD', () => {
   test('create, edit, and delete client', async ({ page }) => {
-    await startAt(page, '/clients');
-    // Wait for page to load, create a new client
-    await page.goto('/clients/new');
-    await expect(page.getByRole('heading', { name: 'New Client' })).toBeVisible();
-
-    // Create
-    await page.getByLabel('Name *').fill('Test Client');
-    await page.getByLabel('Email').fill('test@example.com');
-    await page.getByRole('button', { name: 'Add Client' }).click();
-    await expect(page).toHaveURL('/clients');
-    await expect(page.getByText('Test Client')).toBeVisible();
-
-    // Search
-    await page.getByPlaceholder('Search clients…').fill('Test');
-    await expect(page.getByText('Test Client')).toBeVisible();
-    await page.getByPlaceholder('Search clients…').fill('NoMatch');
-    await expect(page.getByText('No matches')).toBeVisible();
-
-    // Edit
-    await page.getByPlaceholder('Search clients…').fill('');
-    await page.getByText('Test Client').click();
-    await expect(page.getByRole('heading', { name: 'Edit Client' })).toBeVisible();
-    await page.getByLabel('Name *').fill('Updated Client');
-    await page.getByRole('button', { name: 'Save Changes' }).click();
-    await expect(page).toHaveURL('/clients');
-    await expect(page.getByText('Updated Client')).toBeVisible();
+    await runCatalogCrud(page, CATALOGS.client, (p) => p.getByLabel('Email').fill('test@example.com'));
   });
 
   test('validation blocks empty name', async ({ page }) => {
@@ -113,31 +94,7 @@ test.describe('Clients CRUD', () => {
 
 test.describe('Items CRUD', () => {
   test('create, edit, and delete item', async ({ page }) => {
-    await startAt(page, '/items');
-    await page.goto('/items/new');
-    await expect(page.getByRole('heading', { name: 'New Item' })).toBeVisible();
-
-    // Create
-    await page.getByLabel('Name *').fill('Test Service');
-    await page.getByLabel('Price (Rp)').fill('250000');
-    await page.getByRole('button', { name: 'Add Item' }).click();
-    await expect(page).toHaveURL('/items');
-    await expect(page.getByText('Test Service')).toBeVisible();
-
-    // Search
-    await page.getByPlaceholder('Search items…').fill('Test');
-    await expect(page.getByText('Test Service')).toBeVisible();
-    await page.getByPlaceholder('Search items…').fill('NoMatch');
-    await expect(page.getByText('No matches')).toBeVisible();
-
-    // Edit
-    await page.getByPlaceholder('Search items…').fill('');
-    await page.getByText('Test Service').click();
-    await expect(page.getByRole('heading', { name: 'Edit Item' })).toBeVisible();
-    await page.getByLabel('Name *').fill('Updated Service');
-    await page.getByRole('button', { name: 'Save Changes' }).click();
-    await expect(page).toHaveURL('/items');
-    await expect(page.getByText('Updated Service')).toBeVisible();
+    await runCatalogCrud(page, CATALOGS.item, (p) => p.getByLabel('Price (Rp)').fill('250000'));
   });
 
   test('validation blocks empty name', async ({ page }) => {
