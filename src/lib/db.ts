@@ -1,6 +1,6 @@
 import { openDB, type IDBPDatabase } from 'idb';
 import type { BusinessProfile, Client, Item, Invoice, Receipt } from '../types';
-import { effectiveInvoiceStatus, nowISO } from '../types';
+import { dateISO, effectiveInvoiceStatus, nowISO } from '../types';
 
 const DB_NAME = 'invois';
 const DB_VERSION = 3;
@@ -30,6 +30,18 @@ function getDB() {
       }
     });
   return dbPromise;
+}
+
+/** Closes the shared connection so the error fallback can delete the database. */
+export async function closeDB(): Promise<void> {
+  const pending = dbPromise;
+  dbPromise = null;
+  if (!pending) return;
+  try {
+    (await pending).close();
+  } catch {
+    // A failed or already closed connection needs no further action.
+  }
 }
 
 /* Business */
@@ -78,11 +90,10 @@ export async function saveInvoice(inv: Invoice) {
  */
 export async function deleteInvoice(id: string): Promise<Receipt[]> {
   const db = await getDB();
-  const receipts = await getReceipts();
-  const linked = receipts.filter(r => r.invoiceId === id);
   const tx = db.transaction(['invoices', 'receipts'], 'readwrite');
-  await tx.objectStore('invoices').delete(id);
   const receiptStore = tx.objectStore('receipts');
+  const linked = (await receiptStore.getAll()).filter(r => r.invoiceId === id);
+  await tx.objectStore('invoices').delete(id);
   await Promise.all(linked.map((receipt) => receiptStore.delete(receipt.id)));
   await tx.done;
   return linked;
@@ -105,6 +116,49 @@ export async function saveReceipt(r: Receipt) {
   await db.put('receipts', r);
 }
 
+export class DuplicateReceiptError extends Error {
+  readonly receipt: Receipt;
+
+  constructor(receipt: Receipt) {
+    super('A receipt already exists for this invoice.');
+    this.name = 'DuplicateReceiptError';
+    this.receipt = receipt;
+  }
+}
+
+/**
+ * Saves a receipt and marks its linked invoice as paid in one transaction, so a
+ * receipt can never exist while its invoice still reads as unpaid. The duplicate
+ * check lives inside the transaction to close the two-tab race.
+ */
+export async function saveReceiptAndSyncInvoice(receipt: Receipt): Promise<void> {
+  const db = await getDB();
+  const tx = db.transaction(['receipts', 'invoices'], 'readwrite');
+  const receiptStore = tx.objectStore('receipts');
+
+  if (receipt.invoiceId && receipt.status === 'paid') {
+    const existing = (await receiptStore.getAll()).find(
+      item => item.id !== receipt.id &&
+        item.invoiceId === receipt.invoiceId &&
+        item.status !== 'cancelled'
+    );
+    if (existing) {
+      await tx.done;
+      throw new DuplicateReceiptError(existing);
+    }
+  }
+
+  await receiptStore.put(receipt);
+
+  if (receipt.invoiceId && receipt.status === 'paid') {
+    const invoice = await tx.objectStore('invoices').get(receipt.invoiceId);
+    if (invoice && invoice.status !== 'paid') {
+      await tx.objectStore('invoices').put({ ...invoice, status: 'paid', updatedAt: nowISO() });
+    }
+  }
+  await tx.done;
+}
+
 export interface ReceiptChangeResult {
   receipt: Receipt;
   revertedInvoice?: Invoice;
@@ -116,17 +170,20 @@ export interface ReceiptChangeResult {
  */
 export async function deleteReceipt(id: string): Promise<ReceiptChangeResult | undefined> {
   const db = await getDB();
-  const receipt = await db.get('receipts', id);
-  if (!receipt) return undefined;
+  const tx = db.transaction(['receipts', 'invoices'], 'readwrite');
+  const receiptStore = tx.objectStore('receipts');
+  const receipt = await receiptStore.get(id);
+  if (!receipt) {
+    await tx.done;
+    return undefined;
+  }
 
-  const receipts = await getReceipts();
-  const remainingActive = receipts.filter(
+  const remainingActive = (await receiptStore.getAll()).filter(
     r => r.id !== id && r.invoiceId === receipt.invoiceId && r.status !== 'cancelled'
   );
 
   const now = nowISO();
-  const tx = db.transaction(['receipts', 'invoices'], 'readwrite');
-  await tx.objectStore('receipts').delete(id);
+  await receiptStore.delete(id);
 
   let revertedInvoice: Invoice | undefined;
   if (receipt.invoiceId && remainingActive.length === 0) {
@@ -153,18 +210,21 @@ export async function cancelInvoice(id: string): Promise<Invoice | undefined> {
 /** Voids a receipt; reverts the linked invoice when no active receipt remains. */
 export async function cancelReceipt(id: string): Promise<ReceiptChangeResult | undefined> {
   const db = await getDB();
-  const receipt = await db.get('receipts', id);
-  if (!receipt) return undefined;
+  const tx = db.transaction(['receipts', 'invoices'], 'readwrite');
+  const receiptStore = tx.objectStore('receipts');
+  const receipt = await receiptStore.get(id);
+  if (!receipt) {
+    await tx.done;
+    return undefined;
+  }
 
-  const receipts = await getReceipts();
-  const remainingActive = receipts.filter(
+  const remainingActive = (await receiptStore.getAll()).filter(
     r => r.id !== id && r.invoiceId === receipt.invoiceId && r.status !== 'cancelled'
   );
 
   const now = nowISO();
   const updated: Receipt = { ...receipt, status: 'cancelled', updatedAt: now };
-  const tx = db.transaction(['receipts', 'invoices'], 'readwrite');
-  await tx.objectStore('receipts').put(updated);
+  await receiptStore.put(updated);
 
   let revertedInvoice: Invoice | undefined;
   if (receipt.invoiceId && remainingActive.length === 0) {
@@ -188,6 +248,34 @@ function documentNumber(type: 'invoice' | 'receipt', date: Date, count: number):
   const prefix = type === 'invoice' ? 'INV' : 'RCPT';
   const mm = String(date.getMonth() + 1).padStart(2, '0');
   return `${prefix}-${date.getFullYear()}-${mm}-${String(count).padStart(4, '0')}`;
+}
+
+const DOCUMENT_NUMBER_PATTERN = /^(INV|RCPT)-(\d{4})-(\d{2})-(\d{4,})$/;
+
+/**
+ * Highest sequence used per document type and month, so an import can raise the
+ * counters before the next document is numbered.
+ */
+export function counterUpdatesForDocuments(
+  invoices: ReadonlyArray<Pick<Invoice, 'number'>>,
+  receipts: ReadonlyArray<Pick<Receipt, 'number'>>,
+): Record<string, number> {
+  const updates: Record<string, number> = {};
+  const collect = (type: 'invoice' | 'receipt', numbers: readonly string[]) => {
+    const prefix = type === 'invoice' ? 'INV' : 'RCPT';
+    for (const number of numbers) {
+      const match = DOCUMENT_NUMBER_PATTERN.exec(number);
+      if (!match || match[1] !== prefix) continue;
+      const month = Number.parseInt(match[3]!, 10);
+      const sequence = Number.parseInt(match[4]!, 10);
+      if (month < 1 || month > 12 || !Number.isSafeInteger(sequence) || sequence < 1) continue;
+      const key = `${type}-${match[2]!}-${match[3]!}`;
+      if (sequence > (updates[key] ?? 0)) updates[key] = sequence;
+    }
+  };
+  collect('invoice', invoices.map(i => i.number));
+  collect('receipt', receipts.map(r => r.number));
+  return updates;
 }
 
 export async function nextNumber(type: 'invoice' | 'receipt'): Promise<string> {
@@ -233,7 +321,7 @@ export async function getDashboardStats() {
   const paidInvoicesWithoutReceipt = invoices.filter(i =>
     i.status === 'paid' &&
     !paidReceiptInvoiceIds.has(i.id) &&
-    i.updatedAt.slice(0, 10) >= monthStart
+    dateISO(new Date(i.updatedAt)) >= monthStart
   );
   const paidTotal =
     paidReceipts.reduce((s, r) => s + r.amountPaid, 0) +
@@ -443,8 +531,9 @@ export async function importAllData(data: ExportData): Promise<{ imported: boole
   };
 
   const db = await getDB();
-  // One transaction across every store: a failure rolls the whole import back.
-  const tx = db.transaction(['business', 'clients', 'items', 'invoices', 'receipts'], 'readwrite');
+  // One transaction across every store, counters included: a failure rolls the
+  // whole import back, and the next numbers continue after the backup.
+  const tx = db.transaction(['business', 'clients', 'items', 'invoices', 'receipts', 'counters'], 'readwrite');
   await Promise.all([
     ...valid.business.map((b) => tx.objectStore('business').put(b)),
     ...valid.clients.map((c) => tx.objectStore('clients').put(c)),
@@ -452,6 +541,12 @@ export async function importAllData(data: ExportData): Promise<{ imported: boole
     ...valid.invoices.map((inv) => tx.objectStore('invoices').put(inv)),
     ...valid.receipts.map((r) => tx.objectStore('receipts').put(r)),
   ]);
+
+  const counterStore = tx.objectStore('counters');
+  for (const [key, sequence] of Object.entries(counterUpdatesForDocuments(valid.invoices, valid.receipts))) {
+    const current = (await counterStore.get(key)) ?? 0;
+    if (sequence > current) await counterStore.put(sequence, key);
+  }
   await tx.done;
 
   return { imported: true, counts };

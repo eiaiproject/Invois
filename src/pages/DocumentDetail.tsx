@@ -1,10 +1,9 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { getInvoice, getReceipt, getReceipts, deleteInvoice, deleteReceipt, saveInvoice, getBusiness, cancelInvoice, cancelReceipt } from '../lib/db';
-import { useToast } from '../context/toast';
+import { useToast } from '../context/toastContext';
 import { formatIDR, formatDateISO, copyInvoiceText, copyReceiptText } from '../lib/format';
-import { Download, Copy, Send, Check, ReceiptText, Edit, Plus, Trash, X } from 'reicon';
-import { Reicon } from '../components/Reicon';
+import { Download, Copy, Send, Check, ReceiptText, Pencil, Plus, Trash2, X } from 'lucide-react';
 import { Seo } from '../components/SEO';
 import { ConfirmDialog } from '../components/ConfirmDialog';
 import { LoadingScreen } from '../components/LoadingScreen';
@@ -21,6 +20,8 @@ export function DocumentDetail() {
   const [biz, setBiz] = useState<BusinessProfile | undefined>();
   const [linkedReceipt, setLinkedReceipt] = useState<Receipt | undefined>();
   const [loaded, setLoaded] = useState(false);
+  const [loadError, setLoadError] = useState(false);
+  const [reloadKey, setReloadKey] = useState(0);
   const [confirmState, setConfirmState] = useState<{
     title: string;
     message: string;
@@ -31,27 +32,50 @@ export function DocumentDetail() {
 
   useEffect(() => {
     if (!id) return;
+    let active = true;
     setLoaded(false);
+    setLoadError(false);
     void (async () => {
       try {
-        setBiz(await getBusiness());
+        const bizData = await getBusiness();
+        if (!active) return;
+        setBiz(bizData);
         setLinkedReceipt(undefined);
         if (isReceipt) {
-          setDoc(await getReceipt(id));
+          const receipt = await getReceipt(id);
+          if (active) setDoc(receipt);
         } else {
-          setDoc(await getInvoice(id));
+          const invoice = await getInvoice(id);
+          if (!active) return;
+          setDoc(invoice);
           const receipts = await getReceipts();
-          setLinkedReceipt(receipts.find(r => r.invoiceId === id && r.status !== 'cancelled'));
+          if (active) {
+            setLinkedReceipt(receipts.find(r => r.invoiceId === id && r.status !== 'cancelled'));
+          }
         }
       } catch (err) {
         console.error(err);
+        if (active) setLoadError(true);
       } finally {
-        setLoaded(true);
+        if (active) setLoaded(true);
       }
     })();
-  }, [id, isReceipt]);
+    return () => { active = false; };
+  }, [id, isReceipt, reloadKey]);
 
   if (!loaded) return <LoadingScreen />;
+
+  if (loadError) {
+    return (
+      <div className="empty" role="alert">
+        <h3>Could not load this document</h3>
+        <p>Your saved data is still on this device. Try again, or return to the documents list.</p>
+        <button type="button" className="btn btn-primary" onClick={() => setReloadKey(key => key + 1)}>Try again</button>
+        <button type="button" className="btn btn-secondary" onClick={() => nav('/documents')}>Back to Documents</button>
+      </div>
+    );
+  }
+
   if (!doc) return (
     <div className="empty">
       <h3>Document not found</h3>
@@ -122,7 +146,9 @@ export function DocumentDetail() {
       title: `Mark ${doc.number} as cancelled?`,
       message: isReceipt
         ? 'The receipt stays in your records as cancelled. If it was the last proof of payment, the linked invoice is marked as unpaid.'
-        : 'The invoice stays in your records as cancelled and is excluded from outstanding totals.',
+        : linkedReceipt
+          ? 'The invoice stays in your records as cancelled. Its linked receipt remains paid; cancel the receipt separately if the payment was reversed.'
+          : 'The invoice stays in your records as cancelled and is excluded from outstanding totals.',
       confirmLabel: 'Mark as cancelled',
       run: doCancel,
     });
@@ -180,14 +206,22 @@ export function DocumentDetail() {
   };
 
   const handleDownloadPDF = async () => {
-    if (!biz) return;
-    const { generateInvoicePDF, generateReceiptPDF, downloadPDF } = await import('../lib/pdf');
-    if (isReceipt) {
-      downloadPDF(generateReceiptPDF(doc as Receipt, biz), `${doc.number}.pdf`);
-    } else {
-      downloadPDF(generateInvoicePDF(doc as Invoice, biz), `${doc.number}.pdf`);
+    if (!biz) {
+      toast('Set up your business profile in Settings first.', 'danger');
+      return;
     }
-    toast('PDF downloaded.', 'success');
+    try {
+      const { generateInvoicePDF, generateReceiptPDF, downloadPDF } = await import('../lib/pdf');
+      if (isReceipt) {
+        downloadPDF(generateReceiptPDF(doc as Receipt, biz), `${doc.number}.pdf`);
+      } else {
+        downloadPDF(generateInvoicePDF(doc as Invoice, biz), `${doc.number}.pdf`);
+      }
+      toast('PDF downloaded.', 'success');
+    } catch (err) {
+      console.error(err);
+      toast('Failed to download PDF.', 'danger');
+    }
   };
 
   const handleCopyText = async () => {
@@ -217,7 +251,7 @@ export function DocumentDetail() {
         <div>
           <h1 className="num">{doc.number}</h1>
           <p className="sub">
-            {isReceipt ? 'Receipt' : 'Invoice'} · <span className="num">{formatDateISO((doc as any).issueDate || (doc as any).paymentDate)}</span>
+            {isReceipt ? 'Receipt' : 'Invoice'} · <span className="num">{formatDateISO(isReceipt ? (doc as Receipt).paymentDate : (doc as Invoice).issueDate)}</span>
           </p>
         </div>
         <span className={`badge badge-${displayStatus}`}>{displayStatus}</span>
@@ -295,53 +329,53 @@ export function DocumentDetail() {
       {/* Actions */}
       <div className="detail-actions">
         <button type="button" className="btn btn-primary btn-block btn-lg" onClick={handleDownloadPDF}>
-          <Reicon icon={Download} size={16} />
+          <Download size={16} aria-hidden="true" />
           Download PDF
         </button>
         <button type="button" className="btn btn-secondary btn-block" onClick={handleCopyText}>
-          <Reicon icon={Copy} size={16} />
+          <Copy size={16} aria-hidden="true" />
           Copy as plain text
         </button>
         {!isReceipt && (doc as Invoice).status === 'draft' && (
           <button type="button" className="btn btn-primary btn-block" style={{ background: 'var(--color-accent)' }} onClick={handleMarkSent}>
-            <Reicon icon={Send} size={16} />
+            <Send size={16} aria-hidden="true" />
             Mark as Sent
           </button>
         )}
         {!isReceipt && (doc as Invoice).status !== 'paid' && (doc as Invoice).status !== 'cancelled' && (
           <button type="button" className="btn btn-primary btn-block" style={{ background: 'var(--color-success)' }} onClick={handleMarkPaid}>
-            <Reicon icon={Check} size={16} />
+            <Check size={16} aria-hidden="true" />
             Mark as Paid
           </button>
         )}
         {!isReceipt && (doc as Invoice).status === 'paid' && !linkedReceipt && (
             <button type="button" className="btn btn-secondary btn-block" onClick={handleCreateReceipt}>
-              <Reicon icon={ReceiptText} size={16} />
+              <ReceiptText size={16} aria-hidden="true" />
               Create Receipt from this Invoice
             </button>
         )}
         {!isReceipt && linkedReceipt && (
           <button type="button" className="btn btn-secondary btn-block" onClick={() => nav(`/documents/receipt/${linkedReceipt.id}`)}>
-            <Reicon icon={ReceiptText} size={16} />
+            <ReceiptText size={16} aria-hidden="true" />
             View Receipt
           </button>
         )}
         <button type="button" className="btn btn-secondary btn-block" onClick={() => nav(`/documents/${type}/${id}/edit`)}>
-          <Reicon icon={Edit} size={16} />
+          <Pencil size={16} aria-hidden="true" />
           Edit
         </button>
         <button type="button" className="btn btn-secondary btn-block" onClick={handleNewDocument}>
-          <Reicon icon={Plus} size={16} />
+          <Plus size={16} aria-hidden="true" />
           {isReceipt ? 'New Receipt' : 'New Invoice'}
         </button>
         {doc.status !== 'cancelled' && (
           <button type="button" className="btn btn-secondary btn-block" onClick={askCancel}>
-            <Reicon icon={X} size={16} />
+            <X size={16} aria-hidden="true" />
             {isReceipt ? 'Cancel Receipt' : 'Cancel Invoice'}
           </button>
         )}
         <button type="button" className="btn btn-danger btn-block" onClick={askDelete}>
-          <Reicon icon={Trash} size={16} />
+          <Trash2 size={16} aria-hidden="true" />
           Delete
         </button>
       </div>

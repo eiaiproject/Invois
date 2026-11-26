@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { validateImportData, type ExportData } from '../../src/lib/db';
+import { counterUpdatesForDocuments, validateImportData, type ExportData } from '../../src/lib/db';
 import type { Invoice, Receipt } from '../../src/types';
 
 const invoice: Invoice = {
@@ -64,5 +64,25 @@ describe('validateImportData', () => {
   it('rejects a file missing the invoices and receipts lists', () => {
     const file = makeFile({ invoices: null as unknown as Invoice[] });
     expect(() => validateImportData(file)).toThrow(/missing required data/);
+  });
+});
+
+describe('counterUpdatesForDocuments', () => {
+  it('uses the highest sequence per document type and month', () => {
+    expect(counterUpdatesForDocuments(
+      [{ number: 'INV-2026-11-0007' }, { number: 'INV-2026-11-0002' }, { number: 'INV-2025-12-0042' }],
+      [{ number: 'RCPT-2026-11-0004' }],
+    )).toEqual({
+      'invoice-2026-11': 7,
+      'invoice-2025-12': 42,
+      'receipt-2026-11': 4,
+    });
+  });
+
+  it('ignores numbers that do not match their document type or month', () => {
+    expect(counterUpdatesForDocuments(
+      [{ number: 'RCPT-2026-11-0009' }, { number: 'INV-2026-13-0005' }, { number: 'not-a-number' }],
+      [{ number: 'INV-2026-11-0008' }],
+    )).toEqual({});
   });
 });

@@ -79,7 +79,7 @@ test.describe('Navigation', () => {
 /* Clients CRUD */
 
 test.describe('Clients CRUD', () => {
-  test('create, edit, and delete client', async ({ page }) => {
+  test('create, edit, and search client', async ({ page }) => {
     await runCatalogCrud(page, CATALOGS.client, (p) => p.getByLabel('Email').fill('test@example.com'));
   });
 
@@ -93,7 +93,7 @@ test.describe('Clients CRUD', () => {
 /* Items CRUD */
 
 test.describe('Items CRUD', () => {
-  test('create, edit, and delete item', async ({ page }) => {
+  test('create, edit, and search item', async ({ page }) => {
     await runCatalogCrud(page, CATALOGS.item, (p) => p.getByLabel('Price (Rp)').fill('250000'));
   });
 

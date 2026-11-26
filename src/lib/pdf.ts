@@ -60,7 +60,7 @@ function drawTextBlock(doc: jsPDF, title: string, text: string, x: number, y: nu
 
 /* Invoice PDF helpers */
 
-function drawInvoiceMeta(doc: jsPDF, invoice: Invoice, w: number, margin: number, startY: number): number {
+function drawInvoiceMeta(doc: jsPDF, invoice: Invoice, w: number, margin: number, startY: number): void {
   let y = startY;
   doc.setFontSize(28);
   doc.setFont('helvetica', 'bold');
@@ -80,7 +80,6 @@ function drawInvoiceMeta(doc: jsPDF, invoice: Invoice, w: number, margin: number
   label('Invoice No'); value(invoice.number);
   label('Date'); value(formatDateISO(invoice.issueDate));
   if (invoice.dueDate) { label('Due Date'); value(formatDateISO(invoice.dueDate)); }
-  return y + 6;
 }
 
 function drawBizInfo(doc: jsPDF, biz: BusinessProfile, margin: number): void {
@@ -146,7 +145,8 @@ function drawInvoiceItems(doc: jsPDF, invoice: Invoice, margin: number, startY: 
       }
     }
   });
-  return ensureSpace(doc, (doc as any).lastAutoTable.finalY + 6, 38, margin);
+  const finalY = (doc as jsPDF & { lastAutoTable: { finalY: number } }).lastAutoTable.finalY;
+  return ensureSpace(doc, finalY + 6, 38, margin);
 }
 
 function drawTotals(doc: jsPDF, invoice: Invoice, margin: number, y: number): number {
@@ -179,7 +179,7 @@ function drawTotals(doc: jsPDF, invoice: Invoice, margin: number, y: number): nu
   return y;
 }
 
-function drawPaymentInfo(doc: jsPDF, invoice: Invoice, margin: number, y: number, contentW: number): number {
+function drawPaymentInfo(doc: jsPDF, invoice: Invoice, margin: number, y: number): number {
   if (!invoice.bankName && !invoice.bankAccountNumber && !invoice.bankAccountHolder) return y;
   const paymentRows = [invoice.bankName, invoice.bankAccountNumber, invoice.bankAccountHolder].filter(Boolean).length;
   y = ensureSpace(doc, y, 9 + paymentRows * 4 + 4, margin);
@@ -214,7 +214,7 @@ export function generateInvoicePDF(invoice: Invoice, biz: BusinessProfile): jsPD
     y += 18;
   }
 
-  y = drawInvoiceMeta(doc, invoice, w, margin, y);
+  drawInvoiceMeta(doc, invoice, w, margin, y);
   drawBizInfo(doc, biz, margin);
 
   // Bill To
@@ -228,7 +228,7 @@ export function generateInvoicePDF(invoice: Invoice, biz: BusinessProfile): jsPD
   y = drawTotals(doc, invoice, margin, y);
 
   // Payment
-  y = drawPaymentInfo(doc, invoice, margin, y, contentW);
+  y = drawPaymentInfo(doc, invoice, margin, y);
 
   // Notes
   if (invoice.notes) y = drawTextBlock(doc, 'NOTES', invoice.notes, margin, y, contentW, margin);
@@ -378,6 +378,17 @@ export async function sharePDF(doc: jsPDF, filename: string, shareText?: string)
   return false;
 }
 
+type SchedulerLike = { yield?: () => Promise<void> };
+
+async function yieldToMain(): Promise<void> {
+  const scheduler = (globalThis as { scheduler?: SchedulerLike }).scheduler;
+  if (scheduler?.yield) {
+    await scheduler.yield();
+    return;
+  }
+  await new Promise<void>(resolve => setTimeout(resolve, 0));
+}
+
 /* Download all as ZIP */
 
 export async function downloadAllAsZip(
@@ -389,16 +400,21 @@ export async function downloadAllAsZip(
   const folder = zip.folder('invois-documents');
   if (!folder) return;
 
+  let deadline = performance.now() + 50;
+  const addPDF = async (doc: jsPDF, filename: string) => {
+    folder.file(filename, doc.output('blob'));
+    if (performance.now() >= deadline) {
+      await yieldToMain();
+      deadline = performance.now() + 50;
+    }
+  };
+
   for (const inv of invoices) {
-    const doc = generateInvoicePDF(inv, biz);
-    const blob = doc.output('blob');
-    folder.file(`${inv.number}.pdf`, blob);
+    await addPDF(generateInvoicePDF(inv, biz), `${inv.number}.pdf`);
   }
 
   for (const rec of receipts) {
-    const doc = generateReceiptPDF(rec, biz);
-    const blob = doc.output('blob');
-    folder.file(`${rec.number}.pdf`, blob);
+    await addPDF(generateReceiptPDF(rec, biz), `${rec.number}.pdf`);
   }
 
   const zipBlob = await folder.generateAsync({ type: 'blob' });

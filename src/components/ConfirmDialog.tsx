@@ -42,11 +42,11 @@ export function ConfirmDialog({
   if (!open) return null;
 
   return (
-    <dialog ref={dialogRef} className="scrim" aria-labelledby="confirm-dialog-title" onClose={onCancel}>
+    <dialog ref={dialogRef} className="scrim" aria-labelledby="confirm-dialog-title" aria-describedby="confirm-dialog-message" onClose={onCancel}>
       <div className="sheet">
         <div className="sheet-handle" aria-hidden="true" />
         <h2 id="confirm-dialog-title">{title}</h2>
-        <p style={{ marginTop: 8, color: 'var(--color-text-muted)', fontSize: 14, lineHeight: 1.6 }}>{message}</p>
+        <p id="confirm-dialog-message" style={{ marginTop: 8, color: 'var(--color-text-muted)', fontSize: '0.875rem', lineHeight: 1.6 }}>{message}</p>
         <div className="actions" style={{ marginTop: 18 }}>
           <button
             type="button"

@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { getSampleRecordCount, removeSampleData } from '../lib/db';
 import { seedOnce } from '../lib/seed';
-import { useToast } from '../context/toast';
+import { useToast } from '../context/toastContext';
 
 /**
  * Labels the demo records seeded on first run and offers one-click removal.

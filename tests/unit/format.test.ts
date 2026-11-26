@@ -114,6 +114,14 @@ describe('calcTotals', () => {
     expect(result.total).toBe(999000);
   });
 
+  it('caps a discount at the subtotal', () => {
+    const items = [{ quantity: 1, price: 100000 }];
+    const result = calcTotals(items, 250000, 11);
+    expect(result.discount).toBe(100000);
+    expect(result.taxAmount).toBe(0);
+    expect(result.total).toBe(0);
+  });
+
   it('handles multiple items', () => {
     const items = [
       { quantity: 2, price: 500000 },

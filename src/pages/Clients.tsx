@@ -2,12 +2,12 @@ import { useEffect, useState } from 'react';
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { getClients, getClient, saveClient } from '../lib/db';
 import { seedOnce } from '../lib/seed';
-import { useToast } from '../context/toast';
+import { useToast } from '../context/toastContext';
 import { useUnsavedChanges } from '../lib/useUnsavedChanges';
 import { isValidEmail } from '../lib/format';
-import { Plus } from 'reicon';
-import { Reicon } from '../components/Reicon';
+import { Plus } from 'lucide-react';
 import { Seo } from '../components/SEO';
+import { LoadingScreen } from '../components/LoadingScreen';
 import { newId, nowISO } from '../types';
 import type { Client } from '../types';
 
@@ -17,13 +17,20 @@ const EMPTY_CLIENT_FORM = {
 
 export function Clients() {
   const [clients, setClients] = useState<Client[] | null>(null);
+  const [error, setError] = useState(false);
   const [searchParams, setSearchParams] = useSearchParams();
   const search = searchParams.get('q') || '';
   const hasQuery = !!search.trim();
 
   const load = async () => {
-    try { await seedOnce(); setClients(await getClients()); }
-    catch (err) { console.error(err); setClients([]); }
+    setError(false);
+    try {
+      await seedOnce();
+      setClients(await getClients());
+    } catch (err) {
+      console.error(err);
+      setError(true);
+    }
   };
   useEffect(() => { void load(); }, []);
 
@@ -46,11 +53,11 @@ export function Clients() {
       <div className="page-head">
         <div>
           <h1>Clients</h1>
-          <p className="sub">{clients ? `${clients.length} clients` : 'Loading…'}</p>
+          <p className="sub">{clients ? `${clients.length} clients` : error ? 'Could not load' : 'Loading…'}</p>
         </div>
         {clients && clients.length > 0 && (
           <Link to="/clients/new" className="btn btn-primary">
-            <Reicon icon={Plus} size={16} />
+            <Plus size={16} aria-hidden="true" />
             Add Client
           </Link>
         )}
@@ -66,7 +73,13 @@ export function Clients() {
         onKeyDown={e => e.key === 'Enter' && e.currentTarget.blur()}
       />
 
-      {!clients ? (
+      {error && !clients ? (
+        <div className="empty" role="alert">
+          <h3>Could not load clients</h3>
+          <p>Your saved clients are still on this device. Try again.</p>
+          <button type="button" className="btn btn-primary" onClick={() => void load()}>Try again</button>
+        </div>
+      ) : !clients ? (
         <>
           <div className="skeleton" style={{ height: 44, borderRadius: 'var(--radius-md)', marginBottom: 12 }} />
           <div className="skeleton-row">
@@ -129,6 +142,9 @@ export function ClientEditor() {
 
   const [form, setForm] = useState(EMPTY_CLIENT_FORM);
   const [initialForm, setInitialForm] = useState(EMPTY_CLIENT_FORM);
+  const [loading, setLoading] = useState(isEdit);
+  const [loadError, setLoadError] = useState(false);
+  const [notFound, setNotFound] = useState(false);
   const [nameError, setNameError] = useState('');
   const [emailError, setEmailError] = useState('');
   const dirty = JSON.stringify(form) !== JSON.stringify(initialForm);
@@ -136,13 +152,29 @@ export function ClientEditor() {
 
   useEffect(() => {
     if (!id) return;
-    void getClient(id).then(c => {
-      if (c) {
+    let active = true;
+    setLoading(true);
+    setLoadError(false);
+    setNotFound(false);
+    void getClient(id)
+      .then(c => {
+        if (!active) return;
+        if (!c) {
+          setNotFound(true);
+          return;
+        }
         const next = { name: c.name, email: c.email || '', phone: c.phone || '', address: c.address || '', taxId: c.taxId || '', notes: c.notes || '' };
         setForm(next);
         setInitialForm(next);
-      }
-    });
+      })
+      .catch(err => {
+        console.error(err);
+        if (active) setLoadError(true);
+      })
+      .finally(() => {
+        if (active) setLoading(false);
+      });
+    return () => { active = false; };
   }, [id]);
 
   const handleSave = async () => {
@@ -176,6 +208,28 @@ export function ClientEditor() {
     toast(isEdit ? 'Client updated.' : 'Client added.', 'success');
     nav('/clients');
   };
+
+  if (loading) return <LoadingScreen />;
+
+  if (loadError) {
+    return (
+      <div className="empty" role="alert">
+        <h3>Could not load this client</h3>
+        <p>Your saved clients are still on this device. Go back to the client list and try again.</p>
+        <button type="button" className="btn btn-primary" onClick={() => nav('/clients')}>Back to Clients</button>
+      </div>
+    );
+  }
+
+  if (notFound) {
+    return (
+      <div className="empty">
+        <h3>Client not found</h3>
+        <p>This client may have been deleted. Go back to the client list.</p>
+        <button type="button" className="btn btn-primary" onClick={() => nav('/clients')}>Back to Clients</button>
+      </div>
+    );
+  }
 
   return (
     <div>

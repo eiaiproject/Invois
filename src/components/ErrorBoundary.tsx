@@ -1,4 +1,5 @@
 import { Component, type ReactNode } from 'react';
+import { TriangleAlert } from 'lucide-react';
 
 interface Props {
   children: ReactNode;
@@ -28,10 +29,26 @@ export class ErrorBoundary extends Component<Props, State> {
     this.setState({ hasError: false, error: null });
   };
 
-  handleClearData = () => {
+  handleClearData = async () => {
+    const confirmed = window.confirm(
+      'Delete all invoices, receipts, clients, and items stored in this browser? This cannot be undone.'
+    );
+    if (!confirmed) return;
+
     try {
-      indexedDB.deleteDatabase('invois');
-      window.location.reload();
+      const { closeDB } = await import('../lib/db');
+      await closeDB();
+    } catch {
+      // The database wrapper may be unavailable in a crash; deletion still proceeds.
+    }
+
+    try {
+      const request = indexedDB.deleteDatabase('invois');
+      request.onsuccess = () => window.location.reload();
+      request.onerror = () => window.location.reload();
+      request.onblocked = () => {
+        window.alert('Close other Invois tabs, then try clearing data again.');
+      };
     } catch {
       window.location.reload();
     }
@@ -76,25 +93,10 @@ export class ErrorBoundary extends Component<Props, State> {
                 margin: '0 auto 20px',
               }}
             >
-              {/* Inline triangle icon: the crash fallback must not depend on an icon import. */}
-              <svg
-                width="26"
-                height="26"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                aria-hidden="true"
-              >
-                <path d="M12 4 2.5 20h19L12 4Z" />
-                <path d="M12 10v4" />
-                <path d="M12 17.5h.01" />
-              </svg>
+              <TriangleAlert size={26} aria-hidden="true" />
             </div>
-            <h1 style={{ fontSize: 20, fontWeight: 700, marginBottom: 8 }}>Something went wrong</h1>
-            <p style={{ color: '#6F6A5F', fontSize: 14, lineHeight: 1.6, marginBottom: 24 }}>
+            <h1 style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: 8 }}>Something went wrong</h1>
+            <p style={{ color: '#6F6A5F', fontSize: '0.875rem', lineHeight: 1.6, marginBottom: 24 }}>
               Invois encountered an unexpected error. Your data is likely still safe in your browser.
             </p>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
@@ -108,7 +110,8 @@ export class ErrorBoundary extends Component<Props, State> {
                   background: '#596949',
                   color: '#fff',
                   fontWeight: 600,
-                  fontSize: 14,
+                  fontSize: '0.875rem',
+                  minHeight: 44,
                   cursor: 'pointer',
                 }}
               >
@@ -124,7 +127,8 @@ export class ErrorBoundary extends Component<Props, State> {
                   background: '#fff',
                   color: '#7A3F33',
                   fontWeight: 600,
-                  fontSize: 14,
+                  fontSize: '0.875rem',
+                  minHeight: 44,
                   cursor: 'pointer',
                 }}
               >
@@ -133,14 +137,14 @@ export class ErrorBoundary extends Component<Props, State> {
             </div>
             {this.state.error && (
               <details style={{ marginTop: 20, textAlign: 'left' }}>
-                <summary style={{ cursor: 'pointer', color: '#6F6A5F', fontSize: 12 }}>Error details</summary>
+                <summary style={{ cursor: 'pointer', color: '#6F6A5F', fontSize: '0.75rem' }}>Error details</summary>
                 <pre
                   style={{
                     marginTop: 8,
                     padding: 12,
                     background: '#F7F6F0',
                     borderRadius: 8,
-                    fontSize: 11,
+                    fontSize: '0.6875rem',
                     overflow: 'auto',
                     color: '#7A3F33',
                   }}

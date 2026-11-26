@@ -293,7 +293,7 @@ test('mock preview exposes no fake controls', async ({ page }) => {
 
   // The whole preview is decorative and described once.
   await expect(page.locator('.l-preview-stage')).toHaveAttribute('aria-hidden', 'true');
-  await expect(page.locator('.l-preview figcaption')).toHaveText(/paid invoice/i);
+  await expect(page.locator('.l-preview figcaption')).toHaveText(/example invoice/i);
 });
 
 test('mobile hero stays usable at 320px', async ({ page }) => {
