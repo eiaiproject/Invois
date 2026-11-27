@@ -42,10 +42,11 @@ export function formatDateISO(value: string | undefined): string {
 
 export function calcTotals(items: { quantity: number; price: number }[], discount: number, taxRate: number) {
   const subtotal = items.reduce((s, i) => s + i.quantity * i.price, 0);
-  const afterDiscount = Math.max(0, subtotal - discount);
+  const appliedDiscount = Math.min(Math.max(0, discount), subtotal);
+  const afterDiscount = subtotal - appliedDiscount;
   const taxAmount = Math.round(afterDiscount * taxRate / 100);
   const total = afterDiscount + taxAmount;
-  return { subtotal, discount, taxAmount, total };
+  return { subtotal, discount: appliedDiscount, taxAmount, total };
 }
 
 

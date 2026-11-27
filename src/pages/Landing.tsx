@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Menu, X, Check, DocumentText, Share } from 'reicon';
-import { Reicon } from '../components/Reicon';
+import { Menu, X, Check, FileText, Share } from 'lucide-react';
 import { Seo } from '../components/SEO';
 
 const navLinks = [
@@ -154,7 +153,7 @@ export function Landing() {
               aria-controls="mobile-nav"
               aria-label={mobileNavOpen ? 'Close menu' : 'Open menu'}
             >
-              <Reicon icon={mobileNavOpen ? X : Menu} size={20} />
+              {mobileNavOpen ? <X size={20} aria-hidden="true" /> : <Menu size={20} aria-hidden="true" />}
             </button>
           </div>
         </div>
@@ -275,16 +274,16 @@ export function Landing() {
 
                   <div className="l-controls">
                     <span className="l-status-badge l-status-paid">
-                      <Reicon icon={Check} size={10} />
+                      <Check size={10} aria-hidden="true" />
                       Paid
                     </span>
                     <div className="l-controls-spacer" />
                     <span className="l-control-btn">
-                      <Reicon icon={DocumentText} size={12} />
+                      <FileText size={12} aria-hidden="true" />
                       PDF
                     </span>
                     <span className="l-control-btn">
-                      <Reicon icon={Share} size={12} />
+                      <Share size={12} aria-hidden="true" />
                       Share
                     </span>
                   </div>
@@ -294,7 +293,7 @@ export function Landing() {
                   <div className="l-phone-notch"><div className="l-phone-notch-bar" /></div>
                   <div className="l-phone-content">
                     <div className="l-phone-receipt-badge">
-                      <Reicon icon={Check} size={8} />
+                      <Check size={8} aria-hidden="true" />
                       Receipt
                     </div>
                     <div className="l-phone-title">RCPT-2026-07-0001</div>
@@ -319,8 +318,8 @@ export function Landing() {
                   </div>
                 </div>
               </div>
-              <figcaption className="sr-only">
-                Example of a paid invoice and its matching receipt, shown on desktop and on a phone.
+              <figcaption className="l-preview-caption">
+                Example invoice, matching receipt, and phone view. No real client data.
               </figcaption>
             </figure>
           </div>
@@ -330,7 +329,7 @@ export function Landing() {
         <section className="l-section" id="workflow" aria-labelledby="workflow-title">
           <div className="l-section-inner">
             <div data-reveal>
-              <h2 id="workflow-title">Three steps. That's it.</h2>
+              <h2 id="workflow-title">From client details to a paid receipt.</h2>
             </div>
 
             <div className="l-workflow-steps">
@@ -418,8 +417,8 @@ export function Landing() {
                 <dd>Save bank details, default notes, terms, and tax rate so each new invoice starts ready.</dd>
               </div>
               <div>
-                <dt>Edit and delete records</dt>
-                <dd>Update invoices, receipts, clients, and catalog items without leaving the app.</dd>
+                <dt>Edit records, delete documents</dt>
+                <dd>Update invoices, receipts, clients, and catalog items, and delete invoices or receipts you no longer need.</dd>
               </div>
             </dl>
           </div>

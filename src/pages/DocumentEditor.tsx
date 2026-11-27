@@ -1,8 +1,8 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
-import { getInvoice, getReceipt, getReceipts, saveInvoice, saveReceipt, getBusiness, getClients, getItems, nextNumber, peekNextNumber } from '../lib/db';
+import { DuplicateReceiptError, getInvoice, getReceipt, getReceipts, saveInvoice, saveReceiptAndSyncInvoice, getBusiness, getClients, getItems, nextNumber, peekNextNumber } from '../lib/db';
 import { seedOnce } from '../lib/seed';
-import { useToast } from '../context/toast';
+import { useToast } from '../context/toastContext';
 import { formatIDR, parseIDRInput, calcTotals, formatDateISO, copyInvoiceText, copyReceiptText } from '../lib/format';
 import { useUnsavedChanges } from '../lib/useUnsavedChanges';
 import type { Invoice, Receipt, InvoiceItem, BusinessProfile, Client, Item } from '../types';
@@ -14,40 +14,43 @@ import type { EditorValidationError } from '../components/editorTypes';
 function renderInvoicePreview(i: Invoice, biz: BusinessProfile | undefined) {
   return (
     <div className="pdf-page">
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 24 }}>
+      <div className="pdf-head">
         <div>
-          {biz?.name && <div style={{ fontWeight: 700, fontSize: 14 }}>{biz.name}</div>}
-          {biz?.address && <div className="meta" style={{ fontSize: 10, marginTop: 2 }}>{biz.address}</div>}
-          {biz?.email && <div className="meta" style={{ fontSize: 10 }}>{biz.email}</div>}
-          {biz?.phone && <div className="meta" style={{ fontSize: 10 }}>{biz.phone}</div>}
+          {biz?.name && <div className="pdf-biz-name">{biz.name}</div>}
+          {biz?.address && <div className="meta pdf-meta pdf-meta-first">{biz.address}</div>}
+          {biz?.email && <div className="meta pdf-meta">{biz.email}</div>}
+          {biz?.phone && <div className="meta pdf-meta">{biz.phone}</div>}
         </div>
-        <div style={{ textAlign: 'right' }}>
-          <div style={{ fontWeight: 800, fontSize: 20, color: 'var(--color-primary)' }}>INVOICE</div>
-          <div style={{ fontSize: 10, color: 'var(--color-text-muted)', marginTop: 4 }}>No: <span className="num">{i.number}</span></div>
-          <div style={{ fontSize: 10, color: 'var(--color-text-muted)' }}>Date: <span className="num">{formatDateISO(i.issueDate)}</span></div>
-          {i.dueDate && <div style={{ fontSize: 10, color: 'var(--color-text-muted)' }}>Due: <span className="num">{formatDateISO(i.dueDate)}</span></div>}
+        <div className="pdf-head-right">
+          <div className="pdf-doc-title">INVOICE</div>
+          <div className="pdf-meta-line pdf-meta-line-first">No: <span className="num">{i.number}</span></div>
+          <div className="pdf-meta-line">Date: <span className="num">{formatDateISO(i.issueDate)}</span></div>
+          {i.dueDate && <div className="pdf-meta-line">Due: <span className="num">{formatDateISO(i.dueDate)}</span></div>}
         </div>
       </div>
-      <div style={{ fontSize: 10, color: 'var(--color-text-muted)', textTransform: 'uppercase', fontWeight: 700, marginBottom: 4 }}>Bill To</div>
-      <div style={{ fontWeight: 600, fontSize: 12 }}>{i.clientSnapshot.name || '-'}</div>
-      {i.clientSnapshot.address && <div style={{ fontSize: 10 }}>{i.clientSnapshot.address}</div>}
-      <table>
-        <thead><tr><th>Description</th><th className="num">Qty</th><th className="num">Price</th><th className="num">Amount</th></tr></thead>
-        <tbody>
-          {i.items.map(item => (
-            <tr key={item.id}>
-              <td>{item.name || '-'}</td>
-              <td className="num">{item.quantity}</td>
-              <td className="num">{formatIDR(item.price)}</td>
-              <td className="num">{formatIDR(item.amount)}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-      <div style={{ marginTop: 12, textAlign: 'right' }}>
-        <div style={{ fontSize: 11, color: 'var(--color-text-muted)' }}>Subtotal: <b className="num">{formatIDR(i.subtotal)}</b></div>
-        {i.discount > 0 && <div style={{ fontSize: 11, color: 'var(--color-text-muted)' }}>Discount: <b className="num">-{formatIDR(i.discount)}</b></div>}
-        <div style={{ fontSize: 11, color: 'var(--color-text-muted)' }}>Tax (<span className="num">{i.taxRate}</span>%): <b className="num">{formatIDR(i.taxAmount)}</b></div>
+      <div className="pdf-block-label pdf-block-label-tight">Bill To</div>
+      <div className="pdf-client-name">{i.clientSnapshot.name || '-'}</div>
+      {i.clientSnapshot.address && <div className="pdf-client-address">{i.clientSnapshot.address}</div>}
+      <section className="pdf-table-wrap" aria-labelledby="invoice-items-caption">
+        <table>
+          <caption id="invoice-items-caption" className="sr-only">Invoice line items</caption>
+          <thead><tr><th scope="col">Description</th><th scope="col" className="num">Qty</th><th scope="col" className="num">Price</th><th scope="col" className="num">Amount</th></tr></thead>
+          <tbody>
+            {i.items.map(item => (
+              <tr key={item.id}>
+                <td>{item.name || '-'}</td>
+                <td className="num">{item.quantity}</td>
+                <td className="num">{formatIDR(item.price)}</td>
+                <td className="num">{formatIDR(item.amount)}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </section>
+      <div className="pdf-totals">
+        <div className="pdf-totals-line">Subtotal: <b className="num">{formatIDR(i.subtotal)}</b></div>
+        {i.discount > 0 && <div className="pdf-totals-line">Discount: <b className="num">-{formatIDR(i.discount)}</b></div>}
+        <div className="pdf-totals-line">Tax (<span className="num">{i.taxRate}</span>%): <b className="num">{formatIDR(i.taxAmount)}</b></div>
         <div className="grand-total"><span>Total</span><span className="num">{formatIDR(i.total)}</span></div>
       </div>
     </div>
@@ -57,24 +60,24 @@ function renderInvoicePreview(i: Invoice, biz: BusinessProfile | undefined) {
 function renderReceiptPreview(r: Receipt) {
   return (
     <div className="pdf-page">
-      <div style={{ textAlign: 'right', fontWeight: 800, fontSize: 20, color: 'var(--color-primary)' }}>RECEIPT</div>
-      <div style={{ marginTop: 12, fontSize: 14, fontWeight: 600 }}>Payment received</div>
-      <div className="badge-paid-pill" style={{ margin: '10px 0', display: 'inline-block' }}>PAID</div>
-      <div style={{ fontSize: 10, color: 'var(--color-text-muted)', marginTop: 8 }}>
+      <div className="pdf-doc-title pdf-doc-title-right">RECEIPT</div>
+      <div className="pdf-payment-title">Payment received</div>
+      <div className="badge-paid-pill pdf-paid-pill">PAID</div>
+      <div className="pdf-receipt-meta">
         No: <span className="num">{r.number}</span><br />
         {r.invoiceNumber && <>Invoice Ref: <span className="num">{r.invoiceNumber}</span><br /></>}
         Date: <span className="num">{formatDateISO(r.paymentDate)}</span><br />
         {r.paymentMethod && <>Method: {r.paymentMethod}</>}
       </div>
-      <div style={{ marginTop: 16 }}>
-        <div style={{ fontSize: 10, color: 'var(--color-text-muted)', textTransform: 'uppercase', fontWeight: 700 }}>Received From</div>
-        <div style={{ fontWeight: 600, fontSize: 12 }}>{r.clientSnapshot.name || '-'}</div>
+      <div className="pdf-receipt-section">
+        <div className="pdf-block-label">Received From</div>
+        <div className="pdf-client-name">{r.clientSnapshot.name || '-'}</div>
       </div>
-      <div style={{ marginTop: 16 }}>
-        <div style={{ fontSize: 10, color: 'var(--color-text-muted)', textTransform: 'uppercase', fontWeight: 700 }}>Amount Paid</div>
-        <div className="num" style={{ fontWeight: 800, fontSize: 20, color: 'var(--color-primary)', marginTop: 4 }}>{formatIDR(r.amountPaid)}</div>
+      <div className="pdf-receipt-section">
+        <div className="pdf-block-label">Amount Paid</div>
+        <div className="num pdf-amount">{formatIDR(r.amountPaid)}</div>
       </div>
-      {r.notes && <div style={{ marginTop: 12, fontSize: 10, color: 'var(--color-text-muted)' }}>{r.notes}</div>}
+      {r.notes && <div className="pdf-note">{r.notes}</div>}
     </div>
   );
 }
@@ -119,6 +122,7 @@ export function DocumentEditor() {
   const [items, setItems] = useState<Item[]>([]);
   const [preview, setPreview] = useState(false);
   const [suggestedNumber, setSuggestedNumber] = useState('');
+  const [linkedReceipt, setLinkedReceipt] = useState<Receipt | undefined>();
 
   // Invoice state
   const [inv, setInv] = useState<Partial<Invoice>>({});
@@ -128,6 +132,9 @@ export function DocumentEditor() {
 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [loadError, setLoadError] = useState(false);
+  const [notFound, setNotFound] = useState(false);
+  const [reloadKey, setReloadKey] = useState(0);
   const [expanded, setExpanded] = useState<Record<string, boolean>>({
     basic: true, client: true, items: true, adjustments: true, payment: false, notes: false,
   });
@@ -171,38 +178,57 @@ export function DocumentEditor() {
     setLineItems(invData.items || []);
   };
 
-  const loadExistingDoc = async () => {
-    if (!id) return;
+  const loadExistingDoc = async (): Promise<boolean> => {
+    if (!id) return true;
     if (isReceipt) {
       const existing = await getReceipt(id);
-      if (existing) setRec(existing);
-    } else {
-      const existing = await getInvoice(id);
-      if (existing) {
-        setInv(existing);
-        setLineItems(existing.items);
-      }
+      if (!existing) return false;
+      setRec(existing);
+      return true;
     }
+    const existing = await getInvoice(id);
+    if (!existing) return false;
+    setInv(existing);
+    setLineItems(existing.items);
+    const receipts = await getReceipts();
+    setLinkedReceipt(receipts.find(r => r.invoiceId === id && r.status !== 'cancelled'));
+    return true;
   };
 
   // Load data
   useEffect(() => {
+    let active = true;
     setLoading(true);
+    setLoadError(false);
+    setNotFound(false);
     setInitialSnapshot('');
     setValidationError(null);
+    setLinkedReceipt(undefined);
     void (async () => {
-      await seedOnce();
-      const [bizData, clientData] = await Promise.all([getBusiness(), getClients()]);
-      setBiz(bizData);
-      setClients(clientData);
-      setItems(await getItems());
-      if (isReceipt && id === undefined) await loadNewReceipt(clientData);
-      else if (!isReceipt && id === undefined) await loadNewInvoice(bizData);
-      else await loadExistingDoc();
-      setLoading(false);
+      try {
+        await seedOnce();
+        const [bizData, clientData] = await Promise.all([getBusiness(), getClients()]);
+        const itemData = await getItems();
+        if (!active) return;
+        setBiz(bizData);
+        setClients(clientData);
+        setItems(itemData);
+        if (isReceipt && id === undefined) await loadNewReceipt(clientData);
+        else if (!isReceipt && id === undefined) await loadNewInvoice(bizData);
+        else {
+          const found = await loadExistingDoc();
+          if (active && !found) setNotFound(true);
+        }
+      } catch (err) {
+        console.error(err);
+        if (active) setLoadError(true);
+      } finally {
+        if (active) setLoading(false);
+      }
     })();
+    return () => { active = false; };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [type, id, isReceipt]);
+  }, [type, id, isReceipt, query, reloadKey]);
 
   useEffect(() => {
     if (!loading && !initialSnapshot) setInitialSnapshot(stateSnapshot);
@@ -248,7 +274,7 @@ export function DocumentEditor() {
         amount: i.quantity * i.price,
       })),
       subtotal: totals.subtotal,
-      discount: inv.discount || 0,
+      discount: totals.discount,
       taxRate: inv.taxRate || 0,
       taxAmount: totals.taxAmount,
       total: totals.total,
@@ -281,14 +307,17 @@ export function DocumentEditor() {
 
   // Validation
   const validate = (): EditorValidationError | null => {
+    if (!isReceipt && inv.issueDate && inv.dueDate && inv.dueDate < inv.issueDate) {
+      return { fieldId: 'due-date', message: 'Due date cannot be before the issue date.', section: 'basic' };
+    }
     const clientName = isReceipt ? rec.clientSnapshot?.name : inv.clientSnapshot?.name;
     if (!clientName?.trim()) return { fieldId: 'document-client-name', message: 'Enter a client name.', section: 'client' };
     if (!isReceipt) {
       const hasItem = lineItems.some(i => i.name.trim());
       const firstItemId = lineItems[0] ? `item-${lineItems[0].id}-name` : 'catalog-item';
       if (!hasItem) return { fieldId: firstItemId, message: 'Add at least one item.', section: 'items' };
-      if (inv.issueDate && inv.dueDate && inv.dueDate < inv.issueDate) {
-        return { fieldId: 'due-date', message: 'Due date cannot be before the issue date.', section: 'basic' };
+      if ((inv.discount || 0) > totals.subtotal) {
+        return { fieldId: 'invoice-discount', message: 'Discount cannot be more than the subtotal.', section: 'adjustments' };
       }
     }
     if (isReceipt && !rec.amountPaid) return { fieldId: 'amount-paid', message: 'Enter the amount paid.', section: 'payment' };
@@ -313,10 +342,10 @@ export function DocumentEditor() {
     setSaving(true);
     try {
       await action();
-      nav('/documents');
     } catch (err) {
       console.error(err);
-      toast('Failed to save. Please try again.', 'danger');
+      const message = err instanceof DuplicateReceiptError ? err.message : 'Failed to save. Please try again.';
+      toast(message, 'danger');
     } finally {
       setSaving(false);
     }
@@ -337,15 +366,10 @@ export function DocumentEditor() {
       }
     }
     const r = { ...buildReceipt(status as Receipt['status']), number: await saveNumber('receipt', rec.number) };
-    await saveReceipt(r);
-    if (r.invoiceId && r.status === 'paid') {
-      const linkedInvoice = await getInvoice(r.invoiceId);
-      if (linkedInvoice && linkedInvoice.status !== 'paid') {
-        await saveInvoice({ ...linkedInvoice, status: 'paid', updatedAt: nowISO() });
-      }
-    }
+    await saveReceiptAndSyncInvoice(r);
     setInitialSnapshot(stateSnapshot);
     toast('Receipt saved.', 'success');
+    nav('/documents');
   };
 
   const saveInvoiceFlow = async (status?: string) => {
@@ -353,29 +377,39 @@ export function DocumentEditor() {
     await saveInvoice(i);
     setInitialSnapshot(stateSnapshot);
     toast('Invoice saved.', 'success');
+    nav('/documents');
   };
 
   // Save
   const handleSave = async (status?: string) => {
     const err = validate();
     if (err) { showValidationError(err); return; }
+    if (!isReceipt && isEdit && linkedReceipt && totals.total !== (inv.total ?? 0)) {
+      toast('This invoice has an active receipt. Delete or cancel the receipt before changing the total.', 'danger');
+      return;
+    }
     await runGuarded(() => isReceipt ? saveReceiptFlow(status) : saveInvoiceFlow(status));
   };
 
   // PDF
   const handleDownloadPDF = async () => {
     if (!biz) { toast('Set up your business profile first.', 'danger'); return; }
-    const { generateInvoicePDF, generateReceiptPDF, downloadPDF } = await import('../lib/pdf');
-    if (isReceipt) {
-      const r = buildReceipt();
-      const doc = generateReceiptPDF(r, biz);
-      downloadPDF(doc, `${r.number}.pdf`);
-      toast('PDF downloaded.', 'success');
-    } else {
-      const i = buildInvoice();
-      const doc = generateInvoicePDF(i, biz);
-      downloadPDF(doc, `${i.number}.pdf`);
-      toast('PDF downloaded.', 'success');
+    try {
+      const { generateInvoicePDF, generateReceiptPDF, downloadPDF } = await import('../lib/pdf');
+      if (isReceipt) {
+        const r = buildReceipt();
+        const doc = generateReceiptPDF(r, biz);
+        downloadPDF(doc, `${r.number}.pdf`);
+        toast('PDF downloaded.', 'success');
+      } else {
+        const i = buildInvoice();
+        const doc = generateInvoicePDF(i, biz);
+        downloadPDF(doc, `${i.number}.pdf`);
+        toast('PDF downloaded.', 'success');
+      }
+    } catch (err) {
+      console.error(err);
+      toast('Failed to download PDF.', 'danger');
     }
   };
 
@@ -411,6 +445,27 @@ export function DocumentEditor() {
 
   if (loading) return <LoadingScreen />;
 
+  if (loadError) {
+    return (
+      <div className="empty" role="alert">
+        <h3>Could not load this document</h3>
+        <p>Your saved data is still on this device. Try again, or return to the documents list.</p>
+        <button type="button" className="btn btn-primary" onClick={() => setReloadKey(key => key + 1)}>Try again</button>
+        <button type="button" className="btn btn-secondary" onClick={() => nav('/documents')}>Back to Documents</button>
+      </div>
+    );
+  }
+
+  if (notFound) {
+    return (
+      <div className="empty">
+        <h3>Document not found</h3>
+        <p>This document may have been deleted. Go back to the documents list.</p>
+        <button type="button" className="btn btn-primary" onClick={() => nav('/documents')}>Back to Documents</button>
+      </div>
+    );
+  }
+
   // Live preview (inline)
   const invoicePreview = isReceipt ? null : renderInvoicePreview(buildInvoice(), biz);
   const receiptPreview = isReceipt ? renderReceiptPreview(buildReceipt()) : null;
@@ -431,6 +486,12 @@ export function DocumentEditor() {
           {preview ? 'Edit form' : 'Preview PDF'}
         </button>
       </div>
+
+      {!isReceipt && linkedReceipt && (
+        <p className="field-hint">
+          This invoice has an active receipt, so its total is locked. Delete or cancel the receipt first to change the total.
+        </p>
+      )}
 
       {/* Mobile preview toggle */}
       {preview && (

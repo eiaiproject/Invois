@@ -1,13 +1,13 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, type ReactNode } from 'react';
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { getItems, saveItem, getItem } from '../lib/db';
 import { seedOnce } from '../lib/seed';
-import { useToast } from '../context/toast';
+import { useToast } from '../context/toastContext';
 import { formatIDR } from '../lib/format';
 import { useUnsavedChanges } from '../lib/useUnsavedChanges';
-import { Plus } from 'reicon';
-import { Reicon } from '../components/Reicon';
+import { Plus } from 'lucide-react';
 import { Seo } from '../components/SEO';
+import { LoadingScreen } from '../components/LoadingScreen';
 import { newId, nowISO } from '../types';
 import type { Item } from '../types';
 
@@ -17,13 +17,20 @@ const EMPTY_ITEM_FORM = {
 
 export function Items() {
   const [items, setItems] = useState<Item[] | null>(null);
+  const [error, setError] = useState(false);
   const [searchParams, setSearchParams] = useSearchParams();
   const search = searchParams.get('q') || '';
   const hasQuery = !!search.trim();
 
   const load = async () => {
-    try { await seedOnce(); setItems(await getItems()); }
-    catch (err) { console.error(err); setItems([]); }
+    setError(false);
+    try {
+      await seedOnce();
+      setItems(await getItems());
+    } catch (err) {
+      console.error(err);
+      setError(true);
+    }
   };
   useEffect(() => { void load(); }, []);
 
@@ -40,17 +47,81 @@ export function Items() {
     setSearchParams(params, { replace: true });
   };
 
+  let summary = 'Loading…';
+  if (items) summary = `${items.length} items & services`;
+  else if (error) summary = 'Could not load';
+
+  let content: ReactNode;
+  if (!items) {
+    content = error ? (
+      <div className="empty" role="alert">
+        <h3>Could not load items</h3>
+        <p>Your saved items are still on this device. Try again.</p>
+        <button type="button" className="btn btn-primary" onClick={() => void load()}>Try again</button>
+      </div>
+    ) : (
+      <>
+        <div className="skeleton skeleton-search" />
+        <div className="skeleton-row">
+          <div className="skeleton-fill">
+            <div className="skeleton skeleton-text w-180" />
+            <div className="skeleton skeleton-text short" />
+          </div>
+          <div className="skeleton skeleton-line" />
+        </div>
+        <div className="skeleton-row">
+          <div className="skeleton-fill">
+            <div className="skeleton skeleton-text w-140" />
+            <div className="skeleton skeleton-text short" />
+          </div>
+          <div className="skeleton skeleton-line" />
+        </div>
+        <div className="skeleton-row">
+          <div className="skeleton-fill">
+            <div className="skeleton skeleton-text w-160" />
+            <div className="skeleton skeleton-text short" />
+          </div>
+          <div className="skeleton skeleton-line" />
+        </div>
+      </>
+    );
+  } else if (filtered.length === 0) {
+    content = (
+      <div className="empty">
+        <h3>{hasQuery ? 'No matches' : 'No items yet'}</h3>
+        <p>{hasQuery ? 'Try a different search.' : 'Add your services or products to quickly add them to invoices.'}</p>
+        {!hasQuery && <Link to="/items/new" className="btn btn-primary">Add Item</Link>}
+      </div>
+    );
+  } else {
+    content = (
+      <div className="doc-list">
+        {filtered.map(item => (
+          <Link key={item.id} to={`/items/${item.id}`} className="doc-card">
+            <div className="meta">
+              <div className="row1">
+                <span className="card-title">{item.name}</span>
+              </div>
+              <div className="client">{item.description || item.unit || '-'}</div>
+            </div>
+            <span className="total num">{formatIDR(item.price)}</span>
+          </Link>
+        ))}
+      </div>
+    );
+  }
+
   return (
     <div>
       <Seo title="Items & Services" description="Manage your items and services." />
       <div className="page-head">
         <div>
           <h1>Items</h1>
-          <p className="sub">{items ? `${items.length} items & services` : 'Loading…'}</p>
+          <p className="sub">{summary}</p>
         </div>
         {items && items.length > 0 && (
           <Link to="/items/new" className="btn btn-primary">
-            <Reicon icon={Plus} size={16} />
+            <Plus size={16} aria-hidden="true" />
             Add Item
           </Link>
         )}
@@ -66,56 +137,7 @@ export function Items() {
         onKeyDown={e => e.key === 'Enter' && e.currentTarget.blur()}
       />
 
-      {!items ? (
-        <>
-          <div className="skeleton" style={{ height: 44, borderRadius: 'var(--radius-md)', marginBottom: 12 }} />
-          <div className="skeleton-row">
-            <div style={{ flex: 1 }}>
-              <div className="skeleton skeleton-text" style={{ width: 180 }} />
-              <div className="skeleton skeleton-text short" />
-            </div>
-            <div className="skeleton" style={{ width: 80, height: 20, borderRadius: 4 }} />
-          </div>
-          <div className="skeleton-row">
-            <div style={{ flex: 1 }}>
-              <div className="skeleton skeleton-text" style={{ width: 140 }} />
-              <div className="skeleton skeleton-text short" />
-            </div>
-            <div className="skeleton" style={{ width: 80, height: 20, borderRadius: 4 }} />
-          </div>
-          <div className="skeleton-row">
-            <div style={{ flex: 1 }}>
-              <div className="skeleton skeleton-text" style={{ width: 160 }} />
-              <div className="skeleton skeleton-text short" />
-            </div>
-            <div className="skeleton" style={{ width: 80, height: 20, borderRadius: 4 }} />
-          </div>
-        </>
-      ) : (
-        <>
-      {filtered.length === 0 ? (
-        <div className="empty">
-          <h3>{hasQuery ? 'No matches' : 'No items yet'}</h3>
-          <p>{hasQuery ? 'Try a different search.' : 'Add your services or products to quickly add them to invoices.'}</p>
-          {!hasQuery && <Link to="/items/new" className="btn btn-primary">Add Item</Link>}
-        </div>
-      ) : (
-        <div className="doc-list">
-          {filtered.map(item => (
-            <Link key={item.id} to={`/items/${item.id}`} className="doc-card">
-              <div className="meta">
-                <div className="row1">
-                  <span className="card-title">{item.name}</span>
-                </div>
-                <div className="client">{item.description || item.unit || '-'}</div>
-              </div>
-              <span className="total num">{formatIDR(item.price)}</span>
-            </Link>
-          ))}
-        </div>
-      )}
-        </>
-      )}
+      {content}
 
     </div>
   );
@@ -129,19 +151,38 @@ export function ItemEditor() {
 
   const [form, setForm] = useState(EMPTY_ITEM_FORM);
   const [initialForm, setInitialForm] = useState(EMPTY_ITEM_FORM);
+  const [loading, setLoading] = useState(isEdit);
+  const [loadError, setLoadError] = useState(false);
+  const [notFound, setNotFound] = useState(false);
   const [errors, setErrors] = useState<{ name?: string; price?: string }>({});
   const dirty = JSON.stringify(form) !== JSON.stringify(initialForm);
   useUnsavedChanges(dirty);
 
   useEffect(() => {
     if (!id) return;
-    void getItem(id).then(i => {
-      if (i) {
+    let active = true;
+    setLoading(true);
+    setLoadError(false);
+    setNotFound(false);
+    void getItem(id)
+      .then(i => {
+        if (!active) return;
+        if (!i) {
+          setNotFound(true);
+          return;
+        }
         const next = { name: i.name, description: i.description || '', unit: i.unit || 'project', price: i.price };
         setForm(next);
         setInitialForm(next);
-      }
-    });
+      })
+      .catch(err => {
+        console.error(err);
+        if (active) setLoadError(true);
+      })
+      .finally(() => {
+        if (active) setLoading(false);
+      });
+    return () => { active = false; };
   }, [id]);
 
   const handleSave = async () => {
@@ -173,6 +214,28 @@ export function ItemEditor() {
     toast(isEdit ? 'Item updated.' : 'Item added.', 'success');
     nav('/items');
   };
+
+  if (loading) return <LoadingScreen />;
+
+  if (loadError) {
+    return (
+      <div className="empty" role="alert">
+        <h3>Could not load this item</h3>
+        <p>Your saved items are still on this device. Go back to the item list and try again.</p>
+        <button type="button" className="btn btn-primary" onClick={() => nav('/items')}>Back to Items</button>
+      </div>
+    );
+  }
+
+  if (notFound) {
+    return (
+      <div className="empty">
+        <h3>Item not found</h3>
+        <p>This item may have been deleted. Go back to the item list.</p>
+        <button type="button" className="btn btn-primary" onClick={() => nav('/items')}>Back to Items</button>
+      </div>
+    );
+  }
 
   return (
     <div>

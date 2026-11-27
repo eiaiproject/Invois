@@ -293,7 +293,7 @@ test('mock preview exposes no fake controls', async ({ page }) => {
 
   // The whole preview is decorative and described once.
   await expect(page.locator('.l-preview-stage')).toHaveAttribute('aria-hidden', 'true');
-  await expect(page.locator('.l-preview figcaption')).toHaveText(/paid invoice/i);
+  await expect(page.locator('.l-preview figcaption')).toHaveText(/example invoice/i);
 });
 
 test('mobile hero stays usable at 320px', async ({ page }) => {
@@ -408,20 +408,17 @@ test('landing renders desktop and mobile screenshots', async ({ page }, testInfo
     await page.setViewportSize({ width, height });
     await page.goto('/');
     await expect(page.locator('h1')).toBeVisible();
-    // Walk the page so scroll reveals fire before the capture.
-    await page.evaluate(async () => {
-      const step = window.innerHeight * 0.8;
-      for (let y = 0; y < document.body.scrollHeight; y += step) {
-        window.scrollTo(0, y);
-        await new Promise(resolve => setTimeout(resolve, 90));
-      }
-      window.scrollTo(0, 0);
-    });
-    // Every block has to be fully visible before the shot, otherwise the
-    // attachment captures half-faded sections.
-    await expect
-      .poll(() => page.locator('[data-reveal]:not(.revealed)').count(), { timeout: 5_000 })
-      .toBe(0);
+    // Visit each block and wait for its observer callback before moving on.
+    // A fast scroll pass can skip the callback and leave a block faded.
+    await page.evaluate(async () => { await document.fonts.ready; });
+    const revealBlocks = page.locator('[data-reveal]');
+    const blockCount = await revealBlocks.count();
+    for (let index = 0; index < blockCount; index += 1) {
+      const block = revealBlocks.nth(index);
+      await block.scrollIntoViewIfNeeded();
+      await expect(block).toHaveClass(/revealed/, { timeout: 5_000 });
+    }
+    await page.evaluate(() => window.scrollTo(0, 0));
     const shot = await page.screenshot({ fullPage: true });
     expect(shot.byteLength, `${name} capture looks empty`).toBeGreaterThan(10_000);
     await testInfo.attach(`${name}-landing`, {

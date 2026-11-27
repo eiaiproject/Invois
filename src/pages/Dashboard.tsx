@@ -3,8 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { getDashboardStats, getBusiness } from '../lib/db';
 import { seedOnce } from '../lib/seed';
 import { formatIDR } from '../lib/format';
-import { InfoCircle, Plus } from 'reicon';
-import { Reicon } from '../components/Reicon';
+import { Info, Plus } from 'lucide-react';
 import { Seo } from '../components/SEO';
 import type { BusinessProfile } from '../types';
 
@@ -45,6 +44,7 @@ export function Dashboard() {
   const [stats, setStats] = useState<Stats | null>(null);
   const [loadError, setLoadError] = useState(false);
   const [infoOpen, setInfoOpen] = useState(false);
+  const [reloadKey, setReloadKey] = useState(0);
   const nav = useNavigate();
 
   const infoDialogRef = useRef<HTMLDialogElement>(null);
@@ -63,6 +63,8 @@ export function Dashboard() {
 
   useEffect(() => {
     let mounted = true;
+    setLoadError(false);
+    setStats(null);
     void (async () => {
       try {
         const data = await loadDashboard();
@@ -73,20 +75,30 @@ export function Dashboard() {
         console.error(err);
         if (!mounted) return;
         setLoadError(true);
-        setStats({ unpaidTotal: 0, paidTotal: 0, overdueCount: 0, recentDocs: [] });
       }
     })();
     return () => { mounted = false; };
-  }, []);
+  }, [reloadKey]);
+
+  if (loadError) return (
+    <div>
+      <Seo title="Dashboard" description="Overview of your invoices and receipts." />
+      <div className="empty" role="alert">
+        <h3>Dashboard data could not load</h3>
+        <p>Your saved data is still on this device. Try again.</p>
+        <button type="button" className="btn btn-primary" onClick={() => setReloadKey(key => key + 1)}>Try again</button>
+      </div>
+    </div>
+  );
 
   if (!stats) return (
     <div>
       <div className="flex between center">
         <div>
-          <div className="skeleton" style={{ height: 32, width: 200, marginBottom: 8, borderRadius: 6 }} />
-          <div className="skeleton" style={{ height: 16, width: 120, borderRadius: 4 }} />
+          <div className="skeleton skeleton-title" />
+          <div className="skeleton skeleton-subtitle" />
         </div>
-        <div className="skeleton" style={{ width: 44, height: 44, borderRadius: 12 }} />
+        <div className="skeleton skeleton-icon" />
       </div>
       <div className="stat-grid mt-24">
         <div className="skeleton skeleton-stat" />
@@ -117,18 +129,16 @@ export function Dashboard() {
           {biz?.name && <div className="biz-name">{biz.name}</div>}
         </div>
         <button type="button" className="btn btn-ghost btn-icon" onClick={() => setInfoOpen(true)} aria-label="App info" title="App info">
-          <Reicon icon={InfoCircle} size={20} />
+          <Info size={20} aria-hidden="true" />
         </button>
       </div>
-      {loadError && <p className="muted mt-8">Dashboard data could not load. Try refreshing the page.</p>}
-
       <div className="quick-actions hide-mobile">
         <button type="button" className="btn btn-primary btn-lg" onClick={() => nav('/documents/new/invoice')}>
-          <Reicon icon={Plus} size={16} />
+          <Plus size={16} aria-hidden="true" />
           Create Invoice
         </button>
         <button type="button" className="btn btn-secondary btn-lg" onClick={() => nav('/documents/new/receipt')}>
-          <Reicon icon={Plus} size={16} />
+          <Plus size={16} aria-hidden="true" />
           Create Receipt
         </button>
       </div>
@@ -182,20 +192,20 @@ export function Dashboard() {
 
       <div className="mobile-actions hide-desktop">
         <button type="button" className="btn btn-primary btn-block" onClick={() => nav('/documents/new/invoice')}>
-          <Reicon icon={Plus} size={16} />
+          <Plus size={16} aria-hidden="true" />
           Create Invoice
         </button>
         <button type="button" className="btn btn-secondary btn-block" onClick={() => nav('/documents/new/receipt')}>
-          <Reicon icon={Plus} size={16} />
+          <Plus size={16} aria-hidden="true" />
           Create Receipt
         </button>
       </div>
       {infoOpen && (
         <dialog ref={infoDialogRef} className="scrim" aria-labelledby="app-info-title" onClose={() => setInfoOpen(false)}>
           <div className="sheet">
-            <div className="sheet-handle" />
+            <div className="sheet-handle" aria-hidden="true" />
             <h2 id="app-info-title">App Info</h2>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+            <div className="stack-12">
               <div className="item-row">
                 <span className="item-name">Version</span>
                 <span className="item-meta num">{__APP_VERSION__}</span>
@@ -213,7 +223,7 @@ export function Dashboard() {
                 <span className="item-meta">MIT</span>
               </div>
             </div>
-            <div className="actions" style={{ marginTop: 18 }}>
+            <div className="actions mt-18">
               <button type="button" className="btn btn-primary" onClick={() => setInfoOpen(false)}>Close</button>
             </div>
           </div>

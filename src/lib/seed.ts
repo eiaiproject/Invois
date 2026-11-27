@@ -71,17 +71,27 @@ export async function seedDB() {
 /* First-run guard */
 
 let seedOncePromise: Promise<void> | null = null;
+const SEED_LOCK = 'invois-seed';
+
+async function seedIfNeeded() {
+  if (await isSampleDataRemoved()) return;
+  if (await isDBEmpty()) await seedDB();
+}
 
 /**
  * Seeds labeled sample records (ids prefixed with `sample-`) at most once per
- * session. Single-flight guard so React StrictMode double-effects or two tabs
- * opened on an empty DB cannot seed twice. Skipped after the user removes the
- * sample data, so it does not come back on the next visit.
+ * session. The single-flight promise and the Web Locks guard together stop
+ * React StrictMode double-effects and two tabs on an empty DB from seeding
+ * twice. Skipped after the user removes the sample data, so it does not come
+ * back on the next visit.
  */
 export function seedOnce(): Promise<void> {
   seedOncePromise ??= (async () => {
-    if (await isSampleDataRemoved()) return;
-    if (await isDBEmpty()) await seedDB();
+    if (navigator.locks?.request) {
+      await navigator.locks.request(SEED_LOCK, seedIfNeeded);
+    } else {
+      await seedIfNeeded();
+    }
   })();
   return seedOncePromise;
 }

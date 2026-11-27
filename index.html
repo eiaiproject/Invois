@@ -6,27 +6,15 @@
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
     <link rel="canonical" href="https://invois.pages.dev/" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=5.0" />
+    <meta name="text-scale" content="scale" />
+    <meta name="color-scheme" content="light dark" />
     <meta name="theme-color" content="#596949" media="(prefers-color-scheme: light)" />
     <meta name="theme-color" content="#1A1B16" media="(prefers-color-scheme: dark)" />
-    <script>
-      // Apply the saved theme before first paint to avoid a color flash.
-      (function () {
-        try {
-          var pref = localStorage.getItem('invois-theme');
-          var dark = pref === 'dark' || ((pref === null || pref === 'system') && window.matchMedia('(prefers-color-scheme: dark)').matches);
-          document.documentElement.dataset.theme = dark ? 'dark' : 'light';
-        } catch (err) {
-          // localStorage throws in some private modes and when storage is blocked;
-          // report it and fall back to the operating system preference.
-          console.warn('Saved theme unavailable, using the system theme:', err);
-          document.documentElement.dataset.theme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-        }
-      })();
-    </script>
+    <script src="/theme-init.js"></script>
     <meta name="application-name" content="Invois" />
     <meta name="author" content="Anggie Irawan" />
     <meta name="description" content="Create professional invoices and receipts offline, save business data on your device, and export clean PDFs from desktop or mobile." />
-    
+
     <!-- Open Graph -->
     <meta property="og:type" content="website" />
     <meta property="og:title" content="Invois: Offline Invoice & Receipt Maker" />
@@ -38,7 +26,7 @@
     <meta property="og:image:height" content="630" />
     <meta property="og:image:alt" content="Invois: Invoice & Receipt Maker. Create invoices, generate receipts, and export PDFs that work offline on any device." />
     <meta property="og:locale" content="en_US" />
-    
+
     <!-- Twitter Card -->
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content="Invois: Offline Invoice & Receipt Maker" />
@@ -46,13 +34,10 @@
     <meta name="twitter:image" content="https://invois.pages.dev/og-image.png" />
     <meta name="twitter:image:alt" content="Invois: Invoice & Receipt Maker" />
     <meta name="twitter:url" content="https://invois.pages.dev/" />
-    
-    <!-- Fonts -->
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" />
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
-    
+
+    <!-- Self-hosted variable font: no third-party request, available offline. -->
+    <link rel="preload" href="/fonts/plus-jakarta-sans-latin.woff2" as="font" type="font/woff2" crossorigin />
+
     <!-- Structured Data -->
     <script type="application/ld+json">
     {
@@ -71,11 +56,11 @@
       "offers": {
         "@type": "Offer",
         "price": "0",
-        "priceCurrency": "USD"
+        "priceCurrency": "IDR"
       }
     }
     </script>
-    
+
     <title>Invois: Offline Invoice & Receipt Maker</title>
   </head>
   <body>

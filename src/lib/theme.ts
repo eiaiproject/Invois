@@ -26,11 +26,17 @@ function updateThemeColor(resolved: 'light' | 'dark'): void {
   }
 }
 
+function updateColorScheme(pref: ThemePreference): void {
+  const meta = document.querySelector<HTMLMetaElement>('meta[name="color-scheme"]');
+  if (meta) meta.content = pref === 'system' ? 'light dark' : pref;
+}
+
 /** Applies a preference to the document root. "System" resolves to the OS setting. */
 export function applyThemePreference(pref: ThemePreference): void {
   const resolved = resolveTheme(pref);
   document.documentElement.dataset.theme = resolved;
   updateThemeColor(resolved);
+  updateColorScheme(pref);
 }
 
 /** Persists a preference and applies it right away. */
@@ -43,10 +49,13 @@ export function setThemePreference(pref: ThemePreference): void {
   applyThemePreference(pref);
 }
 
-/** Applies the stored preference and keeps "system" in sync with OS changes. */
+/** Applies the stored preference and keeps "system" in sync with OS and tab changes. */
 export function initTheme(): void {
   applyThemePreference(getThemePreference());
   window.matchMedia(DARK_QUERY).addEventListener('change', () => {
     if (getThemePreference() === 'system') applyThemePreference('system');
+  });
+  window.addEventListener('storage', event => {
+    if (event.key === STORAGE_KEY) applyThemePreference(getThemePreference());
   });
 }

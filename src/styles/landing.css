@@ -24,7 +24,7 @@
   max-width: var(--shell-max);
   margin: 0 auto;
   padding: 0 20px;
-  height: 60px;
+  min-height: 60px;
   display: flex;
   align-items: center;
   gap: 12px;
@@ -42,7 +42,7 @@
   padding: 6px 12px;
   min-height: 44px;
   border-radius: var(--radius-sm);
-  font-size: 14px;
+  font-size: 0.875rem;
   font-weight: 600;
   color: var(--color-text-muted);
   transition: color var(--dur) var(--ease-out), background var(--dur) var(--ease-out);
@@ -84,12 +84,10 @@
 @media (max-width: 479px) {
   .l-header-inner { padding: 0 12px; gap: 8px; }
   .l-header-actions { gap: 6px; }
-  .l-header-actions .btn { padding-inline: 10px; font-size: 12px; }
+  .l-header-actions .btn { padding-inline: 10px; font-size: 0.75rem; }
 }
 /* The wordmark gives way first: it shrinks and ellipsizes rather than pushing
-   the CTA past the viewport edge, which is what the wider fallback font used
-   before Plus Jakarta Sans arrives (or forever, when the app runs offline) does
-   at 320px. */
+   the CTA past the viewport edge while the self-hosted font is still loading. */
 .l-header .brand { min-width: 0; }
 .l-header .brand > span {
   min-width: 0;
@@ -114,7 +112,7 @@
   padding: 12px 16px;
   min-height: 44px;
   border-radius: var(--radius-sm);
-  font-size: 15px;
+  font-size: 0.9375rem;
   font-weight: 600;
   color: var(--color-text-muted);
   transition: color var(--dur) var(--ease-out), background var(--dur) var(--ease-out);
@@ -138,7 +136,7 @@
 
 /* Sections shared (layout rhythm) */
 .l-section {
-  padding: 48px 20px;
+  padding: 56px 20px;
 }
 .l-section-inner {
   max-width: var(--shell-max);
@@ -146,7 +144,7 @@
 }
 .l-section-sub {
   max-width: 400px;
-  margin-top: 8px;
+  margin-top: 10px;
   color: var(--color-text-muted);
   text-wrap: pretty;
 }
@@ -156,20 +154,17 @@
   scroll-margin-top: 76px;
 }
 @media (min-width: 720px) {
-  .l-section { padding: 64px 32px; }
+  .l-section { padding: 80px 32px; }
 }
 
 /* Hero */
 .l-hero {
-  padding: 28px 20px 0;
+  padding: 32px 20px 0;
   overflow: hidden;
 }
 .l-hero-inner {
   max-width: var(--shell-max);
   margin: 0 auto;
-}
-.l-hero-text {
-  /* ponytail: max-width removed so the hero fills available space on web */
 }
 .l-hero-heading,
 .l-hero-text h1 {
@@ -177,7 +172,7 @@
   letter-spacing: -0.03em;
   line-height: 1.06;
   color: var(--color-text);
-  margin-bottom: 16px;
+  margin-bottom: 18px;
   text-wrap: balance;
   font-weight: 800;
   animation: l-hero-in 0.5s var(--ease-out) both;
@@ -186,11 +181,12 @@
   font-size: clamp(1rem, 2.2vw, 1.15rem);
   color: var(--color-text-muted);
   line-height: 1.55;
-  margin-bottom: 20px;
+  margin-bottom: 24px;
   max-width: 480px;
   text-wrap: pretty;
   animation: l-hero-in 0.5s var(--ease-out) 0.06s both;
 }
+/* Phones stack the actions full width (see the 479px block below). */
 .l-hero-actions {
   display: flex;
   gap: 8px;
@@ -206,7 +202,7 @@
   gap: 8px;
   width: 100%;
   max-width: 380px;
-  margin: 12px auto 0;
+  margin: 16px auto 0;
   list-style: none;
   padding: 0;
 }
@@ -224,7 +220,7 @@
   border-radius: var(--radius-sm);
   background: var(--note-bg);
   color: var(--color-text-muted);
-  font-size: 11px;
+  font-size: 0.6875rem;
   font-weight: 800;
   letter-spacing: 0;
   line-height: 1.2;
@@ -240,12 +236,13 @@
   flex: 0 0 auto;
 }
 @media (min-width: 720px) {
-  .l-hero-actions {
-    justify-content: center;
-  }
+  .l-hero { padding: 64px 32px 0; }
+  .l-hero-heading,
+  .l-hero-text h1 { margin-bottom: 20px; }
   .l-hero-assurance {
     grid-template-columns: repeat(4, minmax(0, 1fr));
     max-width: 660px;
+    margin: 24px auto 0;
   }
 }
 @media (min-width: 820px) {
@@ -253,11 +250,23 @@
     max-width: 720px;
   }
   .l-hero-assurance li {
-    font-size: 12px;
+    font-size: 0.75rem;
   }
 }
-@media (min-width: 720px) {
-  .l-hero { padding: 56px 32px 0; }
+/* Phones keep the stacked, full-width button column. From 480px up the hero
+   centres so the copy and the mock share one axis instead of hugging the left
+   edge with a dead strip on the right. */
+@media (min-width: 480px) {
+  .l-hero-text { text-align: center; }
+  .l-hero-text p { margin-inline: auto; }
+  .l-hero-heading,
+  .l-hero-text h1 { max-width: 820px; margin-inline: auto; }
+  .l-hero-assurance { margin-inline: auto; }
+}
+@media (min-width: 1024px) {
+  .l-hero { padding: 88px 32px 0; }
+  .l-hero-heading,
+  .l-hero-text h1 { max-width: 900px; }
 }
 
 /* Button micro-interactions (animate + delight) */
@@ -288,14 +297,14 @@
 
 .l-preview {
   display: block;
-  margin-top: 20px;
+  margin-top: 32px;
   padding-bottom: 20px;
   position: relative;
   animation: l-hero-in 0.6s var(--ease-out) 0.25s both;
 }
 @media (min-width: 720px) {
   .l-preview {
-    margin-top: 32px;
+    margin-top: 48px;
     padding-bottom: 28px;
   }
 }
@@ -304,6 +313,9 @@
   gap: 18px;
   justify-content: center;
   align-items: flex-start;
+}
+@media (min-width: 1024px) {
+  .l-preview { margin-top: 56px; }
 }
 
 /* Invoice card */
@@ -331,7 +343,7 @@
 .l-invoice-row > * { min-width: 0; }
 .l-invoice-number-block { text-align: right; }
 .l-invoice-label {
-  font-size: 9px;
+  font-size: 0.5625rem;
   font-weight: 700;
   color: var(--color-text-muted);
   text-transform: uppercase;
@@ -340,12 +352,12 @@
 }
 .l-invoice-number {
   font-family: var(--font-mono);
-  font-size: 12px;
+  font-size: 0.75rem;
   font-weight: 700;
   overflow-wrap: anywhere;
 }
 .l-invoice-title {
-  font-size: 18px;
+  font-size: 1.125rem;
   font-weight: 800;
   letter-spacing: -0.02em;
   color: var(--color-primary-hover);
@@ -357,7 +369,7 @@
   flex-wrap: wrap;
 }
 .l-invoice-meta-item {
-  font-size: 10px;
+  font-size: 0.625rem;
   color: var(--color-text-muted);
 }
 .l-invoice-meta-item strong {
@@ -381,7 +393,7 @@
   display: grid;
   place-items: center;
   font-weight: 700;
-  font-size: 12px;
+  font-size: 0.75rem;
   color: var(--color-primary);
   flex-shrink: 0;
 }
@@ -390,10 +402,10 @@
 }
 .l-client-name {
   font-weight: 700;
-  font-size: 12px;
+  font-size: 0.75rem;
 }
 .l-client-email {
-  font-size: 10px;
+  font-size: 0.625rem;
   color: var(--color-text-muted);
 }
 
@@ -409,10 +421,10 @@
 .l-items th:nth-child(2),
 .l-items td:nth-child(2) { width: 34px; }
 .l-items th:nth-child(3),
-.l-items td:nth-child(3) { width: 78px; }
+.l-items td:nth-child(3) { width: 92px; }
 .l-items th {
   padding: 9px 0 6px;
-  font-size: 9px;
+  font-size: 0.5625rem;
   font-weight: 700;
   color: var(--color-text-muted);
   text-transform: uppercase;
@@ -430,19 +442,21 @@
 }
 .l-items td {
   padding: 7px 0;
-  font-size: 12px;
+  font-size: 0.75rem;
   border-bottom: 1px solid var(--color-border);
 }
 .l-items td.name-col { font-weight: 600; overflow-wrap: break-word; }
 .l-items td.qty-col {
   color: var(--color-text-muted);
   font-family: var(--font-mono);
-  font-size: 11px;
+  font-size: 0.6875rem;
 }
 .l-items td.amount-col {
   font-weight: 700;
   font-family: var(--font-mono);
   font-variant-numeric: tabular-nums;
+  /* Amounts stay on one line; the item name is the only column that wraps. */
+  white-space: nowrap;
 }
 
 /* Totals */
@@ -454,7 +468,7 @@
   gap: 4px;
 }
 .l-totals-row {
-  font-size: 11px;
+  font-size: 0.6875rem;
   color: var(--color-text-muted);
   display: flex;
   gap: 16px;
@@ -463,7 +477,7 @@
   margin-top: 4px;
   padding-top: 7px;
   border-top: 1px solid var(--color-border);
-  font-size: 16px;
+  font-size: 1rem;
   font-weight: 800;
   letter-spacing: -0.02em;
   display: flex;
@@ -486,7 +500,7 @@
   gap: 4px;
   padding: 3px 9px;
   border-radius: var(--radius-pill);
-  font-size: 9px;
+  font-size: 0.5625rem;
   font-weight: 700;
   letter-spacing: 0.03em;
   text-transform: uppercase;
@@ -505,7 +519,7 @@
   gap: 5px;
   padding: 5px 8px;
   border-radius: var(--radius-sm);
-  font-size: 10px;
+  font-size: 0.625rem;
   font-weight: 600;
   color: var(--color-text-muted);
   background: var(--color-surface-warm);
@@ -523,7 +537,7 @@
 /* Phone preview */
 .l-phone {
   display: none;
-  width: 180px;
+  width: 200px;
   flex-shrink: 0;
   background: var(--color-surface);
   border: 1px solid var(--color-border);
@@ -554,7 +568,7 @@
   gap: 4px;
   padding: 3px 8px;
   border-radius: var(--radius-pill);
-  font-size: 9px;
+  font-size: 0.5625rem;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.04em;
@@ -564,33 +578,46 @@
   margin-bottom: 8px;
 }
 .l-phone-title {
-  font-size: 13px;
+  font-size: 0.8125rem;
   font-weight: 800;
   color: var(--color-primary-hover);
   margin-bottom: 4px;
 }
 .l-phone-client {
-  font-size: 11px;
+  font-size: 0.6875rem;
   color: var(--color-text-muted);
   margin-bottom: 8px;
 }
 .l-phone-line {
   display: flex;
   justify-content: space-between;
+  gap: 8px;
   padding: 4px 0;
-  font-size: 10px;
+  font-size: 0.625rem;
   border-bottom: 1px solid var(--color-border);
 }
 .l-phone-line:last-child { border-bottom: none; }
-.l-phone-line-name { color: var(--color-text); font-weight: 600; }
-.l-phone-line-amt { font-family: var(--font-mono); font-weight: 700; }
+.l-phone-line-name {
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  color: var(--color-text);
+  font-weight: 600;
+}
+.l-phone-line-amt {
+  flex: 0 0 auto;
+  white-space: nowrap;
+  font-family: var(--font-mono);
+  font-weight: 700;
+}
 .l-phone-total {
   margin-top: 6px;
   padding-top: 7px;
   border-top: 1px solid var(--color-border);
   display: flex;
   justify-content: space-between;
-  font-size: 13px;
+  font-size: 0.8125rem;
   font-weight: 800;
 }
 .l-phone-share {
@@ -599,7 +626,7 @@
   border-radius: var(--radius-sm);
   background: var(--color-primary);
   color: var(--color-on-primary);
-  font-size: 10px;
+  font-size: 0.625rem;
   font-weight: 700;
   text-align: center;
 }
@@ -612,29 +639,29 @@
   .l-preview-stage { gap: 20px; }
   .l-invoice-card { max-width: 480px; }
   .l-invoice-header { padding: 18px 20px 16px; }
-  .l-invoice-label { font-size: 10px; }
-  .l-invoice-number { font-size: 14px; }
-  .l-invoice-title { font-size: 20px; }
+  .l-invoice-label { font-size: 0.625rem; }
+  .l-invoice-number { font-size: 0.875rem; }
+  .l-invoice-title { font-size: 1.25rem; }
   .l-invoice-meta { gap: 18px; margin-top: 8px; }
-  .l-invoice-meta-item { font-size: 11px; }
+  .l-invoice-meta-item { font-size: 0.6875rem; }
   .l-client-row { padding: 12px 20px; }
-  .l-client-avatar { width: 34px; height: 34px; font-size: 13px; }
-  .l-client-name { font-size: 13px; }
-  .l-client-email { font-size: 11px; }
+  .l-client-avatar { width: 34px; height: 34px; font-size: 0.8125rem; }
+  .l-client-name { font-size: 0.8125rem; }
+  .l-client-email { font-size: 0.6875rem; }
   .l-items { padding: 0 20px; }
   .l-items th:nth-child(2),
   .l-items td:nth-child(2) { width: 38px; }
   .l-items th:nth-child(3),
-  .l-items td:nth-child(3) { width: 86px; }
-  .l-items th { padding: 10px 0 7px; font-size: 10px; }
-  .l-items td { padding: 8px 0; font-size: 13px; }
-  .l-items td.qty-col { font-size: 12px; }
+  .l-items td:nth-child(3) { width: 108px; }
+  .l-items th { padding: 10px 0 7px; font-size: 0.625rem; }
+  .l-items td { padding: 8px 0; font-size: 0.8125rem; }
+  .l-items td.qty-col { font-size: 0.75rem; }
   .l-totals { padding: 12px 20px 14px; gap: 5px; }
-  .l-totals-row { font-size: 12px; gap: 20px; }
-  .l-totals-grand { padding-top: 8px; font-size: 18px; gap: 20px; }
+  .l-totals-row { font-size: 0.75rem; gap: 20px; }
+  .l-totals-grand { padding-top: 8px; font-size: 1.125rem; gap: 20px; }
   .l-controls { padding: 10px 20px; gap: 8px; }
-  .l-status-badge { padding: 3px 10px; font-size: 10px; }
-  .l-control-btn { padding: 6px 10px; font-size: 11px; }
+  .l-status-badge { padding: 3px 10px; font-size: 0.625rem; }
+  .l-control-btn { padding: 6px 10px; font-size: 0.6875rem; }
   .l-control-btn svg { width: 13px; height: 13px; }
 }
 
@@ -645,12 +672,12 @@
   display: flex;
   flex-direction: column;
   gap: 0;
-  margin-top: 20px;
+  margin-top: 32px;
   position: relative;
 }
 .l-wf-step {
   display: flex;
-  gap: 14px;
+  gap: 16px;
   position: relative;
 }
 .l-wf-line-col {
@@ -668,7 +695,7 @@
   color: var(--color-on-primary);
   display: grid;
   place-items: center;
-  font-size: 13px;
+  font-size: 0.8125rem;
   font-weight: 800;
   flex-shrink: 0;
   position: relative;
@@ -682,17 +709,17 @@
   background: var(--color-border);
 }
 .l-wf-body {
-  padding-bottom: 14px;
+  padding-bottom: 20px;
   flex: 1;
 }
 .l-wf-body h3 {
-  font-size: 16px;
+  font-size: 1rem;
   font-weight: 700;
   margin-bottom: 6px;
   text-wrap: balance;
 }
 .l-wf-body p {
-  font-size: 14px;
+  font-size: 0.875rem;
   color: var(--color-text-muted);
   line-height: 1.5;
   max-width: 440px;
@@ -700,8 +727,8 @@
 @media (min-width: 720px) {
   .l-workflow-steps {
     flex-direction: row;
-    gap: 0;
-    margin-top: 20px;
+    gap: 32px;
+    margin-top: 40px;
   }
   .l-wf-step {
     flex: 1;
@@ -735,7 +762,7 @@
   max-width: 620px;
 }
 .l-proof-ledger {
-  margin-top: 34px;
+  margin-top: 36px;
   background: var(--color-surface);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-lg);
@@ -759,11 +786,11 @@
   border-radius: var(--radius-pill);
   background: var(--color-primary-soft);
   color: var(--color-primary-hover);
-  font-size: 12px;
+  font-size: 0.75rem;
   font-weight: 800;
 }
 .l-proof-row h3 {
-  font-size: 16px;
+  font-size: 1rem;
   font-weight: 800;
   margin-bottom: 4px;
   text-wrap: balance;
@@ -771,7 +798,7 @@
 .l-proof-row p {
   max-width: 54ch;
   color: var(--color-text-muted);
-  font-size: 14px;
+  font-size: 0.875rem;
   line-height: 1.55;
 }
 .l-proof-code {
@@ -787,10 +814,11 @@
   background: var(--color-surface-warm);
   color: var(--color-primary-hover);
   font-family: var(--font-mono);
-  font-size: 12px;
+  max-width: 100%;
+  font-size: 0.75rem;
   font-weight: 800;
   font-variant-numeric: tabular-nums;
-  white-space: nowrap;
+  overflow-wrap: anywhere;
 }
 @media (min-width: 780px) {
   .l-proof-row {
@@ -806,14 +834,14 @@
 }
 
 .l-capability-list {
-  margin: 24px 0 0;
+  margin: 32px 0 0;
   border-top: 1px solid var(--color-border);
   border-bottom: 1px solid var(--color-border);
   display: grid;
   grid-template-columns: 1fr;
 }
 .l-capability-list > div {
-  padding: 14px 0;
+  padding: 18px 0;
   min-width: 0;
 }
 .l-capability-list > div + div {
@@ -822,7 +850,7 @@
 .l-capability-list dt {
   margin: 0 0 4px;
   color: var(--color-text);
-  font-size: 13px;
+  font-size: 0.8125rem;
   font-weight: 800;
   line-height: 1.25;
 }
@@ -830,14 +858,14 @@
   margin: 0;
   max-width: 60ch;
   color: var(--color-text-muted);
-  font-size: 13px;
+  font-size: 0.8125rem;
   line-height: 1.5;
   text-wrap: pretty;
 }
 @media (min-width: 780px) {
   .l-capability-list {
     grid-template-columns: repeat(2, minmax(0, 1fr));
-    column-gap: 28px;
+    column-gap: 40px;
     row-gap: 0;
   }
   .l-capability-list > div {
@@ -857,10 +885,10 @@
 .l-trust-inner {
   max-width: var(--shell-max);
   margin: 0 auto;
-  padding: 52px 20px;
+  padding: 56px 20px;
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 24px;
   align-items: center;
   text-align: center;
 }
@@ -870,7 +898,7 @@
 }
 .l-trust p {
   max-width: 440px;
-  font-size: 15px;
+  font-size: 0.9375rem;
   color: var(--color-text-muted);
   line-height: 1.6;
 }
@@ -878,24 +906,24 @@
   width: min(100%, 640px);
   display: grid;
   grid-template-columns: 1fr;
-  gap: 10px;
+  gap: 12px;
   margin: 0;
 }
 .l-faq-item {
-  padding: 16px;
+  padding: 20px;
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
   background: var(--color-surface-warm);
   text-align: left;
 }
 .l-faq-item dt {
-  font-size: 14px;
+  font-size: 0.875rem;
   font-weight: 800;
   margin-bottom: 4px;
 }
 .l-faq-item dd {
   color: var(--color-text-muted);
-  font-size: 13px;
+  font-size: 0.8125rem;
   line-height: 1.5;
   margin: 0;
 }
@@ -905,12 +933,12 @@
   }
 }
 @media (min-width: 720px) {
-  .l-trust-inner { padding: 68px 32px; }
+  .l-trust-inner { padding: 80px 32px; }
 }
 
 /* Final CTA (layout: breathing room) */
 .l-cta {
-  padding: 80px 20px;
+  padding: 72px 20px;
   text-align: center;
 }
 .l-cta-inner {
@@ -925,7 +953,7 @@
   font-weight: 800;
 }
 .l-cta p {
-  font-size: 15px;
+  font-size: 0.9375rem;
   color: var(--color-text-muted);
   margin-bottom: 28px;
   line-height: 1.55;
@@ -937,13 +965,13 @@
   flex-wrap: wrap;
 }
 @media (min-width: 720px) {
-  .l-cta { padding: 96px 32px; }
+  .l-cta { padding: 88px 32px; }
 }
 
 /* Footer (quieter: simplified) */
 .l-footer {
   border-top: 1px solid var(--color-border);
-  padding: 24px 20px;
+  padding: 28px 20px;
 }
 .l-footer-inner {
   max-width: var(--shell-max);
@@ -959,7 +987,7 @@
   align-items: center;
   gap: 8px;
   font-weight: 700;
-  font-size: 13px;
+  font-size: 0.8125rem;
   color: var(--color-text-muted);
 }
 .l-footer-brand .brand-mark {
@@ -968,8 +996,18 @@
   border-radius: var(--radius-sm);
 }
 .l-footer-meta {
-  font-size: 11px;
+  font-size: 0.6875rem;
   color: var(--color-text-subtle);
+}
+
+.l-preview-caption {
+  grid-column: 1 / -1;
+  margin-top: 16px;
+  text-align: center;
+  font-size: 0.75rem;
+  line-height: 1.4;
+  color: var(--color-text-muted);
+  text-wrap: pretty;
 }
 
 /* Scroll reveal system.
@@ -1009,7 +1047,7 @@
     align-items: center;
   }
   .l-invoice-card {
-    max-width: 100%;
+    max-width: 520px;
   }
 }
 

@@ -1,13 +1,12 @@
 import { useEffect, useRef, useState } from 'react';
 import { getBusiness, saveBusiness, exportAllData, importAllData, type ExportData } from '../lib/db';
-import { useToast } from '../context/toast';
+import { useToast } from '../context/toastContext';
 import { useUnsavedChanges } from '../lib/useUnsavedChanges';
 import { isValidEmail } from '../lib/format';
 import { downloadBlob } from '../lib/download';
 import { getThemePreference, setThemePreference, type ThemePreference } from '../lib/theme';
 import { LoadingScreen } from '../components/LoadingScreen';
-import { Download, Upload } from 'reicon';
-import { Reicon } from '../components/Reicon';
+import { Download, Upload } from 'lucide-react';
 import { Seo } from '../components/SEO';
 import { ConfirmDialog } from '../components/ConfirmDialog';
 import type { BusinessProfile } from '../types';
@@ -58,7 +57,7 @@ export function Settings() {
       setLoading(false);
       toast('Could not load business profile.', 'danger');
     });
-  }, []);
+  }, [toast]);
 
   const handleSave = async () => {
     if (!form.name.trim()) {
@@ -227,33 +226,33 @@ export function Settings() {
       {/* Data Backup */}
       <div className="card card-pad-lg detail-card">
         <div className="section-title">Data Backup</div>
-        <p style={{ fontSize: 13, color: 'var(--color-text-muted)', marginBottom: 14 }}>
+        <p className="data-copy">
           Export your invoices, receipts, clients, and items as a JSON file. Import to restore on this or another device.
         </p>
-        <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+        <div className="data-actions">
           <button type="button" className="btn btn-secondary" onClick={handleExport}>
-            <Reicon icon={Download} size={16} />
+            <Download size={16} aria-hidden="true" />
             Export Data
           </button>
           <button type="button" className="btn btn-secondary" onClick={() => importRef.current?.click()} disabled={importing}>
-            <Reicon icon={Upload} size={16} />
+            <Upload size={16} aria-hidden="true" />
             {importing ? 'Importing…' : 'Import Data'}
           </button>
           <input
             ref={importRef}
             type="file"
             accept=".json"
-            style={{ display: 'none' }}
+            hidden
             onChange={handleImportFile}
           />
         </div>
       </div>
 
       <div className="card card-pad detail-card">
-        <p style={{ fontSize: 12, color: 'var(--color-text-muted)', lineHeight: 1.6 }}>
+        <p className="legal-copy">
           This invoice is a commercial invoice and not an official tax invoice unless stated otherwise.
           <br />
-          <span style={{ fontStyle: 'italic' }}>Invoice ini adalah dokumen tagihan komersial dan bukan Faktur Pajak resmi kecuali dinyatakan lain.</span>
+          <span className="legal-copy-id">Invoice ini adalah dokumen tagihan komersial dan bukan Faktur Pajak resmi kecuali dinyatakan lain.</span>
         </p>
       </div>
 

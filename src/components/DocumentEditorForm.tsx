@@ -1,6 +1,6 @@
-import type { Dispatch, SetStateAction } from 'react';
+import { useState, type Dispatch, type SetStateAction } from 'react';
 import { formatIDR, formatIDRInput, parseIDRInput } from '../lib/format';
-import { renderClientSuggestions, renderItemSuggestions } from './DocumentEditorSuggestions';
+import { getClientMatches, getItemMatches, renderClientSuggestions, renderItemSuggestions } from './DocumentEditorSuggestions';
 import type { Client, EditorValidationError, Invoice, InvoiceItem, Item, Receipt, Totals } from './editorTypes';
 
 export type DocumentEditorFormProps = Readonly<{
@@ -34,14 +34,15 @@ function toggleSection(setExpanded: DocumentEditorFormProps['setExpanded'], key:
 function SectionTitle(props: Readonly<{ title: string; open: boolean; onToggle: () => void }>) {
   const { title, open, onToggle } = props;
   return (
-    <button type="button" className="section-title" aria-expanded={open} onClick={onToggle} style={{ width: '100%' }}>
-      {title} {open ? '▾' : '▸'}
+    <button type="button" className="section-title section-title-fill" aria-expanded={open} onClick={onToggle}>
+      {title} <span aria-hidden="true">{open ? '▾' : '▸'}</span>
     </button>
   );
 }
 
-function BasicInfoSection(props: Readonly<Pick<DocumentEditorFormProps, 'isReceipt' | 'inv' | 'rec' | 'expanded' | 'setInv' | 'setRec' | 'setExpanded'>>) {
-  const { isReceipt, inv, rec, expanded, setInv, setRec, setExpanded } = props;
+function BasicInfoSection(props: Readonly<Pick<DocumentEditorFormProps, 'isReceipt' | 'inv' | 'rec' | 'expanded' | 'validationError' | 'setInv' | 'setRec' | 'setExpanded' | 'setValidationError'>>) {
+  const { isReceipt, inv, rec, expanded, validationError, setInv, setRec, setExpanded, setValidationError } = props;
+  const dueDateError = validationError?.fieldId === 'due-date' ? validationError.message : '';
   return (
     <>
       <SectionTitle title="Basic Info" open={expanded.basic ?? false} onToggle={() => toggleSection(setExpanded, 'basic')} />
@@ -68,7 +69,20 @@ function BasicInfoSection(props: Readonly<Pick<DocumentEditorFormProps, 'isRecei
               </div>
               <div className="field">
                 <label className="field-label" htmlFor="due-date">Due Date</label>
-                <input id="due-date" name="dueDate" type="date" className="input" value={inv.dueDate || ''} onChange={e => setInv(i => ({ ...i, dueDate: e.target.value }))} />
+                <input
+                  id="due-date"
+                  name="dueDate"
+                  type="date"
+                  className="input"
+                  value={inv.dueDate || ''}
+                  onChange={e => {
+                    setValidationError(err => err?.fieldId === 'due-date' ? null : err);
+                    setInv(i => ({ ...i, dueDate: e.target.value }));
+                  }}
+                  aria-invalid={dueDateError ? true : undefined}
+                  aria-describedby={dueDateError ? 'due-date-error' : undefined}
+                />
+                {dueDateError && <div id="due-date-error" className="field-error" role="alert">{dueDateError}</div>}
               </div>
             </div>
           )}
@@ -82,12 +96,15 @@ function ClientSection(props: Readonly<Pick<DocumentEditorFormProps, 'isReceipt'
   const { isReceipt, inv, rec, clients, expanded, validationError, setInv, setRec, setExpanded, setValidationError, selectClient } = props;
   const clientName = isReceipt ? (rec.clientSnapshot?.name || '') : (inv.clientSnapshot?.name || '');
   const ariaError = validationError?.fieldId === 'document-client-name' ? 'document-client-name-error' : undefined;
+  const [suggestionsOpen, setSuggestionsOpen] = useState(false);
+  const clientMatches = getClientMatches(clientName, clients);
+  const showSuggestions = suggestionsOpen && clientMatches.length > 0;
   return (
     <>
       <SectionTitle title="Client" open={expanded.client ?? false} onToggle={() => toggleSection(setExpanded, 'client')} />
       {expanded.client && (
         <div className="mt-8">
-          <div className="field" style={{ position: 'relative' }}>
+          <div className="field field-relative">
             <label className="field-label" htmlFor="document-client-name">Client Name</label>
             <input
               id="document-client-name"
@@ -101,17 +118,33 @@ function ClientSection(props: Readonly<Pick<DocumentEditorFormProps, 'isReceipt'
                 if (isReceipt) setRec(r => ({ ...r, clientId: undefined, clientSnapshot: { ...r.clientSnapshot, name: e.target.value } }));
                 else setInv(i => ({ ...i, clientId: undefined, clientSnapshot: { ...i.clientSnapshot, name: e.target.value } }));
               }}
-              onFocus={e => e.target.select()}
+              onFocus={e => {
+                e.target.select();
+                setSuggestionsOpen(true);
+              }}
+              onBlur={e => {
+                if (!e.currentTarget.parentElement?.contains(e.relatedTarget as Node | null)) setSuggestionsOpen(false);
+              }}
+              onKeyDown={e => {
+                if (e.key === 'Escape') setSuggestionsOpen(false);
+                if (e.key === 'ArrowDown' && showSuggestions) {
+                  e.preventDefault();
+                  document.getElementById('client-suggestions')?.querySelector<HTMLButtonElement>('[role="option"]')?.focus();
+                }
+              }}
               aria-invalid={ariaError ? true : undefined}
               aria-describedby={ariaError}
               role="combobox"
-              aria-expanded={false}
+              aria-expanded={showSuggestions}
               aria-autocomplete="list"
-              aria-controls="client-suggestions"
+              aria-controls={showSuggestions ? 'client-suggestions' : undefined}
             />
             {validationError?.fieldId === 'document-client-name' && <div id="document-client-name-error" className="field-error" role="alert">{validationError.message}</div>}
+            {showSuggestions && renderClientSuggestions(isReceipt, rec, inv, clients, selectClient, () => {
+              setSuggestionsOpen(false);
+              document.getElementById('document-client-name')?.focus();
+            })}
           </div>
-          {renderClientSuggestions(isReceipt, rec, inv, clients, selectClient)}
         </div>
       )}
     </>
@@ -120,6 +153,7 @@ function ClientSection(props: Readonly<Pick<DocumentEditorFormProps, 'isReceipt'
 
 function ItemsSection(props: Readonly<Pick<DocumentEditorFormProps, 'lineItems' | 'items' | 'expanded' | 'validationError' | 'setExpanded' | 'setValidationError' | 'pickItem' | 'updateLineItem' | 'addLineItem' | 'removeLineItem'>>) {
   const { lineItems, items, expanded, validationError, setExpanded, setValidationError, pickItem, updateLineItem, addLineItem, removeLineItem } = props;
+  const [openItemId, setOpenItemId] = useState<string | null>(null);
   return (
     <>
       <SectionTitle title="Items" open={expanded.items ?? false} onToggle={() => toggleSection(setExpanded, 'items')} />
@@ -128,30 +162,50 @@ function ItemsSection(props: Readonly<Pick<DocumentEditorFormProps, 'lineItems' 
           {lineItems.map((item, idx) => {
             const errorFieldId = `item-${item.id}-name`;
             const showError = validationError?.fieldId === errorFieldId;
+            const suggestionsId = `item-${item.id}-suggestions`;
+            const itemMatches = getItemMatches(item.name, items);
+            const showSuggestions = openItemId === item.id && itemMatches.length > 0;
             return (
-              <div key={item.id} style={{ marginBottom: 16 }}>
-                <div style={{ position: 'relative' }}>
+              <div key={item.id} className="item-editor-row">
+                <div className="field-relative">
                   <input
                     id={errorFieldId}
-                    className="input"
+                    className="input item-name-input"
                     name={`item-${idx + 1}-name`}
                     aria-label={`Item ${idx + 1} name`}
                     placeholder="Type item name or search catalog…"
                     value={item.name}
                     onChange={e => { setValidationError(err => err?.fieldId === errorFieldId ? null : err); updateLineItem(idx, 'name', e.target.value); }}
-                    onFocus={e => e.target.select()}
-                    style={{ fontWeight: 600, marginBottom: 6 }}
+                    onFocus={e => {
+                      e.target.select();
+                      setOpenItemId(item.id);
+                    }}
+                    onBlur={e => {
+                      if (!e.currentTarget.parentElement?.contains(e.relatedTarget as Node | null)) {
+                        setOpenItemId(current => current === item.id ? null : current);
+                      }
+                    }}
+                    onKeyDown={e => {
+                      if (e.key === 'Escape') setOpenItemId(null);
+                      if (e.key === 'ArrowDown' && showSuggestions) {
+                        e.preventDefault();
+                        document.getElementById(suggestionsId)?.querySelector<HTMLButtonElement>('[role="option"]')?.focus();
+                      }
+                    }}
                     aria-invalid={showError ? true : undefined}
                     aria-describedby={showError ? `${errorFieldId}-error` : undefined}
                     role="combobox"
-                    aria-expanded={false}
+                    aria-expanded={showSuggestions}
                     aria-autocomplete="list"
-                    aria-controls={`item-${item.id}-suggestions`}
+                    aria-controls={showSuggestions ? suggestionsId : undefined}
                   />
-                  {renderItemSuggestions(item, idx, items, pickItem)}
+                  {showSuggestions && renderItemSuggestions(item, idx, items, pickItem, () => {
+                    setOpenItemId(null);
+                    document.getElementById(errorFieldId)?.focus();
+                  })}
                 </div>
                 {showError && <div id={`${errorFieldId}-error`} className="field-error" role="alert">{validationError.message}</div>}
-                <div className="field-row-3" style={{ marginBottom: 4 }}>
+                <div className="field-row-3 mb-4">
                   <div>
                     <label className="field-label" htmlFor={`item-${item.id}-quantity`}>Qty</label>
                     <input id={`item-${item.id}-quantity`} name={`item-${idx + 1}-quantity`} type="number" className="input num" min="1" value={item.quantity} onChange={e => updateLineItem(idx, 'quantity', Math.max(1, Number.parseInt(e.target.value) || 1))} />
@@ -160,13 +214,13 @@ function ItemsSection(props: Readonly<Pick<DocumentEditorFormProps, 'lineItems' 
                     <label className="field-label" htmlFor={`item-${item.id}-price`}>Price</label>
                     <input id={`item-${item.id}-price`} name={`item-${idx + 1}-price`} className="input num" value={formatIDRInput(item.price)} onChange={e => updateLineItem(idx, 'price', parseIDRInput(e.target.value))} inputMode="numeric" />
                   </div>
-                  <div style={{ display: 'flex', flexDirection: 'column' }}>
+                  <div className="amount-col">
                     <span className="field-label">Amount</span>
-                    <span style={{ padding: '11px 14px', fontWeight: 700, fontVariantNumeric: 'tabular-nums', color: 'var(--color-text)', minHeight: 44, display: 'flex', alignItems: 'center' }}>{formatIDR(item.quantity * item.price)}</span>
+                    <span className="amount-value">{formatIDR(item.quantity * item.price)}</span>
                   </div>
                 </div>
                 {lineItems.length > 1 && (
-                  <button type="button" className="btn btn-ghost btn-sm" style={{ color: 'var(--color-danger)' }} onClick={() => removeLineItem(idx)}>Remove item</button>
+                  <button type="button" className="btn btn-ghost btn-sm btn-danger-text" onClick={() => removeLineItem(idx)}>Remove item</button>
                 )}
               </div>
             );
@@ -178,8 +232,9 @@ function ItemsSection(props: Readonly<Pick<DocumentEditorFormProps, 'lineItems' 
   );
 }
 
-function AdjustmentsSection(props: Readonly<Pick<DocumentEditorFormProps, 'inv' | 'totals' | 'expanded' | 'setInv' | 'setExpanded'>>) {
-  const { inv, totals, expanded, setInv, setExpanded } = props;
+function AdjustmentsSection(props: Readonly<Pick<DocumentEditorFormProps, 'inv' | 'totals' | 'expanded' | 'validationError' | 'setInv' | 'setExpanded' | 'setValidationError'>>) {
+  const { inv, totals, expanded, validationError, setInv, setExpanded, setValidationError } = props;
+  const discountError = validationError?.fieldId === 'invoice-discount' ? validationError.message : '';
   return (
     <>
       <SectionTitle title="Adjustments" open={expanded.adjustments ?? false} onToggle={() => toggleSection(setExpanded, 'adjustments')} />
@@ -188,7 +243,20 @@ function AdjustmentsSection(props: Readonly<Pick<DocumentEditorFormProps, 'inv' 
           <div className="field-row">
             <div className="field">
               <label className="field-label" htmlFor="invoice-discount">Discount (Rp)</label>
-              <input id="invoice-discount" name="discount" className="input num" value={formatIDRInput(inv.discount || 0)} onChange={e => setInv(i => ({ ...i, discount: parseIDRInput(e.target.value) }))} inputMode="numeric" />
+              <input
+                id="invoice-discount"
+                name="discount"
+                className="input num"
+                value={formatIDRInput(inv.discount || 0)}
+                onChange={e => {
+                  setValidationError(err => err?.fieldId === 'invoice-discount' ? null : err);
+                  setInv(i => ({ ...i, discount: parseIDRInput(e.target.value) }));
+                }}
+                inputMode="numeric"
+                aria-invalid={discountError ? true : undefined}
+                aria-describedby={discountError ? 'invoice-discount-error' : undefined}
+              />
+              {discountError && <div id="invoice-discount-error" className="field-error" role="alert">{discountError}</div>}
             </div>
             <div className="field">
               <label className="field-label" htmlFor="invoice-tax-rate">Tax (%)</label>
@@ -222,7 +290,7 @@ function PaymentSection(props: Readonly<Pick<DocumentEditorFormProps, 'isReceipt
             ) : (
               <>
                 <input id="payment-method" name="paymentMethod" autoComplete="off" className="input" value={inv.paymentMethod || ''} onChange={e => setInv(i => ({ ...i, paymentMethod: e.target.value }))} placeholder="Bank Transfer…" />
-                <div className="field-row" style={{ marginTop: 8 }}>
+                <div className="field-row mt-8">
                   <div className="field">
                     <label className="field-label" htmlFor="invoice-bank-name">Bank</label>
                     <input id="invoice-bank-name" name="bankName" autoComplete="off" className="input" value={inv.bankName || ''} onChange={e => setInv(i => ({ ...i, bankName: e.target.value }))} />
@@ -312,10 +380,10 @@ export function DocumentEditorForm(props: DocumentEditorFormProps) {
     inv, setInv, setRec, setExpanded, setValidationError, selectClient, pickItem, updateLineItem, addLineItem, removeLineItem, handleSave } = props;
   return (
     <div className="card card-pad-lg">
-      <BasicInfoSection isReceipt={isReceipt} inv={inv} rec={rec} expanded={expanded} setInv={setInv} setRec={setRec} setExpanded={setExpanded} />
+      <BasicInfoSection isReceipt={isReceipt} inv={inv} rec={rec} expanded={expanded} validationError={validationError} setInv={setInv} setRec={setRec} setExpanded={setExpanded} setValidationError={setValidationError} />
       <ClientSection isReceipt={isReceipt} inv={inv} rec={rec} clients={clients} expanded={expanded} validationError={validationError} setInv={setInv} setRec={setRec} setExpanded={setExpanded} setValidationError={setValidationError} selectClient={selectClient} />
       {!isReceipt && <ItemsSection lineItems={lineItems} items={items} expanded={expanded} validationError={validationError} setExpanded={setExpanded} setValidationError={setValidationError} pickItem={pickItem} updateLineItem={updateLineItem} addLineItem={addLineItem} removeLineItem={removeLineItem} />}
-      {!isReceipt && <AdjustmentsSection inv={inv} totals={totals} expanded={expanded} setInv={setInv} setExpanded={setExpanded} />}
+      {!isReceipt && <AdjustmentsSection inv={inv} totals={totals} expanded={expanded} validationError={validationError} setInv={setInv} setExpanded={setExpanded} setValidationError={setValidationError} />}
       <PaymentSection isReceipt={isReceipt} inv={inv} rec={rec} totals={totals} expanded={expanded} validationError={validationError} setInv={setInv} setRec={setRec} setExpanded={setExpanded} setValidationError={setValidationError} />
       <NotesSection isReceipt={isReceipt} inv={inv} rec={rec} expanded={expanded} setInv={setInv} setRec={setRec} setExpanded={setExpanded} />
 
