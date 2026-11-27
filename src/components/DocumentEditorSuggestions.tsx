@@ -31,6 +31,7 @@ export function renderClientSuggestions(
   inv: Partial<Invoice>,
   clients: Client[],
   onSelect: (id: string) => void,
+  onEscape: () => void,
 ) {
   const clientName = isReceipt ? (rec.clientSnapshot?.name || '') : (inv.clientSnapshot?.name || '');
   const matches = getClientMatches(clientName, clients);
@@ -41,7 +42,6 @@ export function renderClientSuggestions(
       className="suggestion-dropdown"
       role="listbox"
       aria-label="Client suggestions"
-      style={{ position: 'absolute', top: '100%', left: 0, right: 0 }}
     >
       {matches.slice(0, 5).map(c => (
         <button
@@ -51,11 +51,14 @@ export function renderClientSuggestions(
           aria-selected={false}
           className="suggestion-dropdown-item"
           onMouseDown={e => e.preventDefault()}
-          onKeyDown={moveOptionFocus}
+          onKeyDown={e => {
+            moveOptionFocus(e);
+            if (e.key === 'Escape') onEscape();
+          }}
           onClick={() => onSelect(c.id)}
         >
           <span className="avatar-small">{c.name.charAt(0).toUpperCase()}</span>
-          <span style={{ fontWeight: 600 }}>{c.name}</span>
+          <span className="suggestion-name">{c.name}</span>
           {c.email && <span className="item-meta">{c.email}</span>}
         </button>
       ))}
@@ -68,16 +71,16 @@ export function renderItemSuggestions(
   idx: number,
   items: Item[],
   onPick: (idx: number, name: string, price: number) => void,
+  onEscape: () => void,
 ) {
   const matches = getItemMatches(item.name, items);
   if (matches.length === 0) return null;
   return (
     <div
       id={`item-${item.id}-suggestions`}
-      className="suggestion-dropdown"
+      className="suggestion-dropdown suggestion-dropdown-compact"
       role="listbox"
       aria-label="Item suggestions"
-      style={{ position: 'absolute', top: '100%', left: 0, right: 0, maxHeight: 140 }}
     >
       {matches.slice(0, 4).map(c => (
         <button
@@ -87,10 +90,13 @@ export function renderItemSuggestions(
           aria-selected={false}
           className="suggestion-dropdown-item"
           onMouseDown={e => e.preventDefault()}
-          onKeyDown={moveOptionFocus}
+          onKeyDown={e => {
+            moveOptionFocus(e);
+            if (e.key === 'Escape') onEscape();
+          }}
           onClick={() => onPick(idx, c.name, c.price)}
         >
-          <span style={{ fontWeight: 600 }}>{c.name}</span>
+          <span className="suggestion-name">{c.name}</span>
           <span className="item-meta">{formatIDR(c.price)}</span>
         </button>
       ))}

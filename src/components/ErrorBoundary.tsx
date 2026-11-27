@@ -59,96 +59,35 @@ export class ErrorBoundary extends Component<Props, State> {
       if (this.props.fallback) return this.props.fallback;
 
       return (
-        <div
-          style={{
-            minHeight: '100dvh',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            padding: 24,
-            fontFamily: 'system-ui, sans-serif',
-            background: '#F7F6F0',
-            color: '#28251F',
-          }}
-        >
-          <div
-            style={{
-              maxWidth: 480,
-              textAlign: 'center',
-              background: '#fff',
-              borderRadius: 18,
-              padding: '40px 32px',
-              boxShadow: '0 4px 12px rgba(40,37,31,0.1)',
-            }}
-          >
-            <div
-              style={{
-                width: 56,
-                height: 56,
-                borderRadius: 18,
-                background: '#F1DFDA',
-                color: '#7A3F33',
-                display: 'grid',
-                placeItems: 'center',
-                margin: '0 auto 20px',
-              }}
-            >
+        <div className="crash-screen">
+          <div className="crash-card">
+            <div className="crash-icon">
               <TriangleAlert size={26} aria-hidden="true" />
             </div>
-            <h1 style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: 8 }}>Something went wrong</h1>
-            <p style={{ color: '#6F6A5F', fontSize: '0.875rem', lineHeight: 1.6, marginBottom: 24 }}>
+            <h1 className="crash-title">Something went wrong</h1>
+            <p className="crash-text">
               Invois encountered an unexpected error. Your data is likely still safe in your browser.
             </p>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+            <div className="crash-actions">
               <button
                 type="button"
                 onClick={this.handleReset}
-                style={{
-                  padding: '12px 20px',
-                  borderRadius: 12,
-                  border: 'none',
-                  background: '#596949',
-                  color: '#fff',
-                  fontWeight: 600,
-                  fontSize: '0.875rem',
-                  minHeight: 44,
-                  cursor: 'pointer',
-                }}
+                className="crash-btn crash-btn-primary"
               >
                 Try again
               </button>
               <button
                 type="button"
                 onClick={this.handleClearData}
-                style={{
-                  padding: '12px 20px',
-                  borderRadius: 12,
-                  border: '1px solid #DDD8C9',
-                  background: '#fff',
-                  color: '#7A3F33',
-                  fontWeight: 600,
-                  fontSize: '0.875rem',
-                  minHeight: 44,
-                  cursor: 'pointer',
-                }}
+                className="crash-btn crash-btn-danger"
               >
                 Clear data &amp; restart
               </button>
             </div>
             {this.state.error && (
-              <details style={{ marginTop: 20, textAlign: 'left' }}>
-                <summary style={{ cursor: 'pointer', color: '#6F6A5F', fontSize: '0.75rem' }}>Error details</summary>
-                <pre
-                  style={{
-                    marginTop: 8,
-                    padding: 12,
-                    background: '#F7F6F0',
-                    borderRadius: 8,
-                    fontSize: '0.6875rem',
-                    overflow: 'auto',
-                    color: '#7A3F33',
-                  }}
-                >
+              <details className="crash-details">
+                <summary className="crash-summary">Error details</summary>
+                <pre className="crash-error">
                   {this.state.error.message}
                 </pre>
               </details>

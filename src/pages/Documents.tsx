@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { getInvoices, getReceipts, getBusiness } from '../lib/db';
 import { seedOnce } from '../lib/seed';
@@ -124,16 +124,110 @@ export function Documents() {
   const showCreate = !hasQuery;
   const createType = filter === 'receipt' ? 'receipt' : 'invoice';
 
+  let summary = 'Loading…';
+  if (docs) summary = `${docs.length} total`;
+  else if (error) summary = 'Could not load';
+
+  let content: ReactNode;
+  if (!docs) {
+    content = error ? (
+      <div className="empty" role="alert">
+        <h3>Could not load documents</h3>
+        <p>Your saved documents are still on this device. Try again.</p>
+        <button type="button" className="btn btn-primary" onClick={() => void load()}>Try again</button>
+      </div>
+    ) : (
+      <>
+        <div className="skeleton skeleton-search" />
+        <div className="filter-row">
+          <div className="skeleton skeleton-chip skeleton-chip-sm" />
+          <div className="skeleton skeleton-chip" />
+          <div className="skeleton skeleton-chip" />
+        </div>
+        <div className="skeleton skeleton-card" />
+        <div className="skeleton skeleton-card" />
+        <div className="skeleton skeleton-card" />
+      </>
+    );
+  } else {
+    content = (
+      <>
+        <input
+          className="input search-box"
+          aria-label="Search documents"
+          placeholder="Search documents…"
+          value={search}
+          onChange={e => updateListState({ q: e.target.value })}
+          enterKeyHint="search"
+          onKeyDown={e => e.key === 'Enter' && e.currentTarget.blur()}
+        />
+
+        <div className="filter-row">
+          {(['all', 'invoice', 'receipt'] as const).map(f => (
+            <button type="button" key={f} className={`chip${filter === f ? ' active' : ''}`} aria-pressed={filter === f} onClick={() => updateListState({ type: f })}>
+              {filterLabels[f]}
+            </button>
+          ))}
+        </div>
+
+        {filtered.length === 0 ? (
+          <div className="empty">
+            <h3>{emptyTitle}</h3>
+            <p>{emptyBody}</p>
+            <div className="empty-actions">
+              {showCreate && (
+                <button type="button" className="btn btn-primary" onClick={() => nav(`/documents/new/${createType}`)}>
+                  Create {createType === 'receipt' ? 'Receipt' : 'Invoice'}
+                </button>
+              )}
+              {showCreate && filter === 'all' && (
+                <button type="button" className="btn btn-secondary" onClick={() => nav('/documents/new/receipt')}>
+                  Create Receipt
+                </button>
+              )}
+              {hasQuery && (
+                <button type="button" className="btn btn-secondary" onClick={() => updateListState({ q: '' })}>
+                  Clear search
+                </button>
+              )}
+            </div>
+          </div>
+        ) : (
+          <div className="doc-list">
+            {filtered.map(d => {
+              const status = d.kind === 'invoice' ? effectiveInvoiceStatus(d.data) : d.data.status;
+              return (
+                <Link key={d.data.id} to={`/documents/${d.kind}/${d.data.id}`} className="doc-card document-card">
+                  <div className="meta">
+                    <div className="row1">
+                      <span className="num-doc">{d.data.number}</span>
+                      <span className={`badge badge-${status}`}>{status}</span>
+                      <span className="badge badge-type">{d.kind}</span>
+                    </div>
+                    <div className="client">
+                      {d.data.clientSnapshot?.name || 'No client'} · <span className="num">{formatDateISO(d.kind === 'invoice' ? d.data.issueDate : d.data.paymentDate)}</span>
+                    </div>
+                  </div>
+                  <span className="total num">{formatIDR(d.kind === 'invoice' ? d.data.total : d.data.amountPaid)}</span>
+                </Link>
+              );
+            })}
+          </div>
+        )}
+      </>
+    );
+  }
+
   return (
     <div>
       <Seo title="Documents" description="Manage your invoices and receipts." />
       <div className="page-head">
         <div>
           <h1>Documents</h1>
-          <p className="sub">{docs ? `${docs.length} total` : error ? 'Could not load' : 'Loading…'}</p>
+          <p className="sub">{summary}</p>
         </div>
         {docs && docs.length > 0 && (
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+          <div className="toolbar-row">
             <button type="button" className="btn btn-secondary" onClick={handleDownloadAll} disabled={downloading}>
               <Download size={16} aria-hidden="true" />
               {downloading ? 'Downloading…' : 'Download All'}
@@ -146,90 +240,7 @@ export function Documents() {
         )}
       </div>
 
-      {error && !docs ? (
-        <div className="empty" role="alert">
-          <h3>Could not load documents</h3>
-          <p>Your saved documents are still on this device. Try again.</p>
-          <button type="button" className="btn btn-primary" onClick={() => void load()}>Try again</button>
-        </div>
-      ) : !docs ? (
-        <>
-          <div className="skeleton" style={{ height: 44, borderRadius: 'var(--radius-md)', marginBottom: 12 }} />
-          <div className="filter-row">
-            <div className="skeleton" style={{ width: 60, height: 44, borderRadius: 'var(--radius-pill)' }} />
-            <div className="skeleton" style={{ width: 80, height: 44, borderRadius: 'var(--radius-pill)' }} />
-            <div className="skeleton" style={{ width: 80, height: 44, borderRadius: 'var(--radius-pill)' }} />
-          </div>
-          <div className="skeleton skeleton-card" />
-          <div className="skeleton skeleton-card" />
-          <div className="skeleton skeleton-card" />
-        </>
-      ) : (
-        <>
-      <input
-        className="input search-box"
-        aria-label="Search documents"
-        placeholder="Search documents…"
-        value={search}
-        onChange={e => updateListState({ q: e.target.value })}
-        enterKeyHint="search"
-        onKeyDown={e => e.key === 'Enter' && e.currentTarget.blur()}
-      />
-
-      <div className="filter-row">
-        {(['all', 'invoice', 'receipt'] as const).map(f => (
-          <button type="button" key={f} className={`chip${filter === f ? ' active' : ''}`} aria-pressed={filter === f} onClick={() => updateListState({ type: f })}>
-            {filterLabels[f]}
-          </button>
-        ))}
-      </div>
-
-        {filtered.length === 0 ? (
-        <div className="empty">
-          <h3>{emptyTitle}</h3>
-          <p>{emptyBody}</p>
-          <div className="empty-actions">
-            {showCreate && (
-              <button type="button" className="btn btn-primary" onClick={() => nav(`/documents/new/${createType}`)}>
-                Create {createType === 'receipt' ? 'Receipt' : 'Invoice'}
-              </button>
-            )}
-            {showCreate && filter === 'all' && (
-              <button type="button" className="btn btn-secondary" onClick={() => nav('/documents/new/receipt')}>
-                Create Receipt
-              </button>
-            )}
-            {hasQuery && (
-              <button type="button" className="btn btn-secondary" onClick={() => updateListState({ q: '' })}>
-                Clear search
-              </button>
-            )}
-          </div>
-        </div>
-      ) : (
-        <div className="doc-list">
-          {filtered.map(d => {
-            const status = d.kind === 'invoice' ? effectiveInvoiceStatus(d.data) : d.data.status;
-            return (
-            <Link key={d.data.id} to={`/documents/${d.kind}/${d.data.id}`} className="doc-card document-card">
-              <div className="meta">
-                <div className="row1">
-                  <span className="num-doc">{d.data.number}</span>
-                  <span className={`badge badge-${status}`}>{status}</span>
-                  <span className="badge badge-type">{d.kind}</span>
-                </div>
-                <div className="client">
-                  {d.data.clientSnapshot?.name || 'No client'} · <span className="num">{formatDateISO(d.kind === 'invoice' ? d.data.issueDate : d.data.paymentDate)}</span>
-                </div>
-              </div>
-              <span className="total num">{formatIDR(d.kind === 'invoice' ? d.data.total : d.data.amountPaid)}</span>
-            </Link>
-            );
-          })}
-        </div>
-      )}
-        </>
-      )}
+      {content}
 
       {showSheet && (
         <dialog ref={sheetRef} className="scrim" aria-labelledby="create-document-title" onClose={() => setShowSheet(false)}>

@@ -95,10 +95,10 @@ export function Dashboard() {
     <div>
       <div className="flex between center">
         <div>
-          <div className="skeleton" style={{ height: 32, width: 200, marginBottom: 8, borderRadius: 6 }} />
-          <div className="skeleton" style={{ height: 16, width: 120, borderRadius: 4 }} />
+          <div className="skeleton skeleton-title" />
+          <div className="skeleton skeleton-subtitle" />
         </div>
-        <div className="skeleton" style={{ width: 44, height: 44, borderRadius: 12 }} />
+        <div className="skeleton skeleton-icon" />
       </div>
       <div className="stat-grid mt-24">
         <div className="skeleton skeleton-stat" />
@@ -205,7 +205,7 @@ export function Dashboard() {
           <div className="sheet">
             <div className="sheet-handle" aria-hidden="true" />
             <h2 id="app-info-title">App Info</h2>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+            <div className="stack-12">
               <div className="item-row">
                 <span className="item-name">Version</span>
                 <span className="item-meta num">{__APP_VERSION__}</span>
@@ -223,7 +223,7 @@ export function Dashboard() {
                 <span className="item-meta">MIT</span>
               </div>
             </div>
-            <div className="actions" style={{ marginTop: 18 }}>
+            <div className="actions mt-18">
               <button type="button" className="btn btn-primary" onClick={() => setInfoOpen(false)}>Close</button>
             </div>
           </div>

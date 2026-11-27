@@ -226,10 +226,10 @@ export function Settings() {
       {/* Data Backup */}
       <div className="card card-pad-lg detail-card">
         <div className="section-title">Data Backup</div>
-        <p style={{ fontSize: '0.8125rem', color: 'var(--color-text-muted)', marginBottom: 14 }}>
+        <p className="data-copy">
           Export your invoices, receipts, clients, and items as a JSON file. Import to restore on this or another device.
         </p>
-        <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+        <div className="data-actions">
           <button type="button" className="btn btn-secondary" onClick={handleExport}>
             <Download size={16} aria-hidden="true" />
             Export Data
@@ -242,17 +242,17 @@ export function Settings() {
             ref={importRef}
             type="file"
             accept=".json"
-            style={{ display: 'none' }}
+            hidden
             onChange={handleImportFile}
           />
         </div>
       </div>
 
       <div className="card card-pad detail-card">
-        <p style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)', lineHeight: 1.6 }}>
+        <p className="legal-copy">
           This invoice is a commercial invoice and not an official tax invoice unless stated otherwise.
           <br />
-          <span style={{ fontStyle: 'italic' }}>Invoice ini adalah dokumen tagihan komersial dan bukan Faktur Pajak resmi kecuali dinyatakan lain.</span>
+          <span className="legal-copy-id">Invoice ini adalah dokumen tagihan komersial dan bukan Faktur Pajak resmi kecuali dinyatakan lain.</span>
         </p>
       </div>
 

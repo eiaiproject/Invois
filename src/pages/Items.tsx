@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, type ReactNode } from 'react';
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { getItems, saveItem, getItem } from '../lib/db';
 import { seedOnce } from '../lib/seed';
@@ -47,13 +47,77 @@ export function Items() {
     setSearchParams(params, { replace: true });
   };
 
+  let summary = 'Loading…';
+  if (items) summary = `${items.length} items & services`;
+  else if (error) summary = 'Could not load';
+
+  let content: ReactNode;
+  if (!items) {
+    content = error ? (
+      <div className="empty" role="alert">
+        <h3>Could not load items</h3>
+        <p>Your saved items are still on this device. Try again.</p>
+        <button type="button" className="btn btn-primary" onClick={() => void load()}>Try again</button>
+      </div>
+    ) : (
+      <>
+        <div className="skeleton skeleton-search" />
+        <div className="skeleton-row">
+          <div className="skeleton-fill">
+            <div className="skeleton skeleton-text w-180" />
+            <div className="skeleton skeleton-text short" />
+          </div>
+          <div className="skeleton skeleton-line" />
+        </div>
+        <div className="skeleton-row">
+          <div className="skeleton-fill">
+            <div className="skeleton skeleton-text w-140" />
+            <div className="skeleton skeleton-text short" />
+          </div>
+          <div className="skeleton skeleton-line" />
+        </div>
+        <div className="skeleton-row">
+          <div className="skeleton-fill">
+            <div className="skeleton skeleton-text w-160" />
+            <div className="skeleton skeleton-text short" />
+          </div>
+          <div className="skeleton skeleton-line" />
+        </div>
+      </>
+    );
+  } else if (filtered.length === 0) {
+    content = (
+      <div className="empty">
+        <h3>{hasQuery ? 'No matches' : 'No items yet'}</h3>
+        <p>{hasQuery ? 'Try a different search.' : 'Add your services or products to quickly add them to invoices.'}</p>
+        {!hasQuery && <Link to="/items/new" className="btn btn-primary">Add Item</Link>}
+      </div>
+    );
+  } else {
+    content = (
+      <div className="doc-list">
+        {filtered.map(item => (
+          <Link key={item.id} to={`/items/${item.id}`} className="doc-card">
+            <div className="meta">
+              <div className="row1">
+                <span className="card-title">{item.name}</span>
+              </div>
+              <div className="client">{item.description || item.unit || '-'}</div>
+            </div>
+            <span className="total num">{formatIDR(item.price)}</span>
+          </Link>
+        ))}
+      </div>
+    );
+  }
+
   return (
     <div>
       <Seo title="Items & Services" description="Manage your items and services." />
       <div className="page-head">
         <div>
           <h1>Items</h1>
-          <p className="sub">{items ? `${items.length} items & services` : error ? 'Could not load' : 'Loading…'}</p>
+          <p className="sub">{summary}</p>
         </div>
         {items && items.length > 0 && (
           <Link to="/items/new" className="btn btn-primary">
@@ -73,62 +137,7 @@ export function Items() {
         onKeyDown={e => e.key === 'Enter' && e.currentTarget.blur()}
       />
 
-      {error && !items ? (
-        <div className="empty" role="alert">
-          <h3>Could not load items</h3>
-          <p>Your saved items are still on this device. Try again.</p>
-          <button type="button" className="btn btn-primary" onClick={() => void load()}>Try again</button>
-        </div>
-      ) : !items ? (
-        <>
-          <div className="skeleton" style={{ height: 44, borderRadius: 'var(--radius-md)', marginBottom: 12 }} />
-          <div className="skeleton-row">
-            <div style={{ flex: 1 }}>
-              <div className="skeleton skeleton-text" style={{ width: 180 }} />
-              <div className="skeleton skeleton-text short" />
-            </div>
-            <div className="skeleton" style={{ width: 80, height: 20, borderRadius: 4 }} />
-          </div>
-          <div className="skeleton-row">
-            <div style={{ flex: 1 }}>
-              <div className="skeleton skeleton-text" style={{ width: 140 }} />
-              <div className="skeleton skeleton-text short" />
-            </div>
-            <div className="skeleton" style={{ width: 80, height: 20, borderRadius: 4 }} />
-          </div>
-          <div className="skeleton-row">
-            <div style={{ flex: 1 }}>
-              <div className="skeleton skeleton-text" style={{ width: 160 }} />
-              <div className="skeleton skeleton-text short" />
-            </div>
-            <div className="skeleton" style={{ width: 80, height: 20, borderRadius: 4 }} />
-          </div>
-        </>
-      ) : (
-        <>
-      {filtered.length === 0 ? (
-        <div className="empty">
-          <h3>{hasQuery ? 'No matches' : 'No items yet'}</h3>
-          <p>{hasQuery ? 'Try a different search.' : 'Add your services or products to quickly add them to invoices.'}</p>
-          {!hasQuery && <Link to="/items/new" className="btn btn-primary">Add Item</Link>}
-        </div>
-      ) : (
-        <div className="doc-list">
-          {filtered.map(item => (
-            <Link key={item.id} to={`/items/${item.id}`} className="doc-card">
-              <div className="meta">
-                <div className="row1">
-                  <span className="card-title">{item.name}</span>
-                </div>
-                <div className="client">{item.description || item.unit || '-'}</div>
-              </div>
-              <span className="total num">{formatIDR(item.price)}</span>
-            </Link>
-          ))}
-        </div>
-      )}
-        </>
-      )}
+      {content}
 
     </div>
   );

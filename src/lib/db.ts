@@ -265,7 +265,7 @@ export function counterUpdatesForDocuments(
     const prefix = type === 'invoice' ? 'INV' : 'RCPT';
     for (const number of numbers) {
       const match = DOCUMENT_NUMBER_PATTERN.exec(number);
-      if (!match || match[1] !== prefix) continue;
+      if (match?.[1] !== prefix) continue;
       const month = Number.parseInt(match[3]!, 10);
       const sequence = Number.parseInt(match[4]!, 10);
       if (month < 1 || month > 12 || !Number.isSafeInteger(sequence) || sequence < 1) continue;
@@ -543,10 +543,11 @@ export async function importAllData(data: ExportData): Promise<{ imported: boole
   ]);
 
   const counterStore = tx.objectStore('counters');
-  for (const [key, sequence] of Object.entries(counterUpdatesForDocuments(valid.invoices, valid.receipts))) {
-    const current = (await counterStore.get(key)) ?? 0;
-    if (sequence > current) await counterStore.put(sequence, key);
-  }
+  const counterUpdates = Object.entries(counterUpdatesForDocuments(valid.invoices, valid.receipts));
+  const currentCounters = await Promise.all(counterUpdates.map(([key]) => counterStore.get(key)));
+  counterUpdates.forEach(([key, sequence], index) => {
+    if (sequence > (currentCounters[index] ?? 0)) void counterStore.put(sequence, key);
+  });
   await tx.done;
 
   return { imported: true, counts };

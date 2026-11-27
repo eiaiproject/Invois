@@ -34,7 +34,7 @@ function toggleSection(setExpanded: DocumentEditorFormProps['setExpanded'], key:
 function SectionTitle(props: Readonly<{ title: string; open: boolean; onToggle: () => void }>) {
   const { title, open, onToggle } = props;
   return (
-    <button type="button" className="section-title" aria-expanded={open} onClick={onToggle} style={{ width: '100%' }}>
+    <button type="button" className="section-title section-title-fill" aria-expanded={open} onClick={onToggle}>
       {title} <span aria-hidden="true">{open ? '▾' : '▸'}</span>
     </button>
   );
@@ -104,20 +104,7 @@ function ClientSection(props: Readonly<Pick<DocumentEditorFormProps, 'isReceipt'
       <SectionTitle title="Client" open={expanded.client ?? false} onToggle={() => toggleSection(setExpanded, 'client')} />
       {expanded.client && (
         <div className="mt-8">
-          <div
-            className="field"
-            style={{ position: 'relative' }}
-            onFocus={() => setSuggestionsOpen(true)}
-            onBlur={e => {
-              if (!e.currentTarget.contains(e.relatedTarget as Node | null)) setSuggestionsOpen(false);
-            }}
-            onKeyDown={e => {
-              if (e.key === 'Escape') {
-                setSuggestionsOpen(false);
-                document.getElementById('document-client-name')?.focus();
-              }
-            }}
-          >
+          <div className="field field-relative">
             <label className="field-label" htmlFor="document-client-name">Client Name</label>
             <input
               id="document-client-name"
@@ -131,8 +118,15 @@ function ClientSection(props: Readonly<Pick<DocumentEditorFormProps, 'isReceipt'
                 if (isReceipt) setRec(r => ({ ...r, clientId: undefined, clientSnapshot: { ...r.clientSnapshot, name: e.target.value } }));
                 else setInv(i => ({ ...i, clientId: undefined, clientSnapshot: { ...i.clientSnapshot, name: e.target.value } }));
               }}
-              onFocus={e => e.target.select()}
+              onFocus={e => {
+                e.target.select();
+                setSuggestionsOpen(true);
+              }}
+              onBlur={e => {
+                if (!e.currentTarget.parentElement?.contains(e.relatedTarget as Node | null)) setSuggestionsOpen(false);
+              }}
               onKeyDown={e => {
+                if (e.key === 'Escape') setSuggestionsOpen(false);
                 if (e.key === 'ArrowDown' && showSuggestions) {
                   e.preventDefault();
                   document.getElementById('client-suggestions')?.querySelector<HTMLButtonElement>('[role="option"]')?.focus();
@@ -146,7 +140,10 @@ function ClientSection(props: Readonly<Pick<DocumentEditorFormProps, 'isReceipt'
               aria-controls={showSuggestions ? 'client-suggestions' : undefined}
             />
             {validationError?.fieldId === 'document-client-name' && <div id="document-client-name-error" className="field-error" role="alert">{validationError.message}</div>}
-            {showSuggestions && renderClientSuggestions(isReceipt, rec, inv, clients, selectClient)}
+            {showSuggestions && renderClientSuggestions(isReceipt, rec, inv, clients, selectClient, () => {
+              setSuggestionsOpen(false);
+              document.getElementById('document-client-name')?.focus();
+            })}
           </div>
         </div>
       )}
@@ -169,38 +166,32 @@ function ItemsSection(props: Readonly<Pick<DocumentEditorFormProps, 'lineItems' 
             const itemMatches = getItemMatches(item.name, items);
             const showSuggestions = openItemId === item.id && itemMatches.length > 0;
             return (
-              <div key={item.id} style={{ marginBottom: 16 }}>
-                <div
-                  style={{ position: 'relative' }}
-                  onFocus={() => setOpenItemId(item.id)}
-                  onBlur={e => {
-                    if (!e.currentTarget.contains(e.relatedTarget as Node | null)) {
-                      setOpenItemId(current => current === item.id ? null : current);
-                    }
-                  }}
-                  onKeyDown={e => {
-                    if (e.key === 'Escape') {
-                      setOpenItemId(null);
-                      document.getElementById(errorFieldId)?.focus();
-                    }
-                  }}
-                >
+              <div key={item.id} className="item-editor-row">
+                <div className="field-relative">
                   <input
                     id={errorFieldId}
-                    className="input"
+                    className="input item-name-input"
                     name={`item-${idx + 1}-name`}
                     aria-label={`Item ${idx + 1} name`}
                     placeholder="Type item name or search catalog…"
                     value={item.name}
                     onChange={e => { setValidationError(err => err?.fieldId === errorFieldId ? null : err); updateLineItem(idx, 'name', e.target.value); }}
-                    onFocus={e => e.target.select()}
+                    onFocus={e => {
+                      e.target.select();
+                      setOpenItemId(item.id);
+                    }}
+                    onBlur={e => {
+                      if (!e.currentTarget.parentElement?.contains(e.relatedTarget as Node | null)) {
+                        setOpenItemId(current => current === item.id ? null : current);
+                      }
+                    }}
                     onKeyDown={e => {
+                      if (e.key === 'Escape') setOpenItemId(null);
                       if (e.key === 'ArrowDown' && showSuggestions) {
                         e.preventDefault();
                         document.getElementById(suggestionsId)?.querySelector<HTMLButtonElement>('[role="option"]')?.focus();
                       }
                     }}
-                    style={{ fontWeight: 600, marginBottom: 6 }}
                     aria-invalid={showError ? true : undefined}
                     aria-describedby={showError ? `${errorFieldId}-error` : undefined}
                     role="combobox"
@@ -208,10 +199,13 @@ function ItemsSection(props: Readonly<Pick<DocumentEditorFormProps, 'lineItems' 
                     aria-autocomplete="list"
                     aria-controls={showSuggestions ? suggestionsId : undefined}
                   />
-                  {showSuggestions && renderItemSuggestions(item, idx, items, pickItem)}
+                  {showSuggestions && renderItemSuggestions(item, idx, items, pickItem, () => {
+                    setOpenItemId(null);
+                    document.getElementById(errorFieldId)?.focus();
+                  })}
                 </div>
                 {showError && <div id={`${errorFieldId}-error`} className="field-error" role="alert">{validationError.message}</div>}
-                <div className="field-row-3" style={{ marginBottom: 4 }}>
+                <div className="field-row-3 mb-4">
                   <div>
                     <label className="field-label" htmlFor={`item-${item.id}-quantity`}>Qty</label>
                     <input id={`item-${item.id}-quantity`} name={`item-${idx + 1}-quantity`} type="number" className="input num" min="1" value={item.quantity} onChange={e => updateLineItem(idx, 'quantity', Math.max(1, Number.parseInt(e.target.value) || 1))} />
@@ -220,13 +214,13 @@ function ItemsSection(props: Readonly<Pick<DocumentEditorFormProps, 'lineItems' 
                     <label className="field-label" htmlFor={`item-${item.id}-price`}>Price</label>
                     <input id={`item-${item.id}-price`} name={`item-${idx + 1}-price`} className="input num" value={formatIDRInput(item.price)} onChange={e => updateLineItem(idx, 'price', parseIDRInput(e.target.value))} inputMode="numeric" />
                   </div>
-                  <div style={{ display: 'flex', flexDirection: 'column' }}>
+                  <div className="amount-col">
                     <span className="field-label">Amount</span>
-                    <span style={{ padding: '11px 14px', fontWeight: 700, fontVariantNumeric: 'tabular-nums', color: 'var(--color-text)', minHeight: 44, display: 'flex', alignItems: 'center' }}>{formatIDR(item.quantity * item.price)}</span>
+                    <span className="amount-value">{formatIDR(item.quantity * item.price)}</span>
                   </div>
                 </div>
                 {lineItems.length > 1 && (
-                  <button type="button" className="btn btn-ghost btn-sm" style={{ color: 'var(--color-danger)' }} onClick={() => removeLineItem(idx)}>Remove item</button>
+                  <button type="button" className="btn btn-ghost btn-sm btn-danger-text" onClick={() => removeLineItem(idx)}>Remove item</button>
                 )}
               </div>
             );
@@ -296,7 +290,7 @@ function PaymentSection(props: Readonly<Pick<DocumentEditorFormProps, 'isReceipt
             ) : (
               <>
                 <input id="payment-method" name="paymentMethod" autoComplete="off" className="input" value={inv.paymentMethod || ''} onChange={e => setInv(i => ({ ...i, paymentMethod: e.target.value }))} placeholder="Bank Transfer…" />
-                <div className="field-row" style={{ marginTop: 8 }}>
+                <div className="field-row mt-8">
                   <div className="field">
                     <label className="field-label" htmlFor="invoice-bank-name">Bank</label>
                     <input id="invoice-bank-name" name="bankName" autoComplete="off" className="input" value={inv.bankName || ''} onChange={e => setInv(i => ({ ...i, bankName: e.target.value }))} />

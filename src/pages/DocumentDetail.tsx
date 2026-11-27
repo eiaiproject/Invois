@@ -142,13 +142,15 @@ export function DocumentDetail() {
   };
 
   const askCancel = () => {
+    let message = 'The invoice stays in your records as cancelled and is excluded from outstanding totals.';
+    if (isReceipt) {
+      message = 'The receipt stays in your records as cancelled. If it was the last proof of payment, the linked invoice is marked as unpaid.';
+    } else if (linkedReceipt) {
+      message = 'The invoice stays in your records as cancelled. Its linked receipt remains paid; cancel the receipt separately if the payment was reversed.';
+    }
     setConfirmState({
       title: `Mark ${doc.number} as cancelled?`,
-      message: isReceipt
-        ? 'The receipt stays in your records as cancelled. If it was the last proof of payment, the linked invoice is marked as unpaid.'
-        : linkedReceipt
-          ? 'The invoice stays in your records as cancelled. Its linked receipt remains paid; cancel the receipt separately if the payment was reversed.'
-          : 'The invoice stays in your records as cancelled and is excluded from outstanding totals.',
+      message,
       confirmLabel: 'Mark as cancelled',
       run: doCancel,
     });
@@ -314,13 +316,13 @@ export function DocumentDetail() {
           {(doc as Invoice).notes && (
             <div>
               <div className="section-title">Notes</div>
-              <div style={{ whiteSpace: 'pre-wrap' }}>{(doc as Invoice).notes}</div>
+              <div className="pre-wrap">{(doc as Invoice).notes}</div>
             </div>
           )}
           {!isReceipt && (doc as Invoice).terms && (
             <div className="mt-12">
               <div className="section-title">Terms</div>
-              <div style={{ whiteSpace: 'pre-wrap' }}>{(doc as Invoice).terms}</div>
+              <div className="pre-wrap">{(doc as Invoice).terms}</div>
             </div>
           )}
         </div>
@@ -337,13 +339,13 @@ export function DocumentDetail() {
           Copy as plain text
         </button>
         {!isReceipt && (doc as Invoice).status === 'draft' && (
-          <button type="button" className="btn btn-primary btn-block" style={{ background: 'var(--color-accent)' }} onClick={handleMarkSent}>
+          <button type="button" className="btn btn-primary btn-accent btn-block" onClick={handleMarkSent}>
             <Send size={16} aria-hidden="true" />
             Mark as Sent
           </button>
         )}
         {!isReceipt && (doc as Invoice).status !== 'paid' && (doc as Invoice).status !== 'cancelled' && (
-          <button type="button" className="btn btn-primary btn-block" style={{ background: 'var(--color-success)' }} onClick={handleMarkPaid}>
+          <button type="button" className="btn btn-primary btn-success btn-block" onClick={handleMarkPaid}>
             <Check size={16} aria-hidden="true" />
             Mark as Paid
           </button>

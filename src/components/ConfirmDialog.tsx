@@ -46,8 +46,8 @@ export function ConfirmDialog({
       <div className="sheet">
         <div className="sheet-handle" aria-hidden="true" />
         <h2 id="confirm-dialog-title">{title}</h2>
-        <p id="confirm-dialog-message" style={{ marginTop: 8, color: 'var(--color-text-muted)', fontSize: '0.875rem', lineHeight: 1.6 }}>{message}</p>
-        <div className="actions" style={{ marginTop: 18 }}>
+        <p id="confirm-dialog-message" className="confirm-message">{message}</p>
+        <div className="actions confirm-actions">
           <button
             type="button"
             className={`btn ${tone === 'danger' ? 'btn-danger' : 'btn-primary'} btn-block`}

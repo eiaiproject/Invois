@@ -129,9 +129,8 @@ test('critical screens reflow at 320px with 200% text', async ({ page }) => {
   }
 });
 
-test('bottom navigation scrolls to every item with 200% text', async ({ page, viewport }) => {
+test('bottom navigation scrolls to every item with 200% text', async ({ page }) => {
   test.setTimeout(60_000);
-  test.skip((viewport?.width ?? 1280) >= 1024, 'bottom navigation is mobile-only');
 
   await startWithProfile(page, '/dashboard');
   await page.setViewportSize({ width: 320, height: 900 });

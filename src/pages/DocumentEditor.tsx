@@ -14,24 +14,24 @@ import type { EditorValidationError } from '../components/editorTypes';
 function renderInvoicePreview(i: Invoice, biz: BusinessProfile | undefined) {
   return (
     <div className="pdf-page">
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 24 }}>
+      <div className="pdf-head">
         <div>
-          {biz?.name && <div style={{ fontWeight: 700, fontSize: '0.875rem' }}>{biz.name}</div>}
-          {biz?.address && <div className="meta" style={{ fontSize: '0.625rem', marginTop: 2 }}>{biz.address}</div>}
-          {biz?.email && <div className="meta" style={{ fontSize: '0.625rem' }}>{biz.email}</div>}
-          {biz?.phone && <div className="meta" style={{ fontSize: '0.625rem' }}>{biz.phone}</div>}
+          {biz?.name && <div className="pdf-biz-name">{biz.name}</div>}
+          {biz?.address && <div className="meta pdf-meta pdf-meta-first">{biz.address}</div>}
+          {biz?.email && <div className="meta pdf-meta">{biz.email}</div>}
+          {biz?.phone && <div className="meta pdf-meta">{biz.phone}</div>}
         </div>
-        <div style={{ textAlign: 'right' }}>
-          <div style={{ fontWeight: 800, fontSize: '1.25rem', color: 'var(--color-primary)' }}>INVOICE</div>
-          <div style={{ fontSize: '0.625rem', color: 'var(--color-text-muted)', marginTop: 4 }}>No: <span className="num">{i.number}</span></div>
-          <div style={{ fontSize: '0.625rem', color: 'var(--color-text-muted)' }}>Date: <span className="num">{formatDateISO(i.issueDate)}</span></div>
-          {i.dueDate && <div style={{ fontSize: '0.625rem', color: 'var(--color-text-muted)' }}>Due: <span className="num">{formatDateISO(i.dueDate)}</span></div>}
+        <div className="pdf-head-right">
+          <div className="pdf-doc-title">INVOICE</div>
+          <div className="pdf-meta-line pdf-meta-line-first">No: <span className="num">{i.number}</span></div>
+          <div className="pdf-meta-line">Date: <span className="num">{formatDateISO(i.issueDate)}</span></div>
+          {i.dueDate && <div className="pdf-meta-line">Due: <span className="num">{formatDateISO(i.dueDate)}</span></div>}
         </div>
       </div>
-      <div style={{ fontSize: '0.625rem', color: 'var(--color-text-muted)', textTransform: 'uppercase', fontWeight: 700, marginBottom: 4 }}>Bill To</div>
-      <div style={{ fontWeight: 600, fontSize: '0.75rem' }}>{i.clientSnapshot.name || '-'}</div>
-      {i.clientSnapshot.address && <div style={{ fontSize: '0.625rem' }}>{i.clientSnapshot.address}</div>}
-      <div className="pdf-table-wrap" role="region" aria-labelledby="invoice-items-caption" tabIndex={0}>
+      <div className="pdf-block-label pdf-block-label-tight">Bill To</div>
+      <div className="pdf-client-name">{i.clientSnapshot.name || '-'}</div>
+      {i.clientSnapshot.address && <div className="pdf-client-address">{i.clientSnapshot.address}</div>}
+      <section className="pdf-table-wrap" aria-labelledby="invoice-items-caption">
         <table>
           <caption id="invoice-items-caption" className="sr-only">Invoice line items</caption>
           <thead><tr><th scope="col">Description</th><th scope="col" className="num">Qty</th><th scope="col" className="num">Price</th><th scope="col" className="num">Amount</th></tr></thead>
@@ -46,11 +46,11 @@ function renderInvoicePreview(i: Invoice, biz: BusinessProfile | undefined) {
             ))}
           </tbody>
         </table>
-      </div>
-      <div style={{ marginTop: 12, textAlign: 'right' }}>
-        <div style={{ fontSize: '0.6875rem', color: 'var(--color-text-muted)' }}>Subtotal: <b className="num">{formatIDR(i.subtotal)}</b></div>
-        {i.discount > 0 && <div style={{ fontSize: '0.6875rem', color: 'var(--color-text-muted)' }}>Discount: <b className="num">-{formatIDR(i.discount)}</b></div>}
-        <div style={{ fontSize: '0.6875rem', color: 'var(--color-text-muted)' }}>Tax (<span className="num">{i.taxRate}</span>%): <b className="num">{formatIDR(i.taxAmount)}</b></div>
+      </section>
+      <div className="pdf-totals">
+        <div className="pdf-totals-line">Subtotal: <b className="num">{formatIDR(i.subtotal)}</b></div>
+        {i.discount > 0 && <div className="pdf-totals-line">Discount: <b className="num">-{formatIDR(i.discount)}</b></div>}
+        <div className="pdf-totals-line">Tax (<span className="num">{i.taxRate}</span>%): <b className="num">{formatIDR(i.taxAmount)}</b></div>
         <div className="grand-total"><span>Total</span><span className="num">{formatIDR(i.total)}</span></div>
       </div>
     </div>
@@ -60,24 +60,24 @@ function renderInvoicePreview(i: Invoice, biz: BusinessProfile | undefined) {
 function renderReceiptPreview(r: Receipt) {
   return (
     <div className="pdf-page">
-      <div style={{ textAlign: 'right', fontWeight: 800, fontSize: '1.25rem', color: 'var(--color-primary)' }}>RECEIPT</div>
-      <div style={{ marginTop: 12, fontSize: '0.875rem', fontWeight: 600 }}>Payment received</div>
-      <div className="badge-paid-pill" style={{ margin: '10px 0', display: 'inline-block' }}>PAID</div>
-      <div style={{ fontSize: '0.625rem', color: 'var(--color-text-muted)', marginTop: 8 }}>
+      <div className="pdf-doc-title pdf-doc-title-right">RECEIPT</div>
+      <div className="pdf-payment-title">Payment received</div>
+      <div className="badge-paid-pill pdf-paid-pill">PAID</div>
+      <div className="pdf-receipt-meta">
         No: <span className="num">{r.number}</span><br />
         {r.invoiceNumber && <>Invoice Ref: <span className="num">{r.invoiceNumber}</span><br /></>}
         Date: <span className="num">{formatDateISO(r.paymentDate)}</span><br />
         {r.paymentMethod && <>Method: {r.paymentMethod}</>}
       </div>
-      <div style={{ marginTop: 16 }}>
-        <div style={{ fontSize: '0.625rem', color: 'var(--color-text-muted)', textTransform: 'uppercase', fontWeight: 700 }}>Received From</div>
-        <div style={{ fontWeight: 600, fontSize: '0.75rem' }}>{r.clientSnapshot.name || '-'}</div>
+      <div className="pdf-receipt-section">
+        <div className="pdf-block-label">Received From</div>
+        <div className="pdf-client-name">{r.clientSnapshot.name || '-'}</div>
       </div>
-      <div style={{ marginTop: 16 }}>
-        <div style={{ fontSize: '0.625rem', color: 'var(--color-text-muted)', textTransform: 'uppercase', fontWeight: 700 }}>Amount Paid</div>
-        <div className="num" style={{ fontWeight: 800, fontSize: '1.25rem', color: 'var(--color-primary)', marginTop: 4 }}>{formatIDR(r.amountPaid)}</div>
+      <div className="pdf-receipt-section">
+        <div className="pdf-block-label">Amount Paid</div>
+        <div className="num pdf-amount">{formatIDR(r.amountPaid)}</div>
       </div>
-      {r.notes && <div style={{ marginTop: 12, fontSize: '0.625rem', color: 'var(--color-text-muted)' }}>{r.notes}</div>}
+      {r.notes && <div className="pdf-note">{r.notes}</div>}
     </div>
   );
 }

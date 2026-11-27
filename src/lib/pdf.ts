@@ -409,13 +409,19 @@ export async function downloadAllAsZip(
     }
   };
 
-  for (const inv of invoices) {
-    await addPDF(generateInvoicePDF(inv, biz), `${inv.number}.pdf`);
-  }
+  const jobs = [
+    ...invoices.map(inv => () => ({ pdf: generateInvoicePDF(inv, biz), name: `${inv.number}.pdf` })),
+    ...receipts.map(rec => () => ({ pdf: generateReceiptPDF(rec, biz), name: `${rec.number}.pdf` })),
+  ];
 
-  for (const rec of receipts) {
-    await addPDF(generateReceiptPDF(rec, biz), `${rec.number}.pdf`);
-  }
+  const addAt = async (index: number): Promise<void> => {
+    const job = jobs[index];
+    if (!job) return;
+    const { pdf, name } = job();
+    await addPDF(pdf, name);
+    await addAt(index + 1);
+  };
+  await addAt(0);
 
   const zipBlob = await folder.generateAsync({ type: 'blob' });
   const date = new Date().toISOString().slice(0, 10);

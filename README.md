@@ -308,6 +308,7 @@ CI runs on every push and pull request to `main`: typecheck, lint, unit tests wi
 ├── public/                       # PWA icons, favicon, OG image, sitemap, robots
 │   ├── _headers                  # CSP, HSTS, COOP/CORP, and other security headers
 │   ├── _redirects                # SPA fallback
+│   ├── theme-init.js             # Applies the saved theme before first paint
 │   └── fonts/                    # Self-hosted Plus Jakarta Sans (OFL)
 ├── scripts/
 │   └── generate-og-image.mjs     # Rebuilds public/og-image.png from the SVG
@@ -378,7 +379,7 @@ CI runs on every push and pull request to `main`: typecheck, lint, unit tests wi
 - **No third-party requests.** Fonts and assets are served from the app origin. The app does not call Google Fonts, analytics, or tracking services.
 - **Per browser profile.** Data belongs to the origin and browser profile. It does not follow the user to another browser or device.
 - **Clearing site data deletes everything.** Export a JSON backup first from Settings.
-- **Strict headers.** `public/_headers` sets a Content Security Policy plus HSTS, COOP/CORP, Referrer-Policy, Permissions-Policy, X-Frame-Options, and nosniff. The CSP allows inline script and inline styles because the theme bootstrap and React inline styles require them, but it allows no third-party script, style, font, or connect origins.
+- **Strict headers.** `public/_headers` sets a Content Security Policy plus HSTS, COOP/CORP, Referrer-Policy, Permissions-Policy, X-Frame-Options, and nosniff. The CSP blocks inline styles and inline scripts: the theme bootstrap is a static file, all styling lives in stylesheets, and the JSON-LD block is allowlisted by hash. No third-party script, style, font, or connect origins are allowed.
 - **Schema version** is `3`. Older databases migrate automatically on open. Importing a backup from a newer schema is rejected instead of partly applied.
 
 ---

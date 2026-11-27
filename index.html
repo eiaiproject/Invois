@@ -2,10 +2,6 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta
-      http-equiv="Content-Security-Policy"
-      content="default-src 'self'; base-uri 'self'; object-src 'none'; img-src 'self' data: blob:; font-src 'self'; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline'; connect-src 'self' ws: wss:; manifest-src 'self'; worker-src 'self' blob:; form-action 'self'"
-    />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
     <link rel="canonical" href="https://invois.pages.dev/" />
@@ -14,22 +10,7 @@
     <meta name="color-scheme" content="light dark" />
     <meta name="theme-color" content="#596949" media="(prefers-color-scheme: light)" />
     <meta name="theme-color" content="#1A1B16" media="(prefers-color-scheme: dark)" />
-    <script>
-      // Apply the saved theme before first paint to avoid a color flash.
-      (function () {
-        var pref = 'system';
-        try {
-          pref = localStorage.getItem('invois-theme') || 'system';
-        } catch {
-          // Storage is blocked in some private modes; the system theme still works.
-        }
-        if (pref !== 'light' && pref !== 'dark') pref = 'system';
-        var dark = pref === 'dark' || (pref === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
-        document.documentElement.dataset.theme = dark ? 'dark' : 'light';
-        var meta = document.querySelector('meta[name="color-scheme"]');
-        if (meta) meta.content = pref === 'system' ? 'light dark' : pref;
-      })();
-    </script>
+    <script src="/theme-init.js"></script>
     <meta name="application-name" content="Invois" />
     <meta name="author" content="Anggie Irawan" />
     <meta name="description" content="Create professional invoices and receipts offline, save business data on your device, and export clean PDFs from desktop or mobile." />
