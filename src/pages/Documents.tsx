@@ -11,6 +11,10 @@ import { Seo } from '../components/SEO';
 
 type Doc = { kind: 'invoice'; data: Invoice } | { kind: 'receipt'; data: Receipt };
 
+function documentTypeLabel(type: 'invoice' | 'receipt') {
+  return type === 'receipt' ? 'Receipt' : 'Invoice';
+}
+
 export function Documents() {
   const [docs, setDocs] = useState<Doc[] | null>(null);
   const [error, setError] = useState(false);
@@ -177,7 +181,7 @@ export function Documents() {
             <div className="empty-actions">
               {showCreate && (
                 <button type="button" className="btn btn-primary" onClick={() => nav(`/documents/new/${createType}`)}>
-                  Create {createType === 'receipt' ? 'Receipt' : 'Invoice'}
+                  Create {documentTypeLabel(createType)}
                 </button>
               )}
               {showCreate && filter === 'all' && (

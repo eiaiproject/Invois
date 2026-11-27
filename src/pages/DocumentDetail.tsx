@@ -253,7 +253,7 @@ export function DocumentDetail() {
         <div>
           <h1 className="num">{doc.number}</h1>
           <p className="sub">
-            {isReceipt ? 'Receipt' : 'Invoice'} · <span className="num">{formatDateISO(isReceipt ? (doc as Receipt).paymentDate : (doc as Invoice).issueDate)}</span>
+            {docType} · <span className="num">{formatDateISO(isReceipt ? (doc as Receipt).paymentDate : (doc as Invoice).issueDate)}</span>
           </p>
         </div>
         <span className={`badge badge-${displayStatus}`}>{displayStatus}</span>
@@ -368,12 +368,12 @@ export function DocumentDetail() {
         </button>
         <button type="button" className="btn btn-secondary btn-block" onClick={handleNewDocument}>
           <Plus size={16} aria-hidden="true" />
-          {isReceipt ? 'New Receipt' : 'New Invoice'}
+          New {docType}
         </button>
         {doc.status !== 'cancelled' && (
           <button type="button" className="btn btn-secondary btn-block" onClick={askCancel}>
             <X size={16} aria-hidden="true" />
-            {isReceipt ? 'Cancel Receipt' : 'Cancel Invoice'}
+            Cancel {docType}
           </button>
         )}
         <button type="button" className="btn btn-danger btn-block" onClick={askDelete}>
