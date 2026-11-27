@@ -164,11 +164,7 @@ export interface ReceiptChangeResult {
   revertedInvoice?: Invoice;
 }
 
-/**
- * Deletes a receipt and, when it was the last active proof of payment, puts the
- * linked invoice back to `sent` so it no longer reads as paid.
- */
-export async function deleteReceipt(id: string): Promise<ReceiptChangeResult | undefined> {
+async function beginReceiptChange(id: string) {
   const db = await getDB();
   const tx = db.transaction(['receipts', 'invoices'], 'readwrite');
   const receiptStore = tx.objectStore('receipts');
@@ -181,8 +177,17 @@ export async function deleteReceipt(id: string): Promise<ReceiptChangeResult | u
   const remainingActive = (await receiptStore.getAll()).filter(
     r => r.id !== id && r.invoiceId === receipt.invoiceId && r.status !== 'cancelled'
   );
+  return { tx, receiptStore, receipt, remainingActive, now: nowISO() };
+}
 
-  const now = nowISO();
+/**
+ * Deletes a receipt and, when it was the last active proof of payment, puts the
+ * linked invoice back to `sent` so it no longer reads as paid.
+ */
+export async function deleteReceipt(id: string): Promise<ReceiptChangeResult | undefined> {
+  const change = await beginReceiptChange(id);
+  if (!change) return undefined;
+  const { tx, receiptStore, receipt, remainingActive, now } = change;
   await receiptStore.delete(id);
 
   let revertedInvoice: Invoice | undefined;
@@ -209,20 +214,9 @@ export async function cancelInvoice(id: string): Promise<Invoice | undefined> {
 
 /** Voids a receipt; reverts the linked invoice when no active receipt remains. */
 export async function cancelReceipt(id: string): Promise<ReceiptChangeResult | undefined> {
-  const db = await getDB();
-  const tx = db.transaction(['receipts', 'invoices'], 'readwrite');
-  const receiptStore = tx.objectStore('receipts');
-  const receipt = await receiptStore.get(id);
-  if (!receipt) {
-    await tx.done;
-    return undefined;
-  }
-
-  const remainingActive = (await receiptStore.getAll()).filter(
-    r => r.id !== id && r.invoiceId === receipt.invoiceId && r.status !== 'cancelled'
-  );
-
-  const now = nowISO();
+  const change = await beginReceiptChange(id);
+  if (!change) return undefined;
+  const { tx, receiptStore, receipt, remainingActive, now } = change;
   const updated: Receipt = { ...receipt, status: 'cancelled', updatedAt: now };
   await receiptStore.put(updated);
 
